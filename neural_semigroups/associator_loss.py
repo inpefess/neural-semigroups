@@ -13,6 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+import torch
 from torch import Tensor
 from torch.functional import einsum
 from torch.nn import Module
@@ -32,6 +33,7 @@ e_je_k=e_m\right\}P\left\{e_je_k=e_m\right\}=
         :param cayley_cube: this is a probabilistic Cayley cube
         :returns: the probabilistic associator
         """
-        one = einsum("iml,jkm->ijkl", cayley_cube, cayley_cube)
-        two = einsum("mkl,ijm->ijkl", cayley_cube, cayley_cube)
-        return kl_div(one, two, reduction="sum") + cayley_cube.shape[0] ** 3
+        one = einsum("biml,bjkm->bijkl", cayley_cube, cayley_cube)
+        two = einsum("bmkl,bijm->bijkl", cayley_cube, cayley_cube)
+        return (kl_div(torch.log(one), two, reduction="sum") /
+                cayley_cube.shape[0])
