@@ -24,15 +24,16 @@ from ignite.engine import (Events, create_supervised_evaluator,
                            create_supervised_trainer)
 from ignite.handlers import EarlyStopping
 from ignite.metrics.loss import Loss
-from neural_semigroups.associator_loss import AssociatorLoss
-from neural_semigroups.denoising_autoencoder import MagmaDAE
-from neural_semigroups.magma import Magma
-from neural_semigroups.table_guess import TableGuess, train_test_split
 from torch import Tensor
 from torch.optim import Adam
 from torch.utils.data import DataLoader, TensorDataset
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
+
+from neural_semigroups.associator_loss import AssociatorLoss
+from neural_semigroups.denoising_autoencoder import MagmaDAE
+from neural_semigroups.magma import Magma
+from neural_semigroups.table_guess import TableGuess, train_test_split
 
 
 def load_database_as_cubes(
@@ -90,7 +91,9 @@ def get_loaders(
     :param validation_size: number of tables for validation
     :returns: a pair of train and validation data loaders
     """
-    train, validation, test = load_database_as_cubes(database_filename, train_size, validation_size)
+    train, validation, test = load_database_as_cubes(
+        database_filename, train_size, validation_size
+    )
     train_tensor = torch.from_numpy(train)
     train_data = TensorDataset(train_tensor, train_tensor)
     val_tensor = torch.from_numpy(validation)

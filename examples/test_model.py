@@ -17,9 +17,10 @@ from argparse import ArgumentParser, Namespace
 
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
+
 from neural_semigroups.magma import Magma
 from neural_semigroups.table_guess import TableGuess
-from tqdm import tqdm
 
 
 def get_arguments() -> Namespace:
@@ -38,14 +39,25 @@ def get_arguments() -> Namespace:
     return parser.parse_args()
 
 
-def main():
-    args = get_arguments()
+def load_pre_trained_model(cardinality: int) -> TableGuess:
+    """
+    load pre-trained model and database of Cayley tables
+
+    :param cardinality: semigroup cardinality
+    :returns: a semigroups searching object
+    """
     table_guess = TableGuess()
-    cardinality = args.cardinality
-    max_level = cardinality ** 2
     table_guess.load_smallsemi_database(f"smallsemi/data{cardinality}.gl")
     table_guess.load_model(f"semigroups.{cardinality}.model")
     table_guess.model.apply_corruption = False
+    return table_guess
+
+
+def main():
+    """ build and show a pre-trained model quality report """
+    cardinality = get_arguments().cardinality
+    table_guess = load_pre_trained_model(cardinality)
+    max_level = cardinality ** 2
     total_tables = np.zeros(max_level, dtype=np.int32)
     total_cells = np.zeros(max_level, dtype=np.int32)
     correct_tables = np.zeros(max_level, dtype=np.int32)
@@ -59,14 +71,16 @@ def main():
                 cols.append(point % cardinality)
             puzzle = cayley_table.copy()
             puzzle[rows, cols] = -1
-            solution, probability = table_guess.predict_from_model(puzzle)
+            solution, _ = table_guess.predict_from_model(puzzle)
             total_tables[level - 1] += 1
             total_cells[level - 1] += level
             if Magma(solution).is_associative:
                 correct_tables[level - 1] += 1
                 correct_cells[level - 1] += level
             else:
-                correct_cells[level - 1] += sum(solution[rows, cols] == cayley_table[rows, cols])
+                correct_cells[level - 1] += sum(
+                    solution[rows, cols] == cayley_table[rows, cols]
+                )
     print_report(total_tables, correct_tables, total_cells, correct_cells)
 
 
