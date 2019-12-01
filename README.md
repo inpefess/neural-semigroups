@@ -4,9 +4,9 @@ Here we try to learn Cayley tables of semigroups using neural
 networks. The supposed workflow:
 
 * install the package
-* get data
+* get the data
 * build a model
-* play with the output
+* print a model testing report
 
 ## Package Installation
 
@@ -28,34 +28,33 @@ This could take some time (mostly downloading `torch`).
 After that you can go to the project's directory and `source ./bin/activate` to
 start a virtual environment there.
 
-## Generating Data
+## Getting Data
 
-```bash
-cd examples
-./generate_data.sh 3
-```
-
-These procedures are quite ineffective and can take hours even for `dim == 4`.
-They were not tested for `dim > 4`.
+This package uses data included into a `smallsemi` package for GAP system.
+One can download it from [the GAP page](https://www.gap-system.org/pub/gap/gap4/tar.gz/packages/smallsemi-0.6.11.tar.gz).
 
 ## Training a Model
 
-```bash
-cd examples
-./train.sh 4
-```
-
-It can take several minutes. For better training script tuning see the `train.py` source.
-
-## Playing with Output
-
-From a virtual environment.
+Here are several examples of commands to train a model depending on semigroup's
+cardinality:
 
 ```bash
-cd examples
-jupyter notebook
+python train_denoising_autoencoder.py --cardinality 4 --epochs 100 \
+--learning_rate 0.1 --batch_size 32 --train_size 10 --validation_size 10
+```
+```bash
+python train_denoising_autoencoder.py --cardinality 5 --epochs 100 \
+--learning_rate 0.01 --batch_size 256 --train_size 100 --validation_size 100
+```
+```bash
+python train_denoising_autoencoder.py --cardinality 6 --epochs 100 \
+--learning_rate 0.001 --batch_size 2048 --train_size 1000 --validation_size 100
 ```
 
-The web browser should run.
-Navigate to `guess_tables.ipynb` Jupyter notebook and follow the instructions
-there.
+## Printing a Testing Report
+
+One can print a model quality report using the following command:
+
+```bash
+python test_model.py --cardinality 4
+```
