@@ -15,19 +15,32 @@
 """
 from unittest import TestCase
 
-from torch import from_numpy
-
+import numpy as np
 from neural_semigroups.associator_loss import AssociatorLoss
+from neural_semigroups.cyclic_group import CyclicGroup
 from neural_semigroups.magma import Magma
 from neural_semigroups.utils import FOUR_GROUP, NON_ASSOCIATIVE_MAGMA
+from torch import from_numpy
+from torch.functional import inf
 
 
 class TestAssociatorLoss(TestCase):
     def test_forward(self):
         associator_loss = AssociatorLoss()
-        cayley_cube = from_numpy(Magma(FOUR_GROUP).probabilistic_cube)
+        cayley_cube = from_numpy(
+            np.stack([
+                Magma(FOUR_GROUP).probabilistic_cube,
+                CyclicGroup(4).probabilistic_cube
+            ])
+        ).view(-1, 4, 4, 4)
+        # associator is zero for semigroups
         self.assertEqual(associator_loss(cayley_cube), 0.0)
         cayley_cube = from_numpy(
-            Magma(NON_ASSOCIATIVE_MAGMA).probabilistic_cube
-        )
-        self.assertEqual(associator_loss(cayley_cube), 9.0)
+            np.stack([
+                Magma(NON_ASSOCIATIVE_MAGMA).probabilistic_cube,
+                CyclicGroup(3).probabilistic_cube
+            ])
+        ).view(-1, 3, 3, 3)
+        # for deterministic magmas which are note semigroups
+        # the associator is infinite
+        self.assertEqual(associator_loss(cayley_cube), inf)

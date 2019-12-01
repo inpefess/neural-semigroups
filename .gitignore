@@ -10,8 +10,10 @@ __pycache__
 *.model
 bin
 lib
+lib64
 include
 etc
+src
 share
 pyvenv.cfg
 #*.*#

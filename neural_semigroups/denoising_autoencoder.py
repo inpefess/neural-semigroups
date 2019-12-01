@@ -16,6 +16,7 @@
 from collections import OrderedDict
 from typing import List
 
+import torch
 from torch import Tensor
 from torch.nn import BatchNorm1d, Linear, Module, ReLU, Sequential, Softmax2d
 from torch.nn.functional import dropout2d
@@ -62,6 +63,8 @@ class MagmaDAE(Module):
             OrderedDict(reversed(decoder_layers.items()))
         )
         self.encoder_layers = Sequential(encoder_layers)
+        self._nearly_zero = torch.Tensor([1e-6])
+        self._nearly_one = torch.Tensor([1 - (self.cardinality - 1) * 1e-6])
 
     def encode(self, corrupted_input: Tensor) -> Tensor:
         """
@@ -120,4 +123,12 @@ class MagmaDAE(Module):
         corrupted_input = self.corrupt_input(cayley_cube)
         encoded_input = self.encode(corrupted_input)
         decoded_input = self.decode(encoded_input)
-        return decoded_input
+        return torch.where(
+            corrupted_input == 1.0,
+            self._nearly_one,
+            torch.where(
+                corrupted_input == 0.0,
+                self._nearly_zero,
+                decoded_input
+            )
+        )

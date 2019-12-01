@@ -22,26 +22,31 @@ import numpy as np
 import torch
 from ignite.engine import (Events, create_supervised_evaluator,
                            create_supervised_trainer)
+from ignite.handlers import EarlyStopping
 from ignite.metrics.loss import Loss
 from torch import Tensor
-from torch.nn.functional import kl_div
 from torch.optim import Adam
 from torch.utils.data import DataLoader, TensorDataset
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
+from neural_semigroups.associator_loss import AssociatorLoss
 from neural_semigroups.denoising_autoencoder import MagmaDAE
 from neural_semigroups.magma import Magma
 from neural_semigroups.table_guess import TableGuess, train_test_split
 
 
 def load_database_as_cubes(
-        database_filename: str
+        database_filename: str,
+        train_size: int,
+        validation_size: int
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     load a database file to probability cubes representation
 
     :param database_filename: the name of the file from which to extract data
+    :param train_size: number of tables for training
+    :param validation_size: number of tables for validation
     :returns: tree arrays of probability Cayley cubes: train, validation and
     test
     """
@@ -49,7 +54,9 @@ def load_database_as_cubes(
     logging.info("reading data from disk")
     table_guess.load_smallsemi_database(database_filename)
     logging.info("splitting by train and test")
-    train, validation, test = train_test_split(table_guess, 1000, 1000)
+    train, validation, test = train_test_split(
+        table_guess, train_size, validation_size
+    )
     logging.info("augmenting train set")
     train.augment_by_equivalent_tables()
     logging.info("generating train cubes")
@@ -71,16 +78,22 @@ def load_database_as_cubes(
 
 def get_loaders(
         database_filename: str,
-        batch_size: int
+        batch_size: int,
+        train_size: int,
+        validation_size: int
 ) -> Tuple[DataLoader, DataLoader]:
     """
     get train and validation data loaders
 
     :param database_filename: the name of the file from which to extract data
     :param batch_size: batch size (common for train and validation)
+    :param train_size: number of tables for training
+    :param validation_size: number of tables for validation
     :returns: a pair of train and validation data loaders
     """
-    train, validation, test = load_database_as_cubes(database_filename)
+    train, validation, test = load_database_as_cubes(
+        database_filename, train_size, validation_size
+    )
     train_tensor = torch.from_numpy(train)
     train_data = TensorDataset(train_tensor, train_tensor)
     val_tensor = torch.from_numpy(validation)
@@ -124,6 +137,18 @@ def get_arguments() -> Namespace:
         default=32,
         required=False
     )
+    parser.add_argument(
+        "--train_size",
+        type=int,
+        help="number of tables for training",
+        required=True
+    )
+    parser.add_argument(
+        "--validation_size",
+        type=int,
+        help="number of tables for validation",
+        required=True
+    )
     return parser.parse_args()
 
 
@@ -133,28 +158,36 @@ def main():
     cardinality = args.cardinality
     train_loader, val_loader = get_loaders(
         database_filename=f"smallsemi/data{cardinality}.gl",
-        batch_size=args.batch_size
+        batch_size=args.batch_size,
+        train_size=args.train_size,
+        validation_size=args.validation_size
     )
     logging.info("data prepared")
     model = MagmaDAE(
         cardinality=cardinality,
         hidden_dims=[
-            cardinality ** 3,
-            cardinality ** 3 // 2,
-            cardinality ** 3 // 4,
-            cardinality ** 3 // 8
+            cardinality ** 2,
+            cardinality
         ],
         corruption_rate=0.5
     )
     optimizer = Adam(model.parameters(), lr=args.learning_rate)
 
     def loss(prediction: Tensor, target: Tensor) -> Tensor:
-        return kl_div(torch.log(prediction), target, reduction="batchmean")
+        return AssociatorLoss()(prediction)
     trainer = create_supervised_trainer(model, optimizer, loss)
     evaluator = create_supervised_evaluator(
         model,
         metrics={"loss": Loss(loss)}
     )
+
+    def score_function(engine):
+        val_loss = engine.state.metrics['loss']
+        return -val_loss
+    handler = EarlyStopping(
+        patience=10, score_function=score_function, trainer=trainer
+    )
+    evaluator.add_event_handler(Events.COMPLETED, handler)
     writer = SummaryWriter()
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
@@ -171,13 +204,13 @@ def main():
     @trainer.on(Events.EPOCH_COMPLETED)
     def log_validation_results(trainer):
         evaluator.run(val_loader)
-        print(evaluator.state.metrics["loss"])
         writer.add_scalars(
             "loss",
             {"validation": evaluator.state.metrics["loss"]},
             global_step=trainer.state.iteration,
             walltime=int(time())
         )
+        print(evaluator.state.metrics["loss"])
         torch.save(model, f"semigroups.{cardinality}.model")
     logging.info("training started")
     trainer.run(train_loader, max_epochs=args.epochs)
