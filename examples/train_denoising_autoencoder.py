@@ -114,7 +114,8 @@ def get_arguments() -> Namespace:
         "--cardinality",
         type=int,
         help="magma cardinality",
-        required=True
+        required=True,
+        choices=range(2, 8)
     )
     parser.add_argument(
         "--epochs",

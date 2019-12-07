@@ -34,7 +34,8 @@ def get_arguments() -> Namespace:
         "--cardinality",
         type=int,
         help="semigroup cardinality",
-        required=True
+        required=True,
+        choices=range(2, 8)
     )
     return parser.parse_args()
 
