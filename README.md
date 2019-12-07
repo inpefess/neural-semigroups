@@ -33,6 +33,12 @@ start a virtual environment there.
 This package uses data included into a `smallsemi` package for GAP system.
 One can download it from [the GAP page](https://www.gap-system.org/pub/gap/gap4/tar.gz/packages/smallsemi-0.6.11.tar.gz).
 
+You can get the data by running a script from a `scripts` folder:
+```bash
+cd scripts
+./download_smallsemi.sh
+```
+
 ## Training a Model
 
 Here are several examples of commands to train a model depending on semigroup's
