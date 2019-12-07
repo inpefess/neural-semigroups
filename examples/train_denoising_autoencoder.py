@@ -25,12 +25,12 @@ from ignite.engine import (Events, create_supervised_evaluator,
 from ignite.handlers import EarlyStopping
 from ignite.metrics.loss import Loss
 from torch import Tensor
+from torch.nn.functional import kl_div
 from torch.optim import Adam
 from torch.utils.data import DataLoader, TensorDataset
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-from neural_semigroups.associator_loss import AssociatorLoss
 from neural_semigroups.denoising_autoencoder import MagmaDAE
 from neural_semigroups.magma import Magma
 from neural_semigroups.table_guess import TableGuess, train_test_split
@@ -175,7 +175,7 @@ def main():
     optimizer = Adam(model.parameters(), lr=args.learning_rate)
 
     def loss(prediction: Tensor, target: Tensor) -> Tensor:
-        return AssociatorLoss()(prediction)
+        return kl_div(prediction, target, reduce="batchmean")
     trainer = create_supervised_trainer(model, optimizer, loss)
     evaluator = create_supervised_evaluator(
         model,

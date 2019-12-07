@@ -82,13 +82,12 @@ def main():
             solution, _ = table_guess.predict_from_model(puzzle)
             total_tables[level - 1] += 1
             total_cells[level - 1] += level
-            if Magma(solution).is_associative:
+            guessed_cells = sum(
+                solution[rows, cols] == cayley_table[rows, cols]
+            )
+            if guessed_cells == level:
                 correct_tables[level - 1] += 1
-                correct_cells[level - 1] += level
-            else:
-                correct_cells[level - 1] += sum(
-                    solution[rows, cols] == cayley_table[rows, cols]
-                )
+            correct_cells[level - 1] += guessed_cells
     print_report(total_tables, correct_tables, total_cells, correct_cells)
 
 
