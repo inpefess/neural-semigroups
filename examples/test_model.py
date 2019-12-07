@@ -58,12 +58,19 @@ def main():
     """ build and show a pre-trained model quality report """
     cardinality = get_arguments().cardinality
     table_guess = load_pre_trained_model(cardinality)
-    max_level = cardinality ** 2
+    max_level = cardinality ** 2 // 2
     total_tables = np.zeros(max_level, dtype=np.int32)
     total_cells = np.zeros(max_level, dtype=np.int32)
     correct_tables = np.zeros(max_level, dtype=np.int32)
     correct_cells = np.zeros(max_level, dtype=np.int32)
-    for cayley_table in tqdm(table_guess.database):
+    database_size = len(table_guess.database)
+    test_indices = np.random.choice(
+        range(database_size),
+        min(database_size, 1000),
+        replace=False
+    )
+    for i in tqdm(test_indices):
+        cayley_table = table_guess.database[i]
         for level in range(1, max_level + 1):
             rows = list()
             cols = list()
