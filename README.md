@@ -50,6 +50,10 @@ python train_denoising_autoencoder.py --cardinality 5 --epochs 100 \
 python train_denoising_autoencoder.py --cardinality 6 --epochs 100 \
 --learning_rate 0.001 --batch_size 2048 --train_size 1000 --validation_size 100
 ```
+```bash
+python train_denoising_autoencoder.py --cardinality 7 --epochs 100 \
+--learning_rate 0.001 --batch_size 2048 --train_size 1000 --validation_size 100
+```
 
 ## Printing a Testing Report
 

@@ -34,7 +34,8 @@ def get_arguments() -> Namespace:
         "--cardinality",
         type=int,
         help="semigroup cardinality",
-        required=True
+        required=True,
+        choices=range(2, 8)
     )
     return parser.parse_args()
 
@@ -57,12 +58,19 @@ def main():
     """ build and show a pre-trained model quality report """
     cardinality = get_arguments().cardinality
     table_guess = load_pre_trained_model(cardinality)
-    max_level = cardinality ** 2
+    max_level = cardinality ** 2 // 2
     total_tables = np.zeros(max_level, dtype=np.int32)
     total_cells = np.zeros(max_level, dtype=np.int32)
     correct_tables = np.zeros(max_level, dtype=np.int32)
     correct_cells = np.zeros(max_level, dtype=np.int32)
-    for cayley_table in tqdm(table_guess.database):
+    database_size = len(table_guess.database)
+    test_indices = np.random.choice(
+        range(database_size),
+        min(database_size, 1000),
+        replace=False
+    )
+    for i in tqdm(test_indices):
+        cayley_table = table_guess.database[i]
         for level in range(1, max_level + 1):
             rows = list()
             cols = list()
@@ -74,13 +82,12 @@ def main():
             solution, _ = table_guess.predict_from_model(puzzle)
             total_tables[level - 1] += 1
             total_cells[level - 1] += level
-            if Magma(solution).is_associative:
+            guessed_cells = sum(
+                solution[rows, cols] == cayley_table[rows, cols]
+            )
+            if guessed_cells == level:
                 correct_tables[level - 1] += 1
-                correct_cells[level - 1] += level
-            else:
-                correct_cells[level - 1] += sum(
-                    solution[rows, cols] == cayley_table[rows, cols]
-                )
+            correct_cells[level - 1] += guessed_cells
     print_report(total_tables, correct_tables, total_cells, correct_cells)
 
 
