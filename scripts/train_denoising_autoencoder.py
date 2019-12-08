@@ -175,7 +175,7 @@ def main():
     optimizer = Adam(model.parameters(), lr=args.learning_rate)
 
     def loss(prediction: Tensor, target: Tensor) -> Tensor:
-        return kl_div(prediction, target, reduce="batchmean")
+        return kl_div(torch.log(prediction), target, reduction="batchmean")
     trainer = create_supervised_trainer(model, optimizer, loss)
     evaluator = create_supervised_evaluator(
         model,
