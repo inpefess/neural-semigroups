@@ -1,5 +1,5 @@
 """
-   Copyright 2019 Boris Shminke
+   Copyright 2019-2020 Boris Shminke
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -24,16 +24,15 @@ from ignite.engine import (Events, create_supervised_evaluator,
                            create_supervised_trainer)
 from ignite.handlers import EarlyStopping
 from ignite.metrics.loss import Loss
+from neural_semigroups.denoising_autoencoder import MagmaDAE
+from neural_semigroups.magma import Magma
+from neural_semigroups.table_guess import TableGuess, train_test_split
 from torch import Tensor
 from torch.nn.functional import kl_div
 from torch.optim import Adam
 from torch.utils.data import DataLoader, TensorDataset
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
-
-from neural_semigroups.denoising_autoencoder import MagmaDAE
-from neural_semigroups.magma import Magma
-from neural_semigroups.table_guess import TableGuess, train_test_split
 
 
 def load_database_as_cubes(

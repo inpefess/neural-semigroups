@@ -1,5 +1,5 @@
 """
-   Copyright 2019 Boris Shminke
+   Copyright 2019-2020 Boris Shminke
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,12 +18,11 @@ from typing import List, Tuple
 
 import numpy as np
 import torch
-from torch.nn import Module
-from tqdm import tqdm
-
 from neural_semigroups.utils import (check_filename, check_smallsemi_filename,
                                      get_equivalent_magmas,
                                      import_smallsemi_format)
+from torch.nn import Module
+from tqdm import tqdm
 
 
 class TableGuess:

@@ -1,5 +1,5 @@
 """
-   Copyright 2019 Boris Shminke
+   Copyright 2019-2020 Boris Shminke
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ from itertools import permutations
 from typing import List, Tuple
 
 import numpy as np
-
 from neural_semigroups.magma import Magma
 
 # the Cayley table of Klein Vierergruppe

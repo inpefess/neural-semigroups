@@ -1,5 +1,5 @@
 """
-   Copyright 2019 Boris Shminke
+   Copyright 2019-2020 Boris Shminke
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,10 +19,9 @@ from multiprocessing import Pool
 from subprocess import check_output
 from typing import List, Tuple
 
-from tqdm import tqdm
-
 from neural_semigroups.magma import Magma
 from neural_semigroups.utils import get_magma_by_index, next_magma
+from tqdm import tqdm
 
 
 def find_semigroups(arg) -> None:

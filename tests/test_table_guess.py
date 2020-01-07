@@ -1,5 +1,5 @@
 """
-   Copyright 2019 Boris Shminke
+   Copyright 2019-2020 Boris Shminke
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ from unittest import TestCase
 from unittest.mock import mock_open, patch
 
 import numpy as np
-
 from neural_semigroups.table_guess import TableGuess, train_test_split
 
 
