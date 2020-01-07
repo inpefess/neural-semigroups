@@ -1,9 +1,9 @@
 #!/bin/bash
 
 PACKAGE_NAME=neural_semigroups
-pycodestyle ${PACKAGE_NAME} examples tests
-pylint --rcfile=.pylintrc ${PACKAGE_NAME} examples
-mypy ${PACKAGE_NAME} examples tests
+pycodestyle ${PACKAGE_NAME} scripts tests
+pylint --rcfile=.pylintrc ${PACKAGE_NAME} scripts
+mypy ${PACKAGE_NAME} scripts tests
 coverage run --source ${PACKAGE_NAME} -m unittest discover -s tests/
 coverage report -m
-cloc ${PACKAGE_NAME} examples
+cloc ${PACKAGE_NAME} scripts
