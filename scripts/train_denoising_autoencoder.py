@@ -24,15 +24,16 @@ from ignite.engine import (Events, create_supervised_evaluator,
                            create_supervised_trainer)
 from ignite.handlers import EarlyStopping
 from ignite.metrics.loss import Loss
-from neural_semigroups.denoising_autoencoder import MagmaDAE
-from neural_semigroups.magma import Magma
-from neural_semigroups.table_guess import TableGuess, train_test_split
 from torch import Tensor
 from torch.nn.functional import kl_div
 from torch.optim import Adam
 from torch.utils.data import DataLoader, TensorDataset
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
+
+from neural_semigroups.denoising_autoencoder import MagmaDAE
+from neural_semigroups.magma import Magma
+from neural_semigroups.table_guess import TableGuess, train_test_split
 
 
 def load_database_as_cubes(
@@ -90,7 +91,7 @@ def get_loaders(
     :param validation_size: number of tables for validation
     :returns: a pair of train and validation data loaders
     """
-    train, validation, test = load_database_as_cubes(
+    train, validation, _ = load_database_as_cubes(
         database_filename, train_size, validation_size
     )
     train_tensor = torch.from_numpy(train)
@@ -192,24 +193,29 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     @trainer.on(Events.EPOCH_COMPLETED)
+    # pylint: disable=unused-variable
     def log_training_results(trainer):
         evaluator.run(train_loader)
         writer.add_scalars(
             "loss",
+            # pylint: disable=no-member
             {"training": evaluator.state.metrics["loss"]},
             global_step=trainer.state.iteration,
             walltime=int(time())
         )
 
     @trainer.on(Events.EPOCH_COMPLETED)
+    # pylint: disable=unused-variable
     def log_validation_results(trainer):
         evaluator.run(val_loader)
         writer.add_scalars(
             "loss",
+            # pylint: disable=no-member
             {"validation": evaluator.state.metrics["loss"]},
             global_step=trainer.state.iteration,
             walltime=int(time())
         )
+        # pylint: disable=no-member
         print(evaluator.state.metrics["loss"])
         torch.save(model, f"semigroups.{cardinality}.model")
     logging.info("training started")

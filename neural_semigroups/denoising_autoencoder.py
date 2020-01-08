@@ -113,6 +113,7 @@ class MagmaDAE(Module):
             -1, self.cardinality, self.cardinality, self.cardinality
         ).transpose(1, 3).transpose(2, 3)).transpose(2, 3).transpose(1, 3)
 
+    # pylint: disable=arguments-differ
     def forward(self, cayley_cube: Tensor) -> Tensor:
         """
         forward pass inhereted from Module

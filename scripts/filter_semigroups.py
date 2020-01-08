@@ -16,8 +16,9 @@
 from argparse import ArgumentParser
 
 import numpy as np
-from neural_semigroups.magma import Magma
 from tqdm import tqdm
+
+from neural_semigroups.magma import Magma
 
 
 def main():

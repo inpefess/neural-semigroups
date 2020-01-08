@@ -19,9 +19,10 @@ from multiprocessing import Pool
 from subprocess import check_output
 from typing import List, Tuple
 
+from tqdm import tqdm
+
 from neural_semigroups.magma import Magma
 from neural_semigroups.utils import get_magma_by_index, next_magma
-from tqdm import tqdm
 
 
 def find_semigroups(arg) -> None:
@@ -72,12 +73,12 @@ def get_starting_magmas(
 
 def main() -> None:
     """ do all """
-    parser = ArgumentParser()
-    parser.add_argument(
+    argument_parser = ArgumentParser()
+    argument_parser.add_argument(
         "--dim", type=int,
         help="magma cardinality"
     )
-    args = parser.parse_args()
+    args = argument_parser.parse_args()
     cpu_count = os.cpu_count()
     if cpu_count:
         batch_count = cpu_count - 1

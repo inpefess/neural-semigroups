@@ -22,6 +22,7 @@ from torch.nn.functional import kl_div
 
 class AssociatorLoss(Module):
     """ probabilistic associator loss  """
+    # pylint: disable=arguments-differ
     def forward(self, cayley_cube: Tensor) -> Tensor:
         r"""
         finds a probabilistic associator of a given probabilistic Cayley cube
