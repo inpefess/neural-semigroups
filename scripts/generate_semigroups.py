@@ -1,5 +1,5 @@
 """
-   Copyright 2019 Boris Shminke
+   Copyright 2019-2020 Boris Shminke
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -73,12 +73,12 @@ def get_starting_magmas(
 
 def main() -> None:
     """ do all """
-    parser = ArgumentParser()
-    parser.add_argument(
+    argument_parser = ArgumentParser()
+    argument_parser.add_argument(
         "--dim", type=int,
         help="magma cardinality"
     )
-    args = parser.parse_args()
+    args = argument_parser.parse_args()
     cpu_count = os.cpu_count()
     if cpu_count:
         batch_count = cpu_count - 1

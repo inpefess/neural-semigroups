@@ -1,5 +1,5 @@
 """
-   Copyright 2019 Boris Shminke
+   Copyright 2019-2020 Boris Shminke
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,13 +19,12 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from neural_semigroups.magma import Magma
 from neural_semigroups.table_guess import TableGuess
 
 
-def get_arguments() -> Namespace:
+def get_test_arguments() -> Namespace:
     """
-    parse script arguments
+    get script arguments
 
     :returns: script parameters
     """
@@ -56,13 +55,10 @@ def load_pre_trained_model(cardinality: int) -> TableGuess:
 
 def main():
     """ build and show a pre-trained model quality report """
-    cardinality = get_arguments().cardinality
+    cardinality = get_test_arguments().cardinality
     table_guess = load_pre_trained_model(cardinality)
     max_level = cardinality ** 2 // 2
-    total_tables = np.zeros(max_level, dtype=np.int32)
-    total_cells = np.zeros(max_level, dtype=np.int32)
-    correct_tables = np.zeros(max_level, dtype=np.int32)
-    correct_cells = np.zeros(max_level, dtype=np.int32)
+    totals = np.zeros((3, max_level), dtype=np.int32)
     database_size = len(table_guess.database)
     test_indices = np.random.choice(
         range(database_size),
@@ -72,48 +68,43 @@ def main():
     for i in tqdm(test_indices):
         cayley_table = table_guess.database[i]
         for level in range(1, max_level + 1):
-            rows = list()
-            cols = list()
-            for point in np.random.randint(0, cardinality ** 2, level):
-                rows.append(point // cardinality)
-                cols.append(point % cardinality)
+            rows, cols = zip(*[
+                (point // cardinality, point % cardinality)
+                for point in np.random.randint(0, cardinality ** 2, level)
+            ])
             puzzle = cayley_table.copy()
             puzzle[rows, cols] = -1
             solution, _ = table_guess.predict_from_model(puzzle)
-            total_tables[level - 1] += 1
-            total_cells[level - 1] += level
+            totals[0, level - 1] += 1
             guessed_cells = sum(
                 solution[rows, cols] == cayley_table[rows, cols]
             )
             if guessed_cells == level:
-                correct_tables[level - 1] += 1
-            correct_cells[level - 1] += guessed_cells
-    print_report(total_tables, correct_tables, total_cells, correct_cells)
+                totals[1, level - 1] += 1
+            totals[2, level - 1] += guessed_cells
+    print_report(totals)
 
 
-def print_report(
-        total_tables: np.ndarray,
-        correct_tables: np.ndarray,
-        total_cells: np.ndarray,
-        correct_cells: np.ndarray
-) -> None:
+def print_report(totals: np.ndarray) -> None:
     """
     print report in a pretty format
 
-    :param total_tables: a column with total number of puzzles per level
-    :param correct_tables: a column with numbers of correctly solved puzzles
-    :param total_cells: total numbers of hidden cells in all puzzles
-    :param correct_cells: numbers of correctly guessed cells in all puzzles
+    :param totals: a table with three columns:
+    * a column with total number of puzzles per level
+    * a column with numbers of correctly solved puzzles
+    * numbers of correctly guessed cells in all puzzles
     :returns:
     """
+    levels = range(1, totals.shape[1] + 1)
+    hidden_cells = totals[0] * levels
     report = pd.DataFrame({
-        "hidden cells per puzzle": range(1, total_tables.shape[0] + 1),
-        "puzzles": total_tables,
-        "solved puzzles": correct_tables,
-        "solved puzzles (%)": correct_tables * 100 // total_tables,
-        "hidden cells": total_cells,
-        "guessed cells": correct_cells,
-        "guessed cells (%)": correct_cells * 100 // total_cells
+        "hidden cells per puzzle": levels,
+        "puzzles": totals[0],
+        "solved puzzles": totals[1],
+        "solved puzzles (%)": totals[1] * 100 // totals[0],
+        "hidden cells": hidden_cells,
+        "guessed cells": totals[2],
+        "guessed cells (%)": totals[2] * 100 // hidden_cells
     })
     print(report.to_string(index=False))
 

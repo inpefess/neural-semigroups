@@ -1,5 +1,5 @@
 """
-   Copyright 2019 Boris Shminke
+   Copyright 2019-2020 Boris Shminke
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -91,7 +91,7 @@ def get_loaders(
     :param validation_size: number of tables for validation
     :returns: a pair of train and validation data loaders
     """
-    train, validation, test = load_database_as_cubes(
+    train, validation, _ = load_database_as_cubes(
         database_filename, train_size, validation_size
     )
     train_tensor = torch.from_numpy(train)
@@ -193,24 +193,29 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     @trainer.on(Events.EPOCH_COMPLETED)
+    # pylint: disable=unused-variable
     def log_training_results(trainer):
         evaluator.run(train_loader)
         writer.add_scalars(
             "loss",
+            # pylint: disable=no-member
             {"training": evaluator.state.metrics["loss"]},
             global_step=trainer.state.iteration,
             walltime=int(time())
         )
 
     @trainer.on(Events.EPOCH_COMPLETED)
+    # pylint: disable=unused-variable
     def log_validation_results(trainer):
         evaluator.run(val_loader)
         writer.add_scalars(
             "loss",
+            # pylint: disable=no-member
             {"validation": evaluator.state.metrics["loss"]},
             global_step=trainer.state.iteration,
             walltime=int(time())
         )
+        # pylint: disable=no-member
         print(evaluator.state.metrics["loss"])
         torch.save(model, f"semigroups.{cardinality}.model")
     logging.info("training started")

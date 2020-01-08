@@ -1,5 +1,5 @@
 """
-   Copyright 2019 Boris Shminke
+   Copyright 2019-2020 Boris Shminke
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ from torch.nn.functional import kl_div
 
 class AssociatorLoss(Module):
     """ probabilistic associator loss  """
+    # pylint: disable=arguments-differ
     def forward(self, cayley_cube: Tensor) -> Tensor:
         r"""
         finds a probabilistic associator of a given probabilistic Cayley cube
