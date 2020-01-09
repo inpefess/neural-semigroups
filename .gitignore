@@ -8,13 +8,7 @@ __pycache__
 *.npz
 *.joblib
 *.model
-bin
-lib
-lib64
-include
-etc
-src
-share
+venv
 pyvenv.cfg
 #*.*#
 runs
