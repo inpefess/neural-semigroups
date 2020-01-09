@@ -47,7 +47,7 @@ def load_database_as_cubes(
     :param database_filename: the name of the file from which to extract data
     :param train_size: number of tables for training
     :param validation_size: number of tables for validation
-    :returns: tree arrays of probability Cayley cubes: train, validation and
+    :returns: three arrays of probability Cayley cubes: train, validation and
     test
     """
     table_guess = TableGuess()
