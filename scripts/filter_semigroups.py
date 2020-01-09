@@ -35,22 +35,22 @@ def main():
     )
     args = parser.parse_args()
     input_file = "semigroup" if args.filter == choices[0] else "monoid"
-    with open(f"./databases/{input_file}.{args.dim}.dat", "r") as file:
-        cayley_tables = [
-            np.array(list(map(int, line.split(" "))))
-            .reshape(args.dim, args.dim)
-            for line in file.readlines()
-        ]
+    with np.load(f"./databases/{input_file}.{args.dim}.npz") as npz_file:
+        cayley_tables = npz_file["database"]
     output_file = "monoid" if args.filter == choices[0] else "group"
-    with open(f"./databases/{output_file}.{args.dim}.dat", "w") as file:
-        for cayley_table in tqdm(cayley_tables):
-            write_to_file = False
-            if args.filter == choices[0]:
-                write_to_file = Magma(cayley_table).identity >= 0
-            elif args.filter == choices[1]:
-                write_to_file = Magma(cayley_table).has_inverses
-            if write_to_file:
-                file.write(str(cayley_table.reshape(-1))[1:-1] + "\n")
+    filtered = list()
+    for cayley_table in tqdm(cayley_tables):
+        append_to_list = False
+        if args.filter == choices[0]:
+            append_to_list = Magma(cayley_table).identity >= 0
+        elif args.filter == choices[1]:
+            append_to_list = Magma(cayley_table).has_inverses
+        if append_to_list:
+            filtered.append(cayley_table)
+    np.savez(
+        f"./databases/{output_file}.{args.dim}.npz",
+        database=np.stack(filtered)
+    )
 
 
 if __name__ == "__main__":

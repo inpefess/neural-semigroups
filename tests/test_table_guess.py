@@ -14,9 +14,10 @@
    limitations under the License.
 """
 from unittest import TestCase
-from unittest.mock import mock_open, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import numpy as np
+
 from neural_semigroups.table_guess import TableGuess, train_test_split
 
 
@@ -29,16 +30,17 @@ class TestTableGuess(TestCase):
             np.array([[1, 1], [1, 0]]), np.array([[1, 1], [1, 1]])
         ])
 
-    @patch("builtins.open", mock_open(read_data="0 1 2 3\n1 0 3 2"))
-    def test_load_database(self):
-        self.table_guess.load_database("semigroup.2.dat")
+    @patch("numpy.load")
+    def test_load_database(self, numpy_load_mock):
+        database = np.array([[[0, 1], [2, 3]], [[1, 0], [3, 2]]])
+        npz_file = MagicMock()
+        npz_file.__getitem__ = lambda x, y: database
+        numpy_load_mock.return_value = npz_file
+        with patch.object(npz_file, "close") as mock:
+            self.table_guess.load_database("semigroup.2.npz")
+            mock.assert_called_once()
         self.assertEqual(self.table_guess.cardinality, 2)
-        database = [np.array([[0, 1], [2, 3]]), np.array([[1, 0], [3, 2]])]
-        for i, table in enumerate(database):
-            self.assertTrue(np.allclose(
-                self.table_guess.database[i],
-                table
-            ))
+        self.assertTrue(np.allclose(self.table_guess.database, database))
 
     def test_search_database(self):
         self.table_guess.cardinality = 2

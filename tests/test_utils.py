@@ -16,6 +16,7 @@
 from unittest import TestCase
 
 import numpy as np
+
 from neural_semigroups.magma import Magma
 from neural_semigroups.utils import (FOUR_GROUP, check_filename,
                                      check_smallsemi_filename,
@@ -96,8 +97,8 @@ class TestUtils(TestCase):
         with self.assertRaises(Exception):
             check_filename("semigroup.strange.name")
         with self.assertRaises(Exception):
-            check_filename("semigroup.name.dat")
-        self.assertEqual(check_filename("monoid.1.dat"), 1)
+            check_filename("semigroup.name.npz")
+        self.assertEqual(check_filename("monoid.1.npz"), 1)
 
     def test_check_smallsemi_filename(self):
         with self.assertRaises(Exception):

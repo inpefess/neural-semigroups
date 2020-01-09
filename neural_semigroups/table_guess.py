@@ -42,23 +42,16 @@ class TableGuess:
         """
         loads a known Cayley tables database from a file
         Database file description:
-        * filename is of a form [description].[n].dat
-        * each row is a string of $n^2$ integers separated by spaces
-        * each integer is from 0 to $n-1$
-        * each row is a Cayley table serialized by rows
+        * a filename is of a form [description].[n].npz
+        * a file is of `npz` format readable by numpy
 
         :param filename: where to load a database from
         :returns:
         """
-        data = list()
         self.cardinality = check_filename(basename(filename))
-        with open(filename, "r") as database:
-            for line in tqdm(database.readlines()):
-                data.append(
-                    np.array(list(map(int, line.split(" "))))
-                    .reshape(self.cardinality, self.cardinality)
-                )
-        self.database = np.stack(data)
+        npz_file = np.load(filename)
+        self.database = npz_file["database"]
+        npz_file.close()
 
     def load_smallsemi_database(self, filename: str) -> None:
         """
