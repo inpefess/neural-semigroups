@@ -31,9 +31,9 @@ from torch.utils.data import DataLoader, TensorDataset
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
+from neural_semigroups.cayley_database import CayleyDatabase, train_test_split
 from neural_semigroups.denoising_autoencoder import MagmaDAE
 from neural_semigroups.magma import Magma
-from neural_semigroups.table_guess import TableGuess, train_test_split
 
 
 def load_database_as_cubes(
@@ -47,15 +47,15 @@ def load_database_as_cubes(
     :param database_filename: the name of the file from which to extract data
     :param train_size: number of tables for training
     :param validation_size: number of tables for validation
-    :returns: tree arrays of probability Cayley cubes: train, validation and
+    :returns: three arrays of probability Cayley cubes: train, validation and
     test
     """
-    table_guess = TableGuess()
+    cayley_db = CayleyDatabase()
     logging.info("reading data from disk")
-    table_guess.load_smallsemi_database(database_filename)
+    cayley_db.load_smallsemi_database(database_filename)
     logging.info("splitting by train and test")
     train, validation, test = train_test_split(
-        table_guess, train_size, validation_size
+        cayley_db, train_size, validation_size
     )
     logging.info("augmenting train set")
     train.augment_by_equivalent_tables()

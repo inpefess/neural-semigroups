@@ -14,53 +14,55 @@
    limitations under the License.
 """
 from unittest import TestCase
-from unittest.mock import mock_open, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import numpy as np
-from neural_semigroups.table_guess import TableGuess, train_test_split
+
+from neural_semigroups.cayley_database import CayleyDatabase, train_test_split
 
 
-class TestTableGuess(TestCase):
+class TestCayleyDatabase(TestCase):
     def setUp(self):
         np.random.seed(43)
-        self.table_guess = TableGuess()
-        self.table_guess.database = np.array([
+        self.cayley_db = CayleyDatabase()
+        self.cayley_db.database = np.array([
             np.array([[0, 1], [1, 0]]), np.array([[1, 0], [1, 1]]),
             np.array([[1, 1], [1, 0]]), np.array([[1, 1], [1, 1]])
         ])
 
-    @patch("builtins.open", mock_open(read_data="0 1 2 3\n1 0 3 2"))
-    def test_load_database(self):
-        self.table_guess.load_database("semigroup.2.dat")
-        self.assertEqual(self.table_guess.cardinality, 2)
-        database = [np.array([[0, 1], [2, 3]]), np.array([[1, 0], [3, 2]])]
-        for i, table in enumerate(database):
-            self.assertTrue(np.allclose(
-                self.table_guess.database[i],
-                table
-            ))
+    @patch("numpy.load")
+    def test_load_database(self, numpy_load_mock):
+        database = np.array([[[0, 1], [2, 3]], [[1, 0], [3, 2]]])
+        npz_file = MagicMock()
+        npz_file.__getitem__ = lambda x, y: database
+        numpy_load_mock.return_value = npz_file
+        with patch.object(npz_file, "close") as mock:
+            self.cayley_db.load_database("semigroup.2.npz")
+            mock.assert_called_once()
+        self.assertEqual(self.cayley_db.cardinality, 2)
+        self.assertTrue(np.allclose(self.cayley_db.database, database))
 
     def test_search_database(self):
-        self.table_guess.cardinality = 2
-        complete = self.table_guess.search_database([[-1, 1], [1, 0]])
+        self.cayley_db.cardinality = 2
+        complete = self.cayley_db.search_database([[-1, 1], [1, 0]])
         self.assertIsInstance(complete, list)
         self.assertEqual(len(complete), 2)
-        self.assertTrue(np.allclose(complete[0], self.table_guess.database[0]))
-        self.assertTrue(np.allclose(complete[1], self.table_guess.database[2]))
-        complete = self.table_guess.search_database([[-1, -1], [0, 0]])
+        self.assertTrue(np.allclose(complete[0], self.cayley_db.database[0]))
+        self.assertTrue(np.allclose(complete[1], self.cayley_db.database[2]))
+        complete = self.cayley_db.search_database([[-1, -1], [0, 0]])
         self.assertIsInstance(complete, list)
         self.assertEqual(len(complete), 0)
         with self.assertRaises(Exception):
-            self.table_guess.search_database("no good")
+            self.cayley_db.search_database("no good")
 
     def test_predict_from_model(self):
-        self.table_guess.cardinality = 2
+        self.cayley_db.cardinality = 2
         input = [[-1, 0], [0, 1]]
-        table, cube = self.table_guess.predict_from_model(input)
+        table, cube = self.cayley_db.predict_from_model(input)
         self.assertIsNone(table)
         self.assertIsNone(cube)
-        self.table_guess.model = lambda x: x
-        table, cube = self.table_guess.predict_from_model(input)
+        self.cayley_db.model = lambda x: x
+        table, cube = self.cayley_db.predict_from_model(input)
         self.assertIsInstance(table, np.ndarray)
         self.assertIsInstance(cube, np.ndarray)
         self.assertEqual(table.dtype, int)
@@ -74,14 +76,14 @@ class TestTableGuess(TestCase):
             ])
         ))
         with self.assertRaises(Exception):
-            self.table_guess.predict_from_model("no good")
+            self.cayley_db.predict_from_model("no good")
 
     def test_check_input(self):
-        self.table_guess.cardinality = 2
-        self.assertFalse(self.table_guess._check_input([[0]]))
-        self.assertFalse(self.table_guess._check_input([[0.5, 0], [0, 0]]))
-        self.assertFalse(self.table_guess._check_input([[-2, 0], [0, 0]]))
-        self.assertFalse(self.table_guess._check_input([[2, 0], [0, 0]]))
+        self.cayley_db.cardinality = 2
+        self.assertFalse(self.cayley_db._check_input([[0]]))
+        self.assertFalse(self.cayley_db._check_input([[0.5, 0], [0, 0]]))
+        self.assertFalse(self.cayley_db._check_input([[-2, 0], [0, 0]]))
+        self.assertFalse(self.cayley_db._check_input([[2, 0], [0, 0]]))
 
     def test_augment_by_equivalent_tables(self):
         database = np.array([
@@ -93,31 +95,31 @@ class TestTableGuess(TestCase):
             np.array([[0, 1], [1, 0]]), np.array([[1, 0], [0, 1]]),
             np.array([[1, 0], [1, 1]]), np.array([[1, 1], [0, 1]])
         ])
-        self.table_guess.database = database
-        self.table_guess.augment_by_equivalent_tables()
+        self.cayley_db.database = database
+        self.cayley_db.augment_by_equivalent_tables()
         self.assertTrue(np.allclose(
-            true_database, self.table_guess.database
+            true_database, self.cayley_db.database
         ))
 
     def test_train_test_split(self):
-        train, validation, test = train_test_split(self.table_guess, 2, 1)
+        train, validation, test = train_test_split(self.cayley_db, 2, 1)
         self.assertTrue(np.allclose(
-            train.database, self.table_guess.database[[1, 2]]
+            train.database, self.cayley_db.database[[1, 2]]
         ))
         self.assertTrue(np.allclose(
-            validation.database, self.table_guess.database[0]
+            validation.database, self.cayley_db.database[0]
         ))
         self.assertTrue(np.allclose(
-            test.database, self.table_guess.database[3]
+            test.database, self.cayley_db.database[3]
         ))
 
     @patch("builtins.open", mock_open())
-    @patch("neural_semigroups.table_guess.import_smallsemi_format")
+    @patch("neural_semigroups.cayley_database.import_smallsemi_format")
     def test_load_smallsemi_database(self, import_smallsemi_format_mock):
-        self.table_guess.load_smallsemi_database("data1.gl")
+        self.cayley_db.load_smallsemi_database("data1.gl")
         import_smallsemi_format_mock.assert_called_once()
 
     @patch("torch.load")
     def test_load_model(self, load_mock):
-        self.table_guess.load_model("model")
+        self.cayley_db.load_model("model")
         load_mock.assert_called_once()

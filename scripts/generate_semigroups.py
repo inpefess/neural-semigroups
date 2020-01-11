@@ -15,38 +15,36 @@
 """
 import os
 from argparse import ArgumentParser
+from itertools import chain
 from multiprocessing import Pool
-from subprocess import check_output
 from typing import List, Tuple
 
+import numpy as np
 from tqdm import tqdm
 
 from neural_semigroups.magma import Magma
 from neural_semigroups.utils import get_magma_by_index, next_magma
 
 
-def find_semigroups(arg) -> None:
+def find_semigroups(arg) -> List[np.ndarray]:
     """ searches for semigroups iteratively going through magmas
 
-    :param arg: a tripe (
-        an ordinal number of the process,
+    :param arg: a tuple (
         a magma from which to start searching,
         a number of next magmas to look through
     )
-    :returns: writes to the file
+    :returns: a list of semigroups' Cayley tables
     """
-    i: int = arg[0]
-    magma: Magma = arg[1]
-    batch_size: int = arg[2]
-    with open(f"data{i}.dat", "w") as data_file:
+    magma: Magma = arg[0]
+    batch_size: int = arg[1]
+    semigroups = list()
+    if magma.is_associative:
+        semigroups.append(magma.cayley_table)
+    for _ in tqdm(range(batch_size)):
+        magma = next_magma(magma)
         if magma.is_associative:
-            line = str(magma.cayley_table.reshape(-1))
-            data_file.write(line[1:-1] + "\n")
-        for _ in tqdm(range(batch_size)):
-            magma = next_magma(magma)
-            if magma.is_associative:
-                line = str(magma.cayley_table.reshape(-1))
-                data_file.write(line[1:-1] + "\n")
+            semigroups.append(magma.cayley_table)
+    return semigroups
 
 
 def get_starting_magmas(
@@ -85,26 +83,17 @@ def main() -> None:
     else:
         batch_count = 1
     starting_magmas, batch_sizes = get_starting_magmas(batch_count, args.dim)
-    check_output(["rm -f ./data*.dat"], shell=True)
     with Pool(batch_count) as pool:
-        tqdm(
-            pool.map(
-                find_semigroups,
-                zip(
-                    range(len(starting_magmas)),
-                    starting_magmas,
-                    batch_sizes
-                )
-            ),
-            total=batch_count
+        semigroups_lists = pool.map(
+            find_semigroups,
+            zip(
+                starting_magmas,
+                batch_sizes
+            )
         )
-    check_output(
-        [f"""
-            cat ./data*.dat | sort | uniq > \
-                ./databases/semigroup.{args.dim}.dat;
-            rm ./data*.dat
-        """],
-        shell=True
+    np.savez(
+        f"./databases/semigroup.{args.dim}.npz",
+        database=np.stack(list(chain.from_iterable(semigroups_lists)))
     )
 
 

@@ -26,7 +26,7 @@ from neural_semigroups.utils import (check_filename, check_smallsemi_filename,
                                      import_smallsemi_format)
 
 
-class TableGuess:
+class CayleyDatabase:
     """
     A user-friendly class for guessing unfilled cells in Cayley tables
     """
@@ -42,23 +42,16 @@ class TableGuess:
         """
         loads a known Cayley tables database from a file
         Database file description:
-        * filename is of a form [description].[n].dat
-        * each row is a string of $n^2$ integers separated by spaces
-        * each integer is from 0 to $n-1$
-        * each row is a Cayley table serialized by rows
+        * a filename is of a form [description].[n].npz
+        * a file is of `npz` format readable by numpy
 
         :param filename: where to load a database from
         :returns:
         """
-        data = list()
         self.cardinality = check_filename(basename(filename))
-        with open(filename, "r") as database:
-            for line in tqdm(database.readlines()):
-                data.append(
-                    np.array(list(map(int, line.split(" "))))
-                    .reshape(self.cardinality, self.cardinality)
-                )
-        self.database = np.stack(data)
+        npz_file = np.load(filename)
+        self.database = npz_file["database"]
+        npz_file.close()
 
     def load_smallsemi_database(self, filename: str) -> None:
         """
@@ -180,20 +173,20 @@ class TableGuess:
 
 
 def train_test_split(
-        table_guess: TableGuess,
+        cayley_db: CayleyDatabase,
         train_size: int,
         validation_size: int
-) -> Tuple[TableGuess, TableGuess, TableGuess]:
+) -> Tuple[CayleyDatabase, CayleyDatabase, CayleyDatabase]:
     """
     split a database of Cayley table in two: train and test
 
-    :param table_guess: a database of Cayley tables
+    :param cayley_db: a database of Cayley tables
     :param train_size: number of tables in a train set
     :param train_size: number of tables in a validation set
     :returns: a triple of distinct Cayley tables databases:
     (train, validation, test)
     """
-    all_indices = np.arange(len(table_guess.database))
+    all_indices = np.arange(len(cayley_db.database))
     train_indices = np.in1d(
         all_indices,
         np.random.choice(
@@ -210,14 +203,14 @@ def train_test_split(
             replace=False
         )
     )
-    train = TableGuess()
-    train.database = table_guess.database[train_indices]
-    validation = TableGuess()
-    validation.database = table_guess.database[
+    train = CayleyDatabase()
+    train.database = cayley_db.database[train_indices]
+    validation = CayleyDatabase()
+    validation.database = cayley_db.database[
         all_indices[~train_indices][validation_indices]
     ]
-    test = TableGuess()
-    test.database = table_guess.database[
+    test = CayleyDatabase()
+    test.database = cayley_db.database[
         all_indices[~train_indices][~validation_indices]
     ]
     return train, validation, test

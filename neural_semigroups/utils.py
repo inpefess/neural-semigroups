@@ -17,6 +17,7 @@ from itertools import permutations
 from typing import List, Tuple
 
 import numpy as np
+
 from neural_semigroups.magma import Magma
 
 # the Cayley table of Klein Vierergruppe
@@ -114,7 +115,7 @@ def check_filename(filename: str) -> int:
             wrong_name = True
         elif filename_parts[0] not in ("semigroup", "monoid", "group"):
             wrong_name = True
-        elif filename_parts[2] != "dat":
+        elif filename_parts[2] != "npz":
             wrong_name = True
         elif not filename_parts[1].isdigit():
             wrong_name = True
@@ -123,7 +124,7 @@ def check_filename(filename: str) -> int:
     if wrong_name:
         raise Exception(
             f"""filename should be of format
-[semigroup|monoid|group].[int].dat, not {filename}"""
+[semigroup|monoid|group].[int].npz, not {filename}"""
         )
     return cardinality
 
