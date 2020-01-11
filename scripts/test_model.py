@@ -76,7 +76,7 @@ def main():
             ])
             puzzle = cayley_table.copy()
             puzzle[rows, cols] = -1
-            solution, _ = cayley_db.predict_from_model(puzzle)
+            solution, _ = cayley_db.fill_in_with_model(puzzle)
             totals[0, level - 1] += 1
             guessed_cells = sum(
                 solution[rows, cols] == cayley_table[rows, cols]

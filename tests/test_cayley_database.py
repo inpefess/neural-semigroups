@@ -55,14 +55,11 @@ class TestCayleyDatabase(TestCase):
         with self.assertRaises(Exception):
             self.cayley_db.search_database("no good")
 
-    def test_predict_from_model(self):
+    def test_fill_in_with_model(self):
         self.cayley_db.cardinality = 2
         input = [[-1, 0], [0, 1]]
-        table, cube = self.cayley_db.predict_from_model(input)
-        self.assertIsNone(table)
-        self.assertIsNone(cube)
         self.cayley_db.model = lambda x: x
-        table, cube = self.cayley_db.predict_from_model(input)
+        table, cube = self.cayley_db.fill_in_with_model(input)
         self.assertIsInstance(table, np.ndarray)
         self.assertIsInstance(cube, np.ndarray)
         self.assertEqual(table.dtype, int)
@@ -76,7 +73,7 @@ class TestCayleyDatabase(TestCase):
             ])
         ))
         with self.assertRaises(Exception):
-            self.cayley_db.predict_from_model("no good")
+            self.cayley_db.fill_in_with_model("no good")
 
     def test_check_input(self):
         self.cayley_db.cardinality = 2
