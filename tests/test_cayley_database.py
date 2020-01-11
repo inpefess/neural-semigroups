@@ -34,13 +34,17 @@ class TestCayleyDatabase(TestCase):
     def test_load_database(self, numpy_load_mock):
         database = np.array([[[0, 1], [2, 3]], [[1, 0], [3, 2]]])
         npz_file = MagicMock()
-        npz_file.__getitem__ = lambda x, y: database
+        npz_file.__getitem__ = (
+            lambda x, y: database if y == "database" else None
+        )
+        npz_file.get = lambda x, y: y if x == "labels" else None
         numpy_load_mock.return_value = npz_file
         with patch.object(npz_file, "close") as mock:
             self.cayley_db.load_database("semigroup.2.npz")
             mock.assert_called_once()
         self.assertEqual(self.cayley_db.cardinality, 2)
         self.assertTrue(np.allclose(self.cayley_db.database, database))
+        self.assertTrue(np.allclose(self.cayley_db.labels, np.zeros(2)))
 
     def test_search_database(self):
         self.cayley_db.cardinality = 2
