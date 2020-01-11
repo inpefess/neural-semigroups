@@ -52,6 +52,7 @@ class CayleyDatabase:
         self.cardinality = check_filename(basename(filename))
         npz_file = np.load(filename)
         self.database = npz_file["database"]
+        self.labels = npz_file.get("labels", np.zeros(len(self.database)))
         npz_file.close()
 
     def load_smallsemi_database(self, filename: str) -> None:
