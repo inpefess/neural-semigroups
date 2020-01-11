@@ -30,7 +30,8 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            python -m unittest
+            coverage run --source neural_semigroups -m unittest discover -s tests/
+            coverage html --fail-under 100
       - run:
           name: run linters
           command: |
@@ -42,5 +43,4 @@ jobs:
             . venv/bin/activate
             mypy --config-file mypy.ini neural_semigroups scripts tests
       - store_artifacts:
-          path: test-reports
-          destination: test-reports
+          path: htmlcov
