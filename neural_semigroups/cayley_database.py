@@ -26,7 +26,7 @@ from neural_semigroups.utils import (check_filename, check_smallsemi_filename,
                                      import_smallsemi_format)
 
 
-class TableGuess:
+class CayleyDatabase:
     """
     A user-friendly class for guessing unfilled cells in Cayley tables
     """
@@ -173,20 +173,20 @@ class TableGuess:
 
 
 def train_test_split(
-        table_guess: TableGuess,
+        cayley_db: CayleyDatabase,
         train_size: int,
         validation_size: int
-) -> Tuple[TableGuess, TableGuess, TableGuess]:
+) -> Tuple[CayleyDatabase, CayleyDatabase, CayleyDatabase]:
     """
     split a database of Cayley table in two: train and test
 
-    :param table_guess: a database of Cayley tables
+    :param cayley_db: a database of Cayley tables
     :param train_size: number of tables in a train set
     :param train_size: number of tables in a validation set
     :returns: a triple of distinct Cayley tables databases:
     (train, validation, test)
     """
-    all_indices = np.arange(len(table_guess.database))
+    all_indices = np.arange(len(cayley_db.database))
     train_indices = np.in1d(
         all_indices,
         np.random.choice(
@@ -203,14 +203,14 @@ def train_test_split(
             replace=False
         )
     )
-    train = TableGuess()
-    train.database = table_guess.database[train_indices]
-    validation = TableGuess()
-    validation.database = table_guess.database[
+    train = CayleyDatabase()
+    train.database = cayley_db.database[train_indices]
+    validation = CayleyDatabase()
+    validation.database = cayley_db.database[
         all_indices[~train_indices][validation_indices]
     ]
-    test = TableGuess()
-    test.database = table_guess.database[
+    test = CayleyDatabase()
+    test.database = cayley_db.database[
         all_indices[~train_indices][~validation_indices]
     ]
     return train, validation, test

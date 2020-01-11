@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from neural_semigroups.table_guess import TableGuess
+from neural_semigroups.cayley_database import CayleyDatabase
 
 
 def get_test_arguments() -> Namespace:
@@ -39,34 +39,34 @@ def get_test_arguments() -> Namespace:
     return parser.parse_args()
 
 
-def load_pre_trained_model(cardinality: int) -> TableGuess:
+def load_pre_trained_model(cardinality: int) -> CayleyDatabase:
     """
     load pre-trained model and database of Cayley tables
 
     :param cardinality: semigroup cardinality
     :returns: a semigroups searching object
     """
-    table_guess = TableGuess()
-    table_guess.load_smallsemi_database(f"smallsemi/data{cardinality}.gl")
-    table_guess.load_model(f"semigroups.{cardinality}.model")
-    table_guess.model.apply_corruption = False
-    return table_guess
+    cayley_db = CayleyDatabase()
+    cayley_db.load_smallsemi_database(f"smallsemi/data{cardinality}.gl")
+    cayley_db.load_model(f"semigroups.{cardinality}.model")
+    cayley_db.model.apply_corruption = False
+    return cayley_db
 
 
 def main():
     """ build and show a pre-trained model quality report """
     cardinality = get_test_arguments().cardinality
-    table_guess = load_pre_trained_model(cardinality)
+    cayley_db = load_pre_trained_model(cardinality)
     max_level = cardinality ** 2 // 2
     totals = np.zeros((3, max_level), dtype=np.int32)
-    database_size = len(table_guess.database)
+    database_size = len(cayley_db.database)
     test_indices = np.random.choice(
         range(database_size),
         min(database_size, 1000),
         replace=False
     )
     for i in tqdm(test_indices):
-        cayley_table = table_guess.database[i]
+        cayley_table = cayley_db.database[i]
         for level in range(1, max_level + 1):
             rows, cols = zip(*[
                 (point // cardinality, point % cardinality)
@@ -74,7 +74,7 @@ def main():
             ])
             puzzle = cayley_table.copy()
             puzzle[rows, cols] = -1
-            solution, _ = table_guess.predict_from_model(puzzle)
+            solution, _ = cayley_db.predict_from_model(puzzle)
             totals[0, level - 1] += 1
             guessed_cells = sum(
                 solution[rows, cols] == cayley_table[rows, cols]
