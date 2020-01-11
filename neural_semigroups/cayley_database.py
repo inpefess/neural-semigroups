@@ -28,15 +28,16 @@ from neural_semigroups.utils import (check_filename, check_smallsemi_filename,
 
 class CayleyDatabase:
     """
-    A user-friendly class for guessing unfilled cells in Cayley tables
+    a database of Cayley tables with different utility functions
     """
-    def __init__(self):
-        # the number of elements in an underlying magma
-        self.cardinality: int = None
-        # a database of known Cayley tables
-        self.database: np.ndarray = None
-        # a pre-trained PyTorch Model
-        self.model: Module = None
+    # the number of elements in an underlying magma
+    cardinality: int
+    # a database of known Cayley tables of shape [:, cardinality, cardinality]
+    database: np.ndarray
+    # a pre-trained PyTorch Model
+    model: Module
+    # 1-D labels array of the same length as the database
+    labels: np.ndarray
 
     def load_database(self, filename: str) -> None:
         """
@@ -127,13 +128,13 @@ class CayleyDatabase:
                     completions.append(table)
         return completions
 
-    def predict_from_model(
+    def fill_in_with_model(
             self,
             cayley_table: List[List[int]]
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         get a list of possible completions of a partially filled Cayley
-        table (unknow entries are filled by -1)
+        table (unknow entries are filled by -1) using a machine learning model
 
         :param cayley_table: a partially filled Cayley table
         (unknow entries are filled by -1)
@@ -144,23 +145,21 @@ class CayleyDatabase:
                 f"invalid Cayley table of {self.cardinality} elements"
             )
         table = np.array(cayley_table)
-        if self.model is not None:
-            inv_cardinality = 1 / self.cardinality
-            cube = np.zeros(
-                [self.cardinality, self.cardinality, self.cardinality],
-                dtype=np.float32
-            )
-            rows, cols = np.where(table != -1)
-            cube[rows, cols, table[rows, cols]] = 1.0
-            rows, cols = np.where(table == -1)
-            cube[rows, cols, :] = inv_cardinality
-            prediction = self.model(torch.from_numpy(
-                cube.reshape([
-                    -1, self.cardinality, self.cardinality, self.cardinality
-                ])
-            )).detach().numpy()[0]
-            return (prediction.argmax(axis=-1), prediction)
-        return (None, None)
+        inv_cardinality = 1 / self.cardinality
+        cube = np.zeros(
+            [self.cardinality, self.cardinality, self.cardinality],
+            dtype=np.float32
+        )
+        rows, cols = np.where(table != -1)
+        cube[rows, cols, table[rows, cols]] = 1.0
+        rows, cols = np.where(table == -1)
+        cube[rows, cols, :] = inv_cardinality
+        prediction = self.model(torch.from_numpy(
+            cube.reshape([
+                -1, self.cardinality, self.cardinality, self.cardinality
+            ])
+        )).detach().numpy()[0]
+        return (prediction.argmax(axis=-1), prediction)
 
     def load_model(self, filename: str) -> None:
         """
