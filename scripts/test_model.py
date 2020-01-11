@@ -20,6 +20,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from neural_semigroups.cayley_database import CayleyDatabase
+from neural_semigroups.denoising_autoencoder import MagmaDAE
 
 
 def get_test_arguments() -> Namespace:
@@ -49,7 +50,8 @@ def load_pre_trained_model(cardinality: int) -> CayleyDatabase:
     cayley_db = CayleyDatabase()
     cayley_db.load_smallsemi_database(f"smallsemi/data{cardinality}.gl")
     cayley_db.load_model(f"semigroups.{cardinality}.model")
-    cayley_db.model.apply_corruption = False
+    if isinstance(cayley_db.model, MagmaDAE):
+        cayley_db.model.apply_corruption = False
     return cayley_db
 
 

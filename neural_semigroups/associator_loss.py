@@ -13,6 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+from typing import no_type_check
+
 import torch
 from torch import Tensor
 from torch.functional import einsum
@@ -23,6 +25,7 @@ from torch.nn.functional import kl_div
 class AssociatorLoss(Module):
     """ probabilistic associator loss  """
     # pylint: disable=arguments-differ
+    @no_type_check
     def forward(self, cayley_cube: Tensor) -> Tensor:
         r"""
         finds a probabilistic associator of a given probabilistic Cayley cube

@@ -14,8 +14,9 @@
    limitations under the License.
 """
 from collections import OrderedDict
-from typing import List
+from typing import List, no_type_check
 
+import numpy as np
 import torch
 from torch import Tensor
 from torch.nn import BatchNorm1d, Linear, Module, ReLU, Sequential, Softmax2d
@@ -63,8 +64,12 @@ class MagmaDAE(Module):
             OrderedDict(reversed(decoder_layers.items()))
         )
         self.encoder_layers = Sequential(encoder_layers)
-        self._nearly_zero = torch.Tensor([1e-6])
-        self._nearly_one = torch.Tensor([1 - (self.cardinality - 1) * 1e-6])
+        self._nearly_zero = torch.from_numpy(np.array(
+            [1e-6], dtype=np.float32))
+        self._nearly_one = torch.from_numpy(np.array(
+            [1 - (self.cardinality - 1) * 1e-6],
+            dtype=np.float32
+        ))
 
     def encode(self, corrupted_input: Tensor) -> Tensor:
         """
@@ -114,6 +119,7 @@ class MagmaDAE(Module):
         ).transpose(1, 3).transpose(2, 3)).transpose(2, 3).transpose(1, 3)
 
     # pylint: disable=arguments-differ
+    @no_type_check
     def forward(self, cayley_cube: Tensor) -> Tensor:
         """
         forward pass inhereted from Module

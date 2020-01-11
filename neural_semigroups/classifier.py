@@ -14,7 +14,7 @@
    limitations under the License.
 """
 from collections import OrderedDict
-from typing import List
+from typing import List, no_type_check
 
 from torch import Tensor
 from torch.nn import BatchNorm1d, Linear, Module, ReLU, Sequential, Sigmoid
@@ -53,6 +53,7 @@ class MagmaClassifier(Module):
         self.net_layers = Sequential(net_layers)
 
     # pylint: disable=arguments-differ
+    @no_type_check
     def forward(self, cayley_cube: Tensor) -> Tensor:
         """
         forward pass inhereted from Module

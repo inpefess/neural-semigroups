@@ -36,6 +36,11 @@ jobs:
           command: |
             . venv/bin/activate
             pylint neural_semigroups
+      - run:
+          name: run type checks
+          command: |
+            . venv/bin/activate
+            mypy --config-file mypy.ini neural_semigroups scripts tests
       - store_artifacts:
           path: test-reports
           destination: test-reports
