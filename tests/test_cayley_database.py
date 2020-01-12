@@ -18,7 +18,7 @@ from unittest.mock import MagicMock, mock_open, patch
 
 import numpy as np
 
-from neural_semigroups.cayley_database import CayleyDatabase, train_test_split
+from neural_semigroups.cayley_database import CayleyDatabase
 
 
 class TestCayleyDatabase(TestCase):
@@ -26,9 +26,10 @@ class TestCayleyDatabase(TestCase):
         np.random.seed(43)
         self.cayley_db = CayleyDatabase()
         self.cayley_db.database = np.array([
-            np.array([[0, 1], [1, 0]]), np.array([[1, 0], [1, 1]]),
-            np.array([[1, 1], [1, 0]]), np.array([[1, 1], [1, 1]])
+            [[0, 1], [1, 0]], [[1, 0], [1, 1]],
+            [[1, 1], [1, 0]], [[1, 1], [1, 1]]
         ])
+        self.cayley_db.labels = np.arange(4)
 
     @patch("numpy.load")
     def test_load_database(self, numpy_load_mock):
@@ -103,16 +104,19 @@ class TestCayleyDatabase(TestCase):
         ))
 
     def test_train_test_split(self):
-        train, validation, test = train_test_split(self.cayley_db, 2, 1)
+        train, validation, test = self.cayley_db.train_test_split(2, 1)
         self.assertTrue(np.allclose(
-            train.database, self.cayley_db.database[[1, 2]]
+            train.database, self.cayley_db.database[[2, 1]]
         ))
+        self.assertTrue(np.allclose(train.labels, [2, 1]))
         self.assertTrue(np.allclose(
-            validation.database, self.cayley_db.database[0]
+            validation.database, self.cayley_db.database[3]
         ))
+        self.assertTrue(np.allclose(validation.labels, [3]))
         self.assertTrue(np.allclose(
-            test.database, self.cayley_db.database[3]
+            test.database, self.cayley_db.database[0]
         ))
+        self.assertTrue(np.allclose(test.labels, [0]))
 
     @patch("builtins.open", mock_open())
     @patch("neural_semigroups.cayley_database.import_smallsemi_format")

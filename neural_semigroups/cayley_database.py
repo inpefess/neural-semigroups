@@ -75,6 +75,7 @@ class CayleyDatabase:
         self.cardinality = check_smallsemi_filename(basename(filename))
         with open(filename, "r") as database:
             self.database = import_smallsemi_format(database.readlines())
+        self.labels = np.ones(len(self.database))
 
     def augment_by_equivalent_tables(self) -> None:
         """
@@ -171,46 +172,34 @@ class CayleyDatabase:
         """
         self.model = torch.load(filename)
 
+    def train_test_split(
+            self,
+            train_size: int,
+            validation_size: int
+    ) -> Tuple["CayleyDatabase", "CayleyDatabase", "CayleyDatabase"]:
+        """
+        split a database of Cayley table in three: train, validation, and test
 
-def train_test_split(
-        cayley_db: CayleyDatabase,
-        train_size: int,
-        validation_size: int
-) -> Tuple[CayleyDatabase, CayleyDatabase, CayleyDatabase]:
-    """
-    split a database of Cayley table in two: train and test
-
-    :param cayley_db: a database of Cayley tables
-    :param train_size: number of tables in a train set
-    :param train_size: number of tables in a validation set
-    :returns: a triple of distinct Cayley tables databases:
-    (train, validation, test)
-    """
-    all_indices = np.arange(len(cayley_db.database))
-    train_indices = np.in1d(
-        all_indices,
-        np.random.choice(
-            all_indices,
-            size=train_size,
-            replace=False
-        )
-    )
-    validation_indices = np.in1d(
-        all_indices[~train_indices],
-        np.random.choice(
-            all_indices[~train_indices],
-            size=validation_size,
-            replace=False
-        )
-    )
-    train = CayleyDatabase()
-    train.database = cayley_db.database[train_indices]
-    validation = CayleyDatabase()
-    validation.database = cayley_db.database[
-        all_indices[~train_indices][validation_indices]
-    ]
-    test = CayleyDatabase()
-    test.database = cayley_db.database[
-        all_indices[~train_indices][~validation_indices]
-    ]
-    return train, validation, test
+        :param cayley_db: a database of Cayley tables
+        :param train_size: number of tables in a train set
+        :param train_size: number of tables in a validation set
+        :returns: a triple of distinct Cayley tables databases:
+        (train, validation, test)
+        """
+        all_indices = np.arange(len(self.database))
+        np.random.shuffle(all_indices)
+        train_indices = all_indices[:train_size]
+        validation_indices = all_indices[
+            train_size:train_size + validation_size
+        ]
+        test_indices = all_indices[train_size + validation_size:]
+        train = CayleyDatabase()
+        train.database = self.database[train_indices]
+        train.labels = self.labels[train_indices]
+        validation = CayleyDatabase()
+        validation.database = self.database[validation_indices]
+        validation.labels = self.labels[validation_indices]
+        test = CayleyDatabase()
+        test.database = self.database[test_indices]
+        test.labels = self.labels[test_indices]
+        return train, validation, test
