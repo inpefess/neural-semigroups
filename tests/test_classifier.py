@@ -39,7 +39,7 @@ class TestMagmaClassifier(TestCase):
                 Magma(FOUR_GROUP).probabilistic_cube
             ])
         ).view(-1, 4, 4, 4)
-        true_value = np.array([[0.5452165], [0.5452165]])
+        true_value = 0.5 * np.ones((2, 2))
         self.assertTrue(np.allclose(
             self.classifier(cayley_cube).detach().numpy(),
             true_value

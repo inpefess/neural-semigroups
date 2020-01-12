@@ -39,7 +39,7 @@ class Magma:
         """
         check associativity of a Cayley table
 
-        :return: whether the input table is accosiative or not
+        :return: whether the input table is assosiative or not
         """
         a_range = range(self.cardinality)
         for one in a_range:

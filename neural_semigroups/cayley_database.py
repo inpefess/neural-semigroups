@@ -52,7 +52,9 @@ class CayleyDatabase:
         self.cardinality = check_filename(basename(filename))
         npz_file = np.load(filename)
         self.database = npz_file["database"]
-        self.labels = npz_file.get("labels", np.zeros(len(self.database)))
+        self.labels = npz_file.get(
+            "labels", np.zeros(len(self.database), dtype=np.int64)
+        )
         npz_file.close()
 
     def load_smallsemi_database(self, filename: str) -> None:
@@ -75,7 +77,7 @@ class CayleyDatabase:
         self.cardinality = check_smallsemi_filename(basename(filename))
         with open(filename, "r") as database:
             self.database = import_smallsemi_format(database.readlines())
-        self.labels = np.ones(len(self.database))
+        self.labels = np.ones(len(self.database), dtype=np.int64)
 
     def augment_by_equivalent_tables(self) -> None:
         """
@@ -118,7 +120,7 @@ class CayleyDatabase:
         :returns: a list of Cayley tables
         """
         if not self._check_input(cayley_table):
-            raise Exception(
+            raise ValueError(
                 f"invalid Cayley table of {self.cardinality} elements"
             )
         completions = list()
@@ -143,7 +145,7 @@ class CayleyDatabase:
         :returns: a tuple: (most probable completion, probabilistic cube)
         """
         if not self._check_input(cayley_table):
-            raise Exception(
+            raise ValueError(
                 f"invalid Cayley table of {self.cardinality} elements"
             )
         table = np.array(cayley_table)

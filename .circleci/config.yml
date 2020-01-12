@@ -31,7 +31,7 @@ jobs:
           command: |
             . venv/bin/activate
             coverage run --source neural_semigroups -m unittest discover -s tests/
-            coverage html --fail-under 100
+            coverage html --fail-under 80
             mkdir test-results
             python -m pytest --junitxml test-results/neural-semigroups.xml
       - run:
