@@ -31,7 +31,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-from neural_semigroups.cayley_database import CayleyDatabase, train_test_split
+from neural_semigroups.cayley_database import CayleyDatabase
 from neural_semigroups.denoising_autoencoder import MagmaDAE
 from neural_semigroups.magma import Magma
 
@@ -54,8 +54,8 @@ def load_database_as_cubes(
     logging.info("reading data from disk")
     cayley_db.load_smallsemi_database(database_filename)
     logging.info("splitting by train and test")
-    train, validation, test = train_test_split(
-        cayley_db, train_size, validation_size
+    train, validation, test = cayley_db.train_test_split(
+        train_size, validation_size
     )
     logging.info("augmenting train set")
     train.augment_by_equivalent_tables()
