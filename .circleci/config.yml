@@ -32,6 +32,8 @@ jobs:
             . venv/bin/activate
             coverage run --source neural_semigroups -m unittest discover -s tests/
             coverage html --fail-under 100
+            mkdir test-results
+            python -m pytest --junitxml test-results/neural-semigroups.xml
       - run:
           name: run linters
           command: |
@@ -44,3 +46,5 @@ jobs:
             mypy --config-file mypy.ini neural_semigroups scripts tests
       - store_artifacts:
           path: htmlcov
+      - store_test_results:
+          path: test-results
