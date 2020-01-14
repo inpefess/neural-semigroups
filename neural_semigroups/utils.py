@@ -122,7 +122,7 @@ def check_filename(filename: str) -> int:
         else:
             cardinality = int(filename_parts[1])
     if wrong_name:
-        raise Exception(
+        raise ValueError(
             f"""filename should be of format
 [semigroup|monoid|group].[int].npz, not {filename}"""
         )
@@ -152,7 +152,7 @@ def check_smallsemi_filename(filename: str) -> int:
         else:
             cardinality = int(filename_parts[0][-1])
     if wrong_name:
-        raise Exception(
+        raise ValueError(
             f"filename should be of format data[1-7].gl, not {filename}"
         )
     return cardinality
@@ -168,7 +168,7 @@ def get_magma_by_index(cardinality: int, index: int) -> Magma:
     """
     square = cardinality ** 2
     if index < 0 or index >= cardinality ** square:
-        raise Exception("""
+        raise ValueError("""
         An index must be non negative and less than $n^(n^2)$""")
     cayley_table = list()
     residual = index

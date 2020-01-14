@@ -13,46 +13,38 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-
-import torch
 from ignite.engine import create_supervised_evaluator
+from ignite.metrics import Accuracy
 from ignite.metrics.loss import Loss
-from torch import Tensor
-from torch.nn.functional import kl_div
+from torch.nn import CrossEntropyLoss
 
-from neural_semigroups.denoising_autoencoder import MagmaDAE
+from neural_semigroups.classifier import MagmaClassifier
 from neural_semigroups.training_helpers import (get_arguments, get_loaders,
                                                 learning_pipeline)
 
 
-def train_denoising_autoencoder():
-    """ train and save a denoising autoencoder """
+def train_classifier():
+    """ train and save a classifier """
     args = get_arguments()
     cardinality = args.cardinality
-    dae = MagmaDAE(
+    classifier = MagmaClassifier(
         cardinality=cardinality,
-        hidden_dims=[
-            cardinality ** 2,
-            cardinality
-        ],
-        corruption_rate=0.5
+        hidden_dims=2 * [cardinality ** 3],
     )
-
-    def loss(prediction: Tensor, target: Tensor) -> Tensor:
-        return kl_div(torch.log(prediction), target, reduction="batchmean")
+    loss = CrossEntropyLoss()
     evaluator = create_supervised_evaluator(
-        dae,
-        metrics={"loss": Loss(loss)}
+        classifier,
+        metrics={"loss": Loss(loss), "accuracy": Accuracy()}
     )
     data_loaders = get_loaders(
-        database_filename=f"smallsemi/data{cardinality}.gl",
+        database_filename=f"databases/semigroup.{cardinality}.npz",
         batch_size=args.batch_size,
         train_size=args.train_size,
         validation_size=args.validation_size,
-        use_labels=False
+        use_labels=True
     )
-    learning_pipeline(args, dae, evaluator, loss, data_loaders)
+    learning_pipeline(args, classifier, evaluator, loss, data_loaders)
 
 
 if __name__ == "__main__":
-    train_denoising_autoencoder()
+    train_classifier()

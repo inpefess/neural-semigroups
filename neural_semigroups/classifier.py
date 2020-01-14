@@ -37,20 +37,21 @@ class MagmaClassifier(Module):
         super().__init__()
         self.cardinality = cardinality
         self.input_dim = cardinality ** 3
-        net_layers: "OrderedDict[str, Module]" = OrderedDict()
+        hidden_layers: "OrderedDict[str, Module]" = OrderedDict()
         dims = [self.input_dim] + hidden_dims
         for i in range(len(dims) - 1):
-            net_layers.update(
+            hidden_layers.update(
                 {f"linear{i}": Linear(dims[i], dims[i + 1], bias=True)}
             )
-            net_layers.update({f"relu{i}": ReLU()})
-            net_layers.update({f"bn{i}": BatchNorm1d(dims[i + 1])})
-        last_layer = len(dims)
-        net_layers.update(
-            {f"linear{last_layer}": Linear(dims[-1], 1, bias=True)}
+            hidden_layers.update({f"relu{i}": ReLU()})
+            hidden_layers.update({f"bn{i}": BatchNorm1d(dims[i + 1])})
+        self.hidden_layers = Sequential(hidden_layers)
+        top_layers: "OrderedDict[str, Module]" = OrderedDict()
+        top_layers.update(
+            {f"linear{len(dims)}": Linear(dims[-1], 2, bias=False)}
         )
-        net_layers.update({f"sigmoid": Sigmoid()})
-        self.net_layers = Sequential(net_layers)
+        top_layers.update({f"sigmoid": Sigmoid()})
+        self.top_layers = Sequential(top_layers)
 
     # pylint: disable=arguments-differ
     @no_type_check
@@ -61,4 +62,7 @@ class MagmaClassifier(Module):
         :param cayley_cube: probabilistic representation of a magma
         :returns: score of associativity (from 0 to 1)
         """
-        return self.net_layers(cayley_cube.view(-1, self.input_dim))
+        last_hidden_layer = self.hidden_layers(
+            cayley_cube.view(-1, self.input_dim)
+        )
+        return self.top_layers(last_hidden_layer)
