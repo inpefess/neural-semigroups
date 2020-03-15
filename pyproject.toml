@@ -1,0 +1,49 @@
+[tool.poetry]
+name = "neural-semigroups"
+version = "0.1.0"
+description = "Neural networks powered research of semigroups"
+authors = ["Boris Shminke <boris@shminke.ml>"]
+license = "Apache-2.0"
+repository = "https://github.com/inpefess/neural-semigroups"
+classifiers=[
+	"Programming Language :: Python :: 3.7",
+	"License :: OSI Approved :: Apache Software License",
+	"Operating System :: OS Independent",
+	"Intended Audience :: Science/Research",
+	"Development Status :: 2 - Pre-Alpha",
+	"Environment :: Console",
+	"Natural Language :: English",
+	"Topic :: Scientific/Engineering :: Artificial Intelligence",
+	"Typing :: Typed"
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+torch = "1.4.0"
+numpy = "1.18.1"
+tqdm = "4.43.0"
+pandas = "1.0.2"
+pytorch-ignite = "0.3.0"
+tensorboard = "^2.1.1"
+
+[tool.poetry.dev-dependencies]
+pycodestyle = "2.5.0"
+pylint = "2.4.4"
+mypy = "0.770"
+numpy-stubs = {git="https://github.com/numpy/numpy-stubs.git"}
+coverage = "5.0.3"
+jupyter = "1.0.0"
+rope = "0.16.0"
+flake8 = "3.7.9"
+autopep8 = "1.5"
+black = "19.10b0"
+virtualenv = "20.0.10"
+yapf = "0.29.0"
+matplotlib = "3.2.0"
+sklearn = "0.0"
+seaborn = "0.10.0"
+pytest = "^5.4.1"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
