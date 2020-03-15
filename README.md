@@ -35,7 +35,7 @@ semigroup but there may be many distinct solutions.
 
 ## Package Installation
 
-First, get Python 3.7
+First, get Python 3.8
 
 Then run several commands in a terminal:
 
@@ -44,8 +44,8 @@ git clone git@bitbucket.org:inpefess/neural-semigroups.git
 cd neural-semigroups
 python3 -m venv .
 source ./bin/activate
-pip install -r requirements.txt
-pip install -e .
+pip install -U pip poetry
+poetry install
 ```
 
 This could take some time (mostly downloading `torch`).
