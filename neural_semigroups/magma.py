@@ -44,16 +44,15 @@ class Magma:
         a_range = range(self.cardinality)
         for one in a_range:
             for two in a_range:
-                for three in a_range:
-                    if (
-                            self.cayley_table[
-                                self.cayley_table[one, two], three
-                            ] !=
-                            self.cayley_table[
-                                one, self.cayley_table[two, three]
-                            ]
-                    ):
-                        return False
+                if (
+                        self.cayley_table[
+                            self.cayley_table[one, two], a_range
+                        ] !=
+                        self.cayley_table[
+                            one, self.cayley_table[two, a_range]
+                        ]
+                ).any():
+                    return False
         return True
 
     @property
