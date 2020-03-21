@@ -16,3 +16,4 @@ runs
 .mypy_cache
 htmlcov/
 doc/build/
+test-results/

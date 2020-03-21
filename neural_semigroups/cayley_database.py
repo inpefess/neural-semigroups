@@ -83,7 +83,8 @@ class CayleyDatabase:
 
     def augment_by_equivalent_tables(self) -> None:
         """
-        for every Cayley table in a previously loaded database adds all of its equivalent tables to the database
+        for every Cayley table in a previously loaded database adds all of its
+        equivalent tables to the database
         """
         database: List[np.ndarray] = []
         for table in tqdm(self.database):

@@ -56,7 +56,7 @@ class MagmaDAE(Module):
             decoder_layers.update({f"bn1{i}": BatchNorm1d(dims[i])})
             decoder_layers.update({f"relu1{i}": ReLU()})
             decoder_layers.update(
-                {f"linear1{i}": Linear(dims[i+1], dims[i], bias=True)}
+                {f"linear1{i}": Linear(dims[i + 1], dims[i], bias=True)}
             )
         self.decoder_layers = Sequential(
             OrderedDict(reversed(decoder_layers.items()))
