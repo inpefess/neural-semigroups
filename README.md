@@ -42,8 +42,8 @@ Then run several commands in a terminal:
 ```bash
 git clone git@bitbucket.org:inpefess/neural-semigroups.git
 cd neural-semigroups
-python3 -m venv .
-source ./bin/activate
+python -m venv venv
+source ./venv/bin/activate
 pip install -U pip poetry
 poetry install
 ```
@@ -51,7 +51,7 @@ poetry install
 This could take some time (mostly downloading `torch`).
 
 After that you can go to the project's directory and `source
-./bin/activate` to start a virtual environment there.
+./venv/bin/activate` to start a virtual environment there.
 
 ## Getting Data
 

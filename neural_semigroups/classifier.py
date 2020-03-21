@@ -31,8 +31,7 @@ class MagmaClassifier(Module):
     ):
         """
         :param cardinality: the number of elements in a magma
-        :param hidden_dims: a list of sizes of hidden layers of a feed-forward
-        network
+        :param hidden_dims: a list of sizes of hidden layers of a feed-forward network
         """
         super().__init__()
         self.cardinality = cardinality
@@ -60,7 +59,7 @@ class MagmaClassifier(Module):
         forward pass inhereted from Module
 
         :param cayley_cube: probabilistic representation of a magma
-        :returns: score of associativity (from 0 to 1)
+        :returns: score of associativity (from ``0`` to ``1``)
         """
         last_hidden_layer = self.hidden_layers(
             cayley_cube.view(-1, self.input_dim)

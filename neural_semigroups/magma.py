@@ -18,8 +18,9 @@ import numpy as np
 
 class Magma:
     """
-    an implementation of magma (a set with a binary operation)
-    https://en.wikipedia.org/wiki/Magma_%28algebra%29
+    an implementation of `a magma`_ (a set with a binary operation)
+
+    .. _a magma: https://en.wikipedia.org/wiki/Magma_%28algebra%29
     """
     cayley_table: np.ndarray
 
@@ -31,7 +32,9 @@ class Magma:
 
     @property
     def cardinality(self) -> int:
-        """ number of elements in a magma """
+        """
+        number of elements in a magma
+        """
         return self.cayley_table.shape[0]
 
     @property
@@ -39,7 +42,8 @@ class Magma:
         """
         check associativity of a Cayley table
 
-        :return: whether the input table is assosiative or not
+        :returns: whether the input table is assosiative or not
+
         """
         a_range = range(self.cardinality)
         for one in a_range:
@@ -60,7 +64,8 @@ class Magma:
         """
         check commutativity of a Cayley table
 
-        :return: whether the input table is commutative or not
+        :returns: whether the input table is commutative or not
+
         """
         return np.allclose(
             self.cayley_table, self.cayley_table.T
@@ -71,8 +76,7 @@ class Magma:
         """
         find an identity element in a Cayley table
 
-        :return: the index of the identity element or -1 if there is no
-        identity
+        :returns: the index of the identity element or -1 if there is no identity
         """
         identity_row = np.arange(self.cardinality)
         identity = -1
@@ -85,7 +89,7 @@ class Magma:
     @property
     def has_inverses(self) -> bool:
         """
-        check whether there are solutions of equations $ax=b$ and $xa=b$
+        check whether there are solutions of equations :math:`ax=b` and :math:`xa=b``
         """
         identity_row = np.arange(self.cardinality)
         has_inverses = True
@@ -104,8 +108,8 @@ class Magma:
 
     @property
     def probabilistic_cube(self) -> np.ndarray:
-        r"""
-        a 3d array $a$ where $a_{ijk}=P\left\{e_ie_j=e_k\right\}$
+        """
+        a 3d array :math:`a` where :math:`a_{ijk}=P\\left\\{e_ie_j=e_k\\right\\}`
 
         :returns: a probabilistic cube representation of a Cayley table
         """

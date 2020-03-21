@@ -14,11 +14,14 @@
    limitations under the License.
 """
 import numpy as np
+
 from neural_semigroups.magma import Magma
 
 
 class CyclicGroup(Magma):
-    """ finite cyclic group """
+    """
+    finite cyclic group
+    """
     def __init__(self, cardinality: int):
         """
         :param cardinality: number of elements in a cyclic group

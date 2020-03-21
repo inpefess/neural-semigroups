@@ -31,21 +31,31 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            coverage run --source neural_semigroups -m unittest discover -s tests/
-            coverage html --fail-under 80
-            mkdir test-results
-            python -m pytest --junitxml test-results/neural-semigroups.xml
+            pytest --cov neural_semigroups --cov-report html --cov-fail-under=80\
+                   --junit-xml test-results/neural-semigroups.xml\
+                   tests/
+            mkdir -p build
+            mv htmlcov build/htmlcov
       - run:
           name: run linters
           command: |
             . venv/bin/activate
-            pylint neural_semigroups
+            pycodestyle --max-doc-length 160 --ignore E501,W504\
+                        neural_semigroups scripts tests
+            pylint --rcfile=.pylintrc neural_semigroups scripts
       - run:
           name: run type checks
           command: |
             . venv/bin/activate
             mypy --config-file mypy.ini neural_semigroups scripts tests
+      - run:
+          name: building documentation
+          command: |
+            . venv/bin/activate
+            cd doc
+            make clean html
+            mv build/html ../build/htmldoc
       - store_artifacts:
-          path: htmlcov
+          path: build
       - store_test_results:
           path: test-results

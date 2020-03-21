@@ -15,3 +15,5 @@ runs
 *.gl
 .mypy_cache
 htmlcov/
+doc/build/
+test-results/
