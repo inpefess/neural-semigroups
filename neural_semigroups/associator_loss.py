@@ -23,16 +23,19 @@ from torch.nn.functional import kl_div
 
 
 class AssociatorLoss(Module):
-    """ probabilistic associator loss  """
+    """
+    probabilistic associator loss
+    """
     # pylint: disable=arguments-differ
     @no_type_check
     def forward(self, cayley_cube: Tensor) -> Tensor:
-        r"""
+        """
         finds a probabilistic associator of a given probabilistic Cayley cube
-$P\left\{e_i\left(e_je_k\right)=e_l\right\}=
-\sum\limits_{m=1}^nP\left\{e_i\left(e_je_k\right)=e_l\vert
-e_je_k=e_m\right\}P\left\{e_je_k=e_m\right\}=
-\sum\limits_{m=1}^na_{iml}a_{jkm}$
+
+:math:`P\\left\\{e_i\\left(e_je_k\\right)=e_l\\right\\}=
+\\sum\\limits_{m=1}^nP\\left\\{e_i\\left(e_je_k\\right)=e_l\\vert
+e_je_k=e_m\\right\\}P\\left\\{e_je_k=e_m\\right\\}=
+\\sum\\limits_{m=1}^na_{iml}a_{jkm}`
 
         :param cayley_cube: this is a probabilistic Cayley cube
         :returns: the probabilistic associator

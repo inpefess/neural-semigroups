@@ -37,10 +37,8 @@ class MagmaDAE(Module):
     ):
         """
         :param cardinality: the number of elements in a magma
-        :param hidden_dims: a list of sizes of hidden layers of the encoder and
-        the decoder
-        :param corruption_rate: what percentage of cells from the Cayley
-        table to substitute with uniform random variables
+        :param hidden_dims: a list of sizes of hidden layers of the encoder and the decoder
+        :param corruption_rate: what percentage of cells from the Cayley table to substitute with uniform random variables
         """
         super().__init__()
         self.cardinality = cardinality
@@ -85,8 +83,7 @@ class MagmaDAE(Module):
         changes several cells in a Cayley table with uniformly distributed
         random variables
 
-        :param cayley_cube: representation of a Cayley table
-        probability distribution
+        :param cayley_cube: representation of a Cayley table probability distribution
         :returns: distorted Cayley cube
         """
         dropout_norm = (
@@ -112,7 +109,7 @@ class MagmaDAE(Module):
         input
 
         :param encoded_input: an embedding vector
-        :returns: a vector of values from 0 to 1 (kind of probabilities)
+        :returns: a vector of values from ``0`` to ``1`` (kind of probabilities)
         """
         return Softmax2d()(self.decoder_layers(encoded_input).view(
             -1, self.cardinality, self.cardinality, self.cardinality
