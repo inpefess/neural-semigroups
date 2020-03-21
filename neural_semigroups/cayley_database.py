@@ -43,8 +43,9 @@ class CayleyDatabase:
         """
         loads a known Cayley tables database from a file
         Database file description:
+
         * a filename is of a form [description].[n].npz
-        * a file is of `npz` format readable by numpy
+        * a file is of ``npz`` format readable by numpy
 
         :param filename: where to load a database from
         :returns:
@@ -59,17 +60,18 @@ class CayleyDatabase:
 
     def load_smallsemi_database(self, filename: str) -> None:
         """
-        loads a known Cayley tables database from a file in `smallsemi` format
+        loads a known Cayley tables database from a file in ``smallsemi`` format
         Format description:
-        * filename is of a form data[n].gl, 1<=n<=7
-        * lines are separated by a pair of symbols '\\r\\n'
-        * there are exactly $n^2$ lines in a file
+
+        * filename is of a form ``data[n].gl``, :math:`1<=n<=7`
+        * lines are separated by a pair of symbols ``\\r\\n``
+        * there are exactly :math:`n^2` lines in a file
         * the first line is a header starting with '#' symbol
-        * each line is a string of $N$ digits from 0 to $n-1$
-        * $N$ is the number of semigroups in the database
+        * each line is a string of :math:`N` digits from :math:`0` to :math:`n-1`
+        * :math`N` is the number of semigroups in the database
         * each column represents a serialised Cayley table
         * the database contains only cells starting from the second
-        * the first cell of each Cayley table is assumed to be filled with 0
+        * the first cell of each Cayley table is assumed to be filled with ``0``
 
         :param filename: where to load a database from
         :returns:
@@ -81,8 +83,7 @@ class CayleyDatabase:
 
     def augment_by_equivalent_tables(self) -> None:
         """
-        for every Cayley table in a previously loaded database adds all of its
-        equivalent tables to the database
+        for every Cayley table in a previously loaded database adds all of its equivalent tables to the database
         """
         database: List[np.ndarray] = []
         for table in tqdm(self.database):
@@ -93,8 +94,7 @@ class CayleyDatabase:
         """
         checks the input to be a correct Cayley table
 
-        :param cayley_table: a partially filled Cayley table
-        (unknow entries are filled by -1)
+        :param cayley_table: a partially filled Cayley table (unknow entries are filled by ``-1``)
         :returns: whether the input is correct
         """
         correct = True
@@ -112,11 +112,9 @@ class CayleyDatabase:
             cayley_table: List[List[int]]
     ) -> List[np.ndarray]:
         """
-        get a list of possible completions of a partially filled Cayley
-        table (unknow entries are filled by -1)
+        get a list of possible completions of a partially filled Cayley table (unknow entries are filled by ``-1``)
 
-        :param cayley_table: a partially filled Cayley table
-        (unknow entries are filled by -1)
+        :param cayley_table: a partially filled Cayley table (unknow entries are filled by ``-1``)
         :returns: a list of Cayley tables
         """
         if not self._check_input(cayley_table):
@@ -138,10 +136,9 @@ class CayleyDatabase:
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         get a list of possible completions of a partially filled Cayley
-        table (unknow entries are filled by -1) using a machine learning model
+        table (unknow entries are filled by ``-1``) using a machine learning model
 
-        :param cayley_table: a partially filled Cayley table
-        (unknow entries are filled by -1)
+        :param cayley_table: a partially filled Cayley table (unknow entries are filled by ``-1``)
         :returns: a tuple: (most probable completion, probabilistic cube)
         """
         if not self._check_input(cayley_table):
@@ -185,8 +182,7 @@ class CayleyDatabase:
         :param cayley_db: a database of Cayley tables
         :param train_size: number of tables in a train set
         :param train_size: number of tables in a validation set
-        :returns: a triple of distinct Cayley tables databases:
-        (train, validation, test)
+        :returns: a triple of distinct Cayley tables databases: ``(train, validation, test)``
         """
         all_indices = np.arange(len(self.database))
         np.random.shuffle(all_indices)
