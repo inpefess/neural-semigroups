@@ -1,5 +1,7 @@
 Package Documentation
 =====================
 
-.. automodule:: neural_semigroups
+Magma
+-----
+.. autoclass:: neural_semigroups.Magma
    :members:

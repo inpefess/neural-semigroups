@@ -5,6 +5,7 @@ Welcome to Neural Semigroups' documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   installation
    getting-started
    package-documentation
 

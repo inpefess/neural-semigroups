@@ -41,7 +41,7 @@ def random_magma(cardinality: int) -> np.ndarray:
     randomly generate a Cayley table for a magma
 
     :param cardinality: number of elements in a magma
-    :return: Cayley table of some magma
+    :returns: Cayley table of some magma
     """
     return np.random.randint(
         low=0,
@@ -57,7 +57,7 @@ def random_semigroup(dim: int, maximal_tries: int) -> Tuple[bool, np.ndarray]:
 
     :param dim: number of elements in a semigroup
     :param maximal_tries: how many times to try at most
-    :return: a pair (whether the Cayley table is associative,
+    :returns: a pair (whether the Cayley table is associative,
     a Cayley table of a magma)
     """
     associative = False
@@ -75,7 +75,7 @@ def next_magma(magma: Magma) -> Magma:
     order
 
     :param magma: a magma
-    :return: a magma
+    :returns: a magma
     """
     next_table = magma.cayley_table.copy()
     one = 1
