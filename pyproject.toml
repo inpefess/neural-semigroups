@@ -1,16 +1,18 @@
 [tool.poetry]
 name = "neural-semigroups"
-version = "0.1.0"
+version = "0.2.1"
 description = "Neural networks powered research of semigroups"
 authors = ["Boris Shminke <boris@shminke.ml>"]
 license = "Apache-2.0"
 repository = "https://github.com/inpefess/neural-semigroups"
+documentation = "https://neural-semigroups.readthedocs.io"
+readme = "README.md"
 classifiers=[
 	"Programming Language :: Python :: 3.8",
 	"License :: OSI Approved :: Apache Software License",
 	"Operating System :: OS Independent",
 	"Intended Audience :: Science/Research",
-	"Development Status :: 2 - Pre-Alpha",
+	"Development Status :: 3 - Alpha",
 	"Environment :: Console",
 	"Natural Language :: English",
 	"Topic :: Scientific/Engineering :: Artificial Intelligence",
