@@ -8,6 +8,8 @@ networks. The supposed workflow:
 * build a model
 * print a model testing report
 
+More documentation can be found [here](https://neural-semigroups.readthedocs.io).
+
 ## Motivation
 
 This work was inspired by [a sudoku
