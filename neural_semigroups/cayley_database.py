@@ -13,15 +13,18 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from os.path import basename
-from typing import List, Tuple
+import gzip
+from os import path
+from typing import List, Optional, Tuple
 
 import numpy as np
 import torch
 from torch.nn import Module
 from tqdm import tqdm
 
+from neural_semigroups.constants import CAYLEY_DATABASE_PATH
 from neural_semigroups.utils import (check_filename, check_smallsemi_filename,
+                                     download_smallsemi_data,
                                      get_equivalent_magmas,
                                      import_smallsemi_format)
 
@@ -30,56 +33,38 @@ class CayleyDatabase:
     """
     a database of Cayley tables with different utility functions
     """
-    # the number of elements in an underlying magma
-    cardinality: int
-    # a database of known Cayley tables of shape [:, cardinality, cardinality]
-    database: np.ndarray
-    # a pre-trained PyTorch Model
-    model: Module
-    # 1-D labels array of the same length as the database
-    labels: np.ndarray
+    _model: Optional[Module] = None
+    _data_path: str = CAYLEY_DATABASE_PATH
 
-    def load_database(self, filename: str) -> None:
+    def __init__(
+            self,
+            cardinality: int,
+            database_filename: Optional[str] = None
+    ):
         """
-        loads a known Cayley tables database from a file
-        Database file description:
-
-        * a filename is of a form [description].[n].npz
-        * a file is of ``npz`` format readable by numpy
-
-        :param filename: where to load a database from
-        :returns:
+        :param cardinality: the number of elements in underlying magmas
+        :param database_filename: a full path to a pre-generated Cayley database.
+                                  If ``None``, a ``smallsemi`` data is used.
         """
-        self.cardinality = check_filename(basename(filename))
-        npz_file = np.load(filename)
-        self.database = npz_file["database"]
-        self.labels = npz_file.get(
-            "labels", np.zeros(len(self.database), dtype=np.int64)
-        )
-        npz_file.close()
-
-    def load_smallsemi_database(self, filename: str) -> None:
-        """
-        loads a known Cayley tables database from a file in ``smallsemi`` format
-        Format description:
-
-        * filename is of a form ``data[n].gl``, :math:`1<=n<=7`
-        * lines are separated by a pair of symbols ``\\r\\n``
-        * there are exactly :math:`n^2` lines in a file
-        * the first line is a header starting with '#' symbol
-        * each line is a string of :math:`N` digits from :math:`0` to :math:`n-1`
-        * :math`N` is the number of semigroups in the database
-        * each column represents a serialised Cayley table
-        * the database contains only cells starting from the second
-        * the first cell of each Cayley table is assumed to be filled with ``0``
-
-        :param filename: where to load a database from
-        :returns:
-        """
-        self.cardinality = check_smallsemi_filename(basename(filename))
-        with open(filename, "r") as database:
-            self.database = import_smallsemi_format(database.readlines())
-        self.labels = np.ones(len(self.database), dtype=np.int64)
+        self.cardinality = cardinality
+        if database_filename is None:
+            filename = path.join(
+                self.data_path, "smallsemi_data", f"data{cardinality}.gl.gz"
+            )
+            check_smallsemi_filename(filename)
+            if not path.exists(filename):
+                download_smallsemi_data(self.data_path)
+            with gzip.open(filename, "rb") as file:
+                self.database = import_smallsemi_format(file.readlines())
+            self.labels = np.ones(len(self.database), dtype=np.int64)
+        else:
+            check_filename(path.basename(database_filename))
+            npz_file = np.load(database_filename)
+            self.database = npz_file["database"]
+            self.labels = npz_file.get(
+                "labels", np.zeros(len(self.database), dtype=np.int64)
+            )
+            npz_file.close()
 
     def augment_by_equivalent_tables(self) -> None:
         """
@@ -170,7 +155,7 @@ class CayleyDatabase:
         :param filename: where to load the model from
         :returns:
         """
-        self.model = torch.load(filename)
+        self._model = torch.load(filename)
 
     def train_test_split(
             self,
@@ -192,13 +177,43 @@ class CayleyDatabase:
             train_size:train_size + validation_size
         ]
         test_indices = all_indices[train_size + validation_size:]
-        train = CayleyDatabase()
+        train = CayleyDatabase(self.cardinality)
         train.database = self.database[train_indices]
         train.labels = self.labels[train_indices]
-        validation = CayleyDatabase()
+        validation = CayleyDatabase(self.cardinality)
         validation.database = self.database[validation_indices]
         validation.labels = self.labels[validation_indices]
-        test = CayleyDatabase()
+        test = CayleyDatabase(self.cardinality)
         test.database = self.database[test_indices]
         test.labels = self.labels[test_indices]
         return train, validation, test
+
+    @property
+    def model(self) -> Module:
+        """
+        :returns: pre-trained Torch model
+        """
+        if self._model is None:
+            raise ValueError("The model should be loaded first!")
+        return self._model
+
+    @model.setter
+    def model(self, model: Module) -> None:
+        """
+        :param model: pre-trained Torch model
+        """
+        self._model = model
+
+    @property
+    def data_path(self) -> str:
+        """
+        :returns: the path where data are permanently stored
+        """
+        return self._data_path
+
+    @data_path.setter
+    def data_path(self, data_path: str) -> None:
+        """
+        :param data_path: a valid path to use as a permanent data storage
+        """
+        self._data_path = data_path

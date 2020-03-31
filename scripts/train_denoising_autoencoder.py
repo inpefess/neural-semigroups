@@ -45,7 +45,7 @@ def train_denoising_autoencoder():
         metrics={"loss": Loss(loss)}
     )
     data_loaders = get_loaders(
-        database_filename=f"smallsemi/data{cardinality}.gl",
+        cardinality=cardinality,
         batch_size=args.batch_size,
         train_size=args.train_size,
         validation_size=args.validation_size,

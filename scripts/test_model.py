@@ -47,8 +47,7 @@ def load_pre_trained_model(cardinality: int) -> CayleyDatabase:
     :param cardinality: semigroup cardinality
     :returns: a semigroups searching object
     """
-    cayley_db = CayleyDatabase()
-    cayley_db.load_smallsemi_database(f"smallsemi/data{cardinality}.gl")
+    cayley_db = CayleyDatabase(cardinality)
     cayley_db.load_model(f"semigroups.{cardinality}.model")
     if isinstance(cayley_db.model, MagmaDAE):
         cayley_db.model.apply_corruption = False
