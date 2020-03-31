@@ -3,7 +3,8 @@ Installing Neural Semigroups
 
 As a PyPi package
 -----------------
-To use the package, just::
+To use the package, just: ::
+
   pip install neural-semigroups
 
 Use source (for developers)
@@ -11,7 +12,7 @@ Use source (for developers)
 
 First, get Python 3.8
 
-Then run several commands in a terminal:::
+Then run several commands in a terminal: ::
 
   git clone git@github.com:inpefess/neural-semigroups.git
   cd neural-semigroups

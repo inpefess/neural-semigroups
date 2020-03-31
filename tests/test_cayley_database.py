@@ -24,7 +24,7 @@ from neural_semigroups.cayley_database import CayleyDatabase
 class TestCayleyDatabase(TestCase):
     def setUp(self):
         np.random.seed(43)
-        self.cayley_db = CayleyDatabase(2)
+        self.cayley_db = CayleyDatabase(2, data_path="./tests")
         self.cayley_db.database = np.array([
             [[0, 1], [1, 0]], [[1, 0], [1, 1]],
             [[1, 1], [1, 0]], [[1, 1], [1, 1]]
@@ -118,12 +118,6 @@ class TestCayleyDatabase(TestCase):
         ))
         self.assertTrue(np.allclose(test.labels, [0]))
 
-    # @patch("builtins.open", mock_open())
-    # @patch("neural_semigroups.cayley_database.import_smallsemi_format")
-    # def test_load_smallsemi_database(self, import_smallsemi_format_mock):
-    #     CayleyDatabase(2)
-    #     import_smallsemi_format_mock.assert_called_once()
-
     @patch("torch.load")
     def test_load_model(self, load_mock):
         self.cayley_db.load_model("model")
@@ -132,7 +126,3 @@ class TestCayleyDatabase(TestCase):
     def test_model(self):
         with self.assertRaises(ValueError):
             self.cayley_db.model
-
-    def test_data_path_setter(self):
-        self.cayley_db.data_path = "test"
-        self.assertEqual(self.cayley_db.data_path, "test")

@@ -34,19 +34,21 @@ class CayleyDatabase:
     a database of Cayley tables with different utility functions
     """
     _model: Optional[Module] = None
-    _data_path: str = CAYLEY_DATABASE_PATH
 
     def __init__(
             self,
             cardinality: int,
-            database_filename: Optional[str] = None
+            database_filename: Optional[str] = None,
+            data_path: str = CAYLEY_DATABASE_PATH
     ):
         """
         :param cardinality: the number of elements in underlying magmas
         :param database_filename: a full path to a pre-generated Cayley database.
                                   If ``None``, a ``smallsemi`` data is used.
+        :param data_path: a valid path to use as a permanent data storage
         """
         self.cardinality = cardinality
+        self.data_path = data_path
         if database_filename is None:
             filename = path.join(
                 self.data_path, "smallsemi_data", f"data{cardinality}.gl.gz"
@@ -203,17 +205,3 @@ class CayleyDatabase:
         :param model: pre-trained Torch model
         """
         self._model = model
-
-    @property
-    def data_path(self) -> str:
-        """
-        :returns: the path where data are permanently stored
-        """
-        return self._data_path
-
-    @data_path.setter
-    def data_path(self, data_path: str) -> None:
-        """
-        :param data_path: a valid path to use as a permanent data storage
-        """
-        self._data_path = data_path
