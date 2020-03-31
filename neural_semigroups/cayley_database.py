@@ -179,13 +179,13 @@ class CayleyDatabase:
             train_size:train_size + validation_size
         ]
         test_indices = all_indices[train_size + validation_size:]
-        train = CayleyDatabase(self.cardinality)
+        train = CayleyDatabase(self.cardinality, data_path=self.data_path)
         train.database = self.database[train_indices]
         train.labels = self.labels[train_indices]
-        validation = CayleyDatabase(self.cardinality)
+        validation = CayleyDatabase(self.cardinality, data_path=self.data_path)
         validation.database = self.database[validation_indices]
         validation.labels = self.labels[validation_indices]
-        test = CayleyDatabase(self.cardinality)
+        test = CayleyDatabase(self.cardinality, data_path=self.data_path)
         test.database = self.database[test_indices]
         test.labels = self.labels[test_indices]
         return train, validation, test

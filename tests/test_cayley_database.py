@@ -14,7 +14,7 @@
    limitations under the License.
 """
 from unittest import TestCase
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 
