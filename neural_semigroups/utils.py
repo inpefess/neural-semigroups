@@ -13,11 +13,18 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+import tarfile
 from itertools import permutations
+from os import mkdir, path, rename
+from os.path import basename
+from shutil import rmtree
 from typing import List, Tuple
 
 import numpy as np
+import requests
+from tqdm import tqdm
 
+from neural_semigroups.constants import GAP_PACKAGES_URL
 from neural_semigroups.magma import Magma
 
 # the Cayley table of Klein Vierergruppe
@@ -110,7 +117,8 @@ def check_filename(filename: str) -> int:
     if not isinstance(filename, str):
         wrong_name = True
     else:
-        filename_parts = filename.split(".")
+        base_filename = basename(filename)
+        filename_parts = base_filename.split(".")
         if len(filename_parts) != 3:
             wrong_name = True
         elif filename_parts[0] not in ("semigroup", "monoid", "group"):
@@ -124,7 +132,7 @@ def check_filename(filename: str) -> int:
     if wrong_name:
         raise ValueError(
             f"""filename should be of format
-[semigroup|monoid|group].[int].npz, not {filename}"""
+[semigroup|monoid|group].[int].npz, not {base_filename}"""
         )
     return cardinality
 
@@ -140,8 +148,11 @@ def check_smallsemi_filename(filename: str) -> int:
     if not isinstance(filename, str):
         wrong_name = True
     else:
-        filename_parts = filename.split(".")
-        if len(filename_parts) != 2:
+        base_filename = basename(filename)
+        filename_parts = base_filename.split(".")
+        if len(filename_parts) != 3:
+            wrong_name = True
+        elif filename_parts[2] != "gz":
             wrong_name = True
         elif filename_parts[1] != "gl":
             wrong_name = True
@@ -151,9 +162,12 @@ def check_smallsemi_filename(filename: str) -> int:
             wrong_name = True
         else:
             cardinality = int(filename_parts[0][-1])
+            if cardinality < 2 or cardinality > 7:
+                wrong_name = True
     if wrong_name:
         raise ValueError(
-            f"filename should be of format data[1-7].gl, not {filename}"
+            "filename should be of format data[2-7].gl.gz"
+            f" not {base_filename}"
         )
     return cardinality
 
@@ -180,16 +194,27 @@ def get_magma_by_index(cardinality: int, index: int) -> Magma:
     ).reshape(cardinality, cardinality))
 
 
-def import_smallsemi_format(lines: List[str]) -> np.ndarray:
+def import_smallsemi_format(lines: List[bytes]) -> np.ndarray:
     """
-    imports lines in a format used by `smallsemi` GAP package
-    https://www.gap-system.org/Manuals/pkg/smallsemi-0.6.11/doc/chap0.html
+    imports lines in a format used by ``smallsemi`` `GAP package`.
+    Format description:
+
+    * filename is of a form ``data[n].gl.gz``, :math:`1<=n<=7`
+    * lines are separated by a pair of symbols ``\\r\\n``
+    * there are exactly :math:`n^2` lines in a file
+    * the first line is a header starting with '#' symbol
+    * each line is a string of :math:`N` digits from :math:`0` to :math:`n-1`
+    * :math`N` is the number of semigroups in the database
+    * each column represents a serialised Cayley table
+    * the database contains only cells starting from the second
+    * the first cell of each Cayley table is assumed to be filled with ``0``
 
     :param lines: lines read from a file of `smallsemi` format
     :returns: a list of Cayley tables
+    .. _GAP package: https://www.gap-system.org/Manuals/pkg/smallsemi-0.6.12/doc/chap0.html
     """
     raw_tables = np.array(
-        [list(map(int, list(line[:-1]))) for line in lines[1:]]
+        [list(map(int, list(line.decode("utf-8")[:-1]))) for line in lines[1:]]
     ).T
     tables = np.hstack([
         np.zeros([raw_tables.shape[0], 1], dtype=int),
@@ -258,3 +283,64 @@ def get_equivalent_magmas(cayley_table: np.ndarray) -> np.ndarray:
         get_anti_isomorphic_magmas(cayley_table)
     ], axis=0)
     return np.unique(equivalent_tables, axis=0)
+
+
+def download_file_from_url(
+        url: str,
+        filename: str,
+        buffer_size: int = 1024
+) -> None:
+    """
+    downloads some file from the Web to a specified destination
+    >>> download_file_from_url("https://python.org/", "/tmp/test.html")
+    >>> import subprocess
+    >>> subprocess.run("ls /tmp/test.html", shell=True).returncode
+    0
+
+    :param url: a valid HTTP URL
+    :param filename: a valid filename
+    :param buffer_size: a number of bytes to read from URL at once
+    """
+    response = requests.get(url, stream=True)
+    if not response.ok:
+        raise ValueError(f"Wrong response from URL: {response.status_code}")
+    file_size = int(response.headers.get("Content-Length", 0))
+    progress = tqdm(
+        response.iter_content(chunk_size=buffer_size),
+        f"Downloading {filename}",
+        total=int(file_size / buffer_size),
+        unit="kB"
+    )
+    with open(filename, "wb") as file:
+        for data in progress:
+            file.write(data)
+    response.close()
+
+
+def download_smallsemi_data(data_path: str) -> None:
+    """
+    downloads, unzips and moves ``smallsemi`` data
+
+    :param data_path: data storage path
+    :returns:
+    """
+    package_names = requests.get(GAP_PACKAGES_URL).text
+    for package_name in package_names.split("\n"):
+        starting_index = package_name.find("smallsemi")
+        if starting_index >= 0:
+            ending_index = package_name.find(".tar.bz2")
+            smallsemi_with_version = package_name[
+                starting_index: ending_index
+            ]
+    url = f"{GAP_PACKAGES_URL}{smallsemi_with_version}.tar.bz2"
+    temp_path = path.join(data_path, "tmp")
+    rmtree(temp_path)
+    mkdir(temp_path)
+    archive_path = path.join(temp_path, path.basename(url))
+    download_file_from_url(url=url, filename=archive_path)
+    with tarfile.open(archive_path) as archive:
+        archive.extractall(temp_path)
+    rename(
+        path.join(temp_path, smallsemi_with_version, "data", "data2to7"),
+        path.join(data_path, "smallsemi_data")
+    )

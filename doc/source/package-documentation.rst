@@ -11,6 +11,8 @@ Cyclic Group
 .. autoclass:: neural_semigroups.CyclicGroup
    :special-members: __init__
 
+.. _cayley-database:
+
 Cayley Database
 ---------------
 .. autoclass:: neural_semigroups.CayleyDatabase

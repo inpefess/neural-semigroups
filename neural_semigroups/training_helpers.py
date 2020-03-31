@@ -34,7 +34,7 @@ from neural_semigroups.magma import Magma
 
 
 def load_database_as_cubes(
-        database_filename: str,
+        cardinality: int,
         train_size: int,
         validation_size: int
 ) -> Tuple[
@@ -43,18 +43,14 @@ def load_database_as_cubes(
     """
     load a database file to probability cubes representation
 
-    :param database_filename: the name of the file from which to extract data
+    :param cardinality: cardinality of Cayley database (from ``smallsemi``) to read
     :param train_size: number of tables for training
     :param validation_size: number of tables for validation
     :returns: three arrays of probability Cayley cubes (train, validation, test
     ) and three arrays of labels for them
     """
-    cayley_db = CayleyDatabase()
+    cayley_db = CayleyDatabase(cardinality)
     logging.info("reading data from disk")
-    try:
-        cayley_db.load_database(database_filename)
-    except ValueError:
-        cayley_db.load_smallsemi_database(database_filename)
     logging.info("splitting by train and test")
     train, validation, test = cayley_db.train_test_split(
         train_size, validation_size
@@ -203,7 +199,7 @@ def learning_pipeline(
 
 
 def get_loaders(
-        database_filename: str,
+        cardinality: int,
         batch_size: int,
         train_size: int,
         validation_size: int,
@@ -212,7 +208,7 @@ def get_loaders(
     """
     get train and validation data loaders
 
-    :param database_filename: the name of the file from which to extract data
+    :param cardinality: the cardinality of a ``smallsemi`` database
     :param batch_size: batch size (common for train and validation)
     :param train_size: number of tables for training
     :param validation_size: number of tables for validation
@@ -224,7 +220,7 @@ def get_loaders(
         train, validation, _,
         train_labels, validation_labels, _
     ) = load_database_as_cubes(
-        database_filename, train_size, validation_size
+        cardinality, train_size, validation_size
     )
     train_tensor = torch.from_numpy(train)
     val_tensor = torch.from_numpy(validation)

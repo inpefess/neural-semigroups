@@ -104,14 +104,18 @@ class TestUtils(TestCase):
         with self.assertRaises(Exception):
             check_smallsemi_filename(123)
         with self.assertRaises(Exception):
+            check_smallsemi_filename("very.very.strange.name")
+        with self.assertRaises(Exception):
             check_smallsemi_filename("very.strange.name")
         with self.assertRaises(Exception):
-            check_smallsemi_filename("strange.name")
+            check_smallsemi_filename("strange.name.gz")
         with self.assertRaises(Exception):
-            check_smallsemi_filename("strange.gl")
+            check_smallsemi_filename("name.gl.gz")
         with self.assertRaises(Exception):
-            check_smallsemi_filename("datan.gl")
-        self.assertEqual(check_smallsemi_filename("data1.gl"), 1)
+            check_smallsemi_filename("datan.gl.gz")
+        with self.assertRaises(Exception):
+            check_smallsemi_filename("data1.gl.gz")
+        self.assertEqual(check_smallsemi_filename("data2.gl.gz"), 2)
 
     def test_get_magma_by_index(self):
         self.assertTrue(np.allclose(
@@ -130,7 +134,7 @@ class TestUtils(TestCase):
 
     def test_import_smallsemi_format(self):
         lines = [
-            "# header", "0100\r", "0101\r", "0011\r"
+            b"# header", b"0100\r", b"0101\r", b"0011\r"
         ]
         semigroups = import_smallsemi_format(lines)
         self.assertIsInstance(semigroups, np.ndarray)

@@ -6,15 +6,12 @@ Getting Data
 
 This package uses data included into a ``smallsemi`` package for GAP system. One can download it from `the GAP page`_.
 
-You can get the data by running a script from a ``scripts`` folder:::
-
-  cd scripts
-  ./download_smallsemi.sh
+Data is downloaded and saved automatically. By default it resides in a directory ``$HOME/neural-semigroups-data/smallsemi-data/``. Ona can change this using a ``data_path`` argument of a :ref:`Cayley database<cayley-database>`.
 
 Training a Model
 ----------------
 
-Here are several examples of commands to train a model depending on semigroup's cardinality:::
+Here are several examples of commands to train a model depending on semigroup's cardinality: ::
 
   python train_denoising_autoencoder.py --cardinality 4 --epochs 100 \
   --learning_rate 0.1 --batch_size 32 --train_size 10 --validation_size 10
@@ -31,7 +28,7 @@ Here are several examples of commands to train a model depending on semigroup's 
 Printing a Testing Report
 -------------------------
 
-One can print a model quality report using the following command:::
+One can print a model quality report using the following command: ::
 
   python test_model.py --cardinality 4
 
