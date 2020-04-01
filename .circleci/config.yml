@@ -34,8 +34,6 @@ jobs:
             pytest --cov neural_semigroups --cov-report html --cov-fail-under=85\
                    --junit-xml test-results/neural-semigroups.xml\
                    tests/
-            mkdir -p build
-            mv htmlcov build/htmlcov
       - run:
           name: run linters
           command: |
@@ -48,13 +46,6 @@ jobs:
           command: |
             . venv/bin/activate
             mypy --config-file mypy.ini neural_semigroups scripts tests
-      - run:
-          name: building documentation
-          command: |
-            . venv/bin/activate
-            cd doc
-            make clean html
-            mv build/html ../build/htmldoc
       - store_artifacts:
           path: build
       - store_test_results:
