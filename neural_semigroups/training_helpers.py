@@ -55,17 +55,14 @@ def load_database_as_cubes(
     train, validation, test = cayley_db.train_test_split(
         train_size, validation_size
     )
-    logging.info("generating train cubes")
     train_cubes = list()
-    for cayley_table in tqdm(train.database):
+    for cayley_table in tqdm(train.database, desc="generating train cubes"):
         train_cubes.append(Magma(cayley_table).probabilistic_cube)
     validation_cubes = list()
-    logging.info("generating validation cubes")
-    for cayley_table in tqdm(validation.database):
+    for cayley_table in tqdm(validation.database, desc="generating validation cubes"):
         validation_cubes.append(Magma(cayley_table).probabilistic_cube)
     test_cubes = list()
-    logging.info("generating test cubes")
-    for cayley_table in tqdm(test.database):
+    for cayley_table in tqdm(test.database, desc="generating test cubes"):
         test_cubes.append(Magma(cayley_table).probabilistic_cube)
     return (
         np.stack(train_cubes), np.stack(validation_cubes),

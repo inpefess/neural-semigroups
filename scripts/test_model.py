@@ -67,7 +67,7 @@ def main():
         min(database_size, 1000),
         replace=False
     )
-    for i in tqdm(test_indices):
+    for i in tqdm(test_indices, desc="generating and solving puzzles"):
         cayley_table = cayley_db.database[i]
         for level in range(1, max_level + 1):
             rows, cols = zip(*[

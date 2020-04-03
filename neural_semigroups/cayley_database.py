@@ -74,7 +74,10 @@ class CayleyDatabase:
         equivalent tables to the database
         """
         database: List[np.ndarray] = []
-        for table in tqdm(self.database):
+        for table in tqdm(
+                self.database,
+                desc="augmenting by equivalent tables"
+        ):
             database += [get_equivalent_magmas(table)]
         self.database = np.unique(np.concatenate(database, axis=0), axis=0)
 
@@ -113,7 +116,10 @@ class CayleyDatabase:
         if self.database is not None:
             partial_table = np.array(cayley_table)
             rows, cols = np.where(partial_table != -1)
-            for table in tqdm(self.database):
+            for table in tqdm(
+                    self.database,
+                    desc="full scan over Cayley database"
+            ):
                 if np.alltrue(table[rows, cols] == partial_table[rows, cols]):
                     completions.append(table)
         return completions
