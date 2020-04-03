@@ -15,7 +15,7 @@
 """
 import tarfile
 from itertools import permutations
-from os import mkdir, path, rename
+from os import makedirs, path, rename
 from os.path import basename
 from shutil import rmtree
 from typing import List, Tuple
@@ -131,8 +131,8 @@ def check_filename(filename: str) -> int:
             cardinality = int(filename_parts[1])
     if wrong_name:
         raise ValueError(
-            f"""filename should be of format
-[semigroup|monoid|group].[int].npz, not {base_filename}"""
+            "filename should be of format"
+            f"[semigroup|monoid|group].[int].npz, not {base_filename}"
         )
     return cardinality
 
@@ -334,8 +334,8 @@ def download_smallsemi_data(data_path: str) -> None:
             ]
     url = f"{GAP_PACKAGES_URL}{smallsemi_with_version}.tar.bz2"
     temp_path = path.join(data_path, "tmp")
-    rmtree(temp_path)
-    mkdir(temp_path)
+    rmtree(temp_path, ignore_errors=True)
+    makedirs(temp_path, exist_ok=True)
     archive_path = path.join(temp_path, path.basename(url))
     download_file_from_url(url=url, filename=archive_path)
     with tarfile.open(archive_path) as archive:
