@@ -13,6 +13,9 @@ Training a Model
 
 Here are several examples of commands to train a model depending on semigroup's cardinality: ::
 
+  python train_denoising_autoencoder.py --cardinality 4 --epochs 1000 \
+  --learning_rate 0.005 --batch_size 48 --train_size 124 --validation_size 1
+
   python train_denoising_autoencoder.py --cardinality 4 --epochs 100 \
   --learning_rate 0.1 --batch_size 32 --train_size 10 --validation_size 10
 
@@ -22,8 +25,8 @@ Here are several examples of commands to train a model depending on semigroup's 
   python train_denoising_autoencoder.py --cardinality 6 --epochs 100 \
   --learning_rate 0.001 --batch_size 2048 --train_size 1000 --validation_size 100
 
-  python train_denoising_autoencoder.py --cardinality 7 --epochs 100 \
-  --learning_rate 0.001 --batch_size 2048 --train_size 1000 --validation_size 100
+  python train_denoising_autoencoder.py --cardinality 7 --epochs 1000 \
+  --learning_rate 0.005 --batch_size 48 --train_size 100 --validation_size 100
 
 Printing a Testing Report
 -------------------------

@@ -32,8 +32,7 @@ def train_denoising_autoencoder():
     dae = MagmaDAE(
         cardinality=cardinality,
         hidden_dims=[
-            cardinality ** 2,
-            cardinality
+            cardinality ** 3
         ],
         corruption_rate=0.5
     )
