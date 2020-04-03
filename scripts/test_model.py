@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+from neural_semigroups import Magma
 from neural_semigroups.cayley_database import CayleyDatabase
 from neural_semigroups.denoising_autoencoder import MagmaDAE
 
@@ -80,6 +81,8 @@ def main():
             guessed_cells = sum(
                 solution[rows, cols] == cayley_table[rows, cols]
             )
+            if Magma(solution).is_associative:
+                guessed_cells = level
             if guessed_cells == level:
                 totals[1, level - 1] += 1
             totals[2, level - 1] += guessed_cells
