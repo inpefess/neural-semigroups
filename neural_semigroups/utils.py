@@ -21,6 +21,7 @@ from shutil import rmtree
 from typing import List, Tuple
 
 import numpy as np
+import pandas as pd
 import requests
 from tqdm import tqdm
 
@@ -344,3 +345,33 @@ def download_smallsemi_data(data_path: str) -> None:
         path.join(temp_path, smallsemi_with_version, "data", "data2to7"),
         path.join(data_path, "smallsemi_data")
     )
+
+
+def print_report(totals: np.ndarray) -> pd.DataFrame:
+    """
+    print report in a pretty format
+
+    >>> totals = np.array([[4, 4], [0, 1], [1, 2]])
+    >>> print_report(totals)
+           puzzles  solved  (%)  hidden cells  guessed  in %
+    level
+    1      4             0    0             4        1    25
+    2      4             1   25             8        2    25
+
+    :param totals: a table with three columns:
+    * a column with total number of puzzles per level
+    * a column with numbers of correctly solved puzzles
+    * numbers of correctly guessed cells in all puzzles
+    :returns: the report in a form of ``pandas.DataFrame``
+    """
+    levels = range(1, totals.shape[1] + 1)
+    hidden_cells = totals[0] * levels
+    return pd.DataFrame({
+        "level": levels,
+        "puzzles": totals[0],
+        "solved": totals[1],
+        "(%)": totals[1] * 100 // totals[0],
+        "hidden cells": hidden_cells,
+        "guessed": totals[2],
+        "in %": totals[2] * 100 // hidden_cells
+    }).set_index("level")

@@ -23,6 +23,7 @@ from torch.nn import Module
 from tqdm import tqdm
 
 from neural_semigroups.constants import CAYLEY_DATABASE_PATH
+from neural_semigroups.magma import Magma
 from neural_semigroups.utils import (check_filename, check_smallsemi_filename,
                                      download_smallsemi_data,
                                      get_equivalent_magmas,
@@ -211,3 +212,52 @@ class CayleyDatabase:
         :param model: pre-trained Torch model
         """
         self._model = model
+
+    @property
+    def testing_report(self) -> np.ndarray:
+        """
+        this functions:
+
+        * takes 1000 random Cayley tables from the database (if there are less tables,
+          it simply takes all of them)
+        * for each Cayley table generates ``cardinality ** 2 // 2`` puzzles
+        * each puzzle is created from an original table by omitting several cell values
+        * for each full table the function omits 1, 2, and up to a half of all cells
+        * each puzzle is given to a pre-trained model of that database
+        * if the model returns an associative table (not necessary the original one)
+          it is considered to be a sucessfull solution
+        * in addition, all correctly filled cells are counted
+          (despite leading to a full associative table)
+
+        :returns: statistics of solved puzzles splitted by the levels of difficulty
+                  (number of cells omitted)
+        """
+        cardinality = self.cardinality
+        max_level = cardinality ** 2 // 2
+        totals = np.zeros((3, max_level), dtype=np.int32)
+        database_size = len(self.database)
+        test_indices = np.random.choice(
+            range(database_size),
+            min(database_size, 1000),
+            replace=False
+        )
+        for i in tqdm(test_indices, desc="generating and solving puzzles"):
+            cayley_table = self.database[i]
+            for level in range(1, max_level + 1):
+                rows, cols = zip(*[
+                    (point // cardinality, point % cardinality)
+                    for point in np.random.randint(0, cardinality ** 2, level)
+                ])
+                puzzle = cayley_table.copy()
+                puzzle[rows, cols] = -1
+                solution, _ = self.fill_in_with_model(puzzle)
+                totals[0, level - 1] += 1
+                guessed_cells = sum(
+                    solution[rows, cols] == cayley_table[rows, cols]
+                )
+                if Magma(solution).is_associative:
+                    guessed_cells = level
+                if guessed_cells == level:
+                    totals[1, level - 1] += 1
+                totals[2, level - 1] += guessed_cells
+        return totals

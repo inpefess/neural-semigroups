@@ -16,7 +16,7 @@
 import logging
 from argparse import ArgumentParser, Namespace
 from time import time
-from typing import Tuple
+from typing import Dict, Tuple, Union
 
 import numpy as np
 import torch
@@ -74,6 +74,7 @@ def get_arguments() -> Namespace:
     """
     parse script arguments
 
+
     :returns: script parameters
     """
     parser = ArgumentParser()
@@ -99,13 +100,6 @@ def get_arguments() -> Namespace:
         required=False
     )
     parser.add_argument(
-        "--weight_decay",
-        type=float,
-        help="weight decay",
-        default=0.0,
-        required=False
-    )
-    parser.add_argument(
         "--batch_size",
         type=int,
         help="batch size for training",
@@ -128,7 +122,7 @@ def get_arguments() -> Namespace:
 
 
 def learning_pipeline(
-        args: Namespace,
+        params: Dict[str, Union[int, float]],
         model: Module,
         evaluator: Engine,
         loss: Loss,
@@ -137,17 +131,17 @@ def learning_pipeline(
     """
     run a comon learning pipeline
 
-    :param args: some other arguments from the shell script
+    :param params: parameters of learning: epochs, learning_rate.
+                   Cardinality also goes here
     :param model: a network architecture
-    :param evaluator: an `ignite` engine which evaluates the model's quality
+    :param evaluator: an ``ignite`` engine which evaluates the model's quality
     :param loss: the criterion to optimize
     :oaram data_loader: train and validation data loaders
     """
     logging.info("data prepared")
     optimizer = Adam(
         model.parameters(),
-        lr=args.learning_rate,
-        weight_decay=args.weight_decay
+        lr=params["learning_rate"]
     )
     trainer = create_supervised_trainer(model, optimizer, loss)
 
@@ -159,8 +153,7 @@ def learning_pipeline(
     )
     evaluator.add_event_handler(Events.COMPLETED, handler)
     writer = SummaryWriter()
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger = logging.getLogger("training")
     @trainer.on(Events.EPOCH_COMPLETED)
     # pylint: disable=unused-variable
     def log_training_results(trainer):
@@ -189,10 +182,10 @@ def learning_pipeline(
                 walltime=int(time())
             )
         # pylint: disable=no-member
-        print(evaluator.state.metrics["loss"])
-        torch.save(model, f"semigroups.{args.cardinality}.model")
+        logger.debug(evaluator.state.metrics["loss"])
+        torch.save(model, f"semigroups.{params['cardinality']}.model")
     logging.info("training started")
-    trainer.run(data_loaders[0], max_epochs=args.epochs)
+    trainer.run(data_loaders[0], max_epochs=params["epochs"])
 
 
 def get_loaders(
@@ -200,7 +193,7 @@ def get_loaders(
         batch_size: int,
         train_size: int,
         validation_size: int,
-        use_labels: bool
+        use_labels: bool = False
 ) -> Tuple[DataLoader, DataLoader]:
     """
     get train and validation data loaders
