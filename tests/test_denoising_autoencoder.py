@@ -17,6 +17,8 @@ from unittest import TestCase
 
 import numpy as np
 import torch
+
+from neural_semigroups.constants import CURRENT_DEVICE
 from neural_semigroups.denoising_autoencoder import MagmaDAE
 from neural_semigroups.magma import Magma
 from neural_semigroups.utils import FOUR_GROUP
@@ -30,14 +32,14 @@ class TestMagmaDAE(TestCase):
             cardinality=self.cardinality,
             hidden_dims=[4],
             corruption_rate=0.6
-        )
+        ).to(CURRENT_DEVICE)
 
     def test_corruption(self):
         # first dimension is a batch size
         # for all x and y: x * y = 0
         cayley_cube = np.zeros([1, 4, 4, 4])
         cayley_cube[:, :, :, 0] = 1.0
-        cayley_cube = torch.from_numpy(cayley_cube)
+        cayley_cube = torch.from_numpy(cayley_cube).to(CURRENT_DEVICE)
         self.magma_dae.train()
         true_value = np.array(
             [
@@ -84,7 +86,7 @@ class TestMagmaDAE(TestCase):
                 Magma(FOUR_GROUP).probabilistic_cube,
                 Magma(FOUR_GROUP).probabilistic_cube
             ])
-        ).view(-1, 4, 4, 4)
+        ).to(CURRENT_DEVICE).view(-1, 4, 4, 4)
         true_value = np.array([[
             [
                 [7.1075952e-01, 9.6697964e-02, 9.6298940e-02, 9.6243583e-02],

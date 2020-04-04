@@ -30,6 +30,7 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from neural_semigroups.cayley_database import CayleyDatabase
+from neural_semigroups.constants import CURRENT_DEVICE
 from neural_semigroups.magma import Magma
 
 
@@ -212,14 +213,14 @@ def get_loaders(
     ) = load_database_as_cubes(
         cardinality, train_size, validation_size
     )
-    train_tensor = torch.from_numpy(train)
-    val_tensor = torch.from_numpy(validation)
+    train_tensor = torch.from_numpy(train).to(CURRENT_DEVICE)
+    val_tensor = torch.from_numpy(validation).to(CURRENT_DEVICE)
     if use_labels:
         train_data = TensorDataset(
-            train_tensor, torch.from_numpy(train_labels)
+            train_tensor, torch.from_numpy(train_labels).to(CURRENT_DEVICE)
         )
         val_data = TensorDataset(
-            val_tensor, torch.from_numpy(validation_labels)
+            val_tensor, torch.from_numpy(validation_labels).to(CURRENT_DEVICE)
         )
     else:
         train_data = TensorDataset(train_tensor, train_tensor)
