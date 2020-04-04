@@ -15,12 +15,13 @@
 """
 import tarfile
 from itertools import permutations
-from os import mkdir, path, rename
+from os import makedirs, path, rename
 from os.path import basename
 from shutil import rmtree
 from typing import List, Tuple
 
 import numpy as np
+import pandas as pd
 import requests
 from tqdm import tqdm
 
@@ -131,8 +132,8 @@ def check_filename(filename: str) -> int:
             cardinality = int(filename_parts[1])
     if wrong_name:
         raise ValueError(
-            f"""filename should be of format
-[semigroup|monoid|group].[int].npz, not {base_filename}"""
+            "filename should be of format"
+            f"[semigroup|monoid|group].[int].npz, not {base_filename}"
         )
     return cardinality
 
@@ -334,8 +335,8 @@ def download_smallsemi_data(data_path: str) -> None:
             ]
     url = f"{GAP_PACKAGES_URL}{smallsemi_with_version}.tar.bz2"
     temp_path = path.join(data_path, "tmp")
-    rmtree(temp_path)
-    mkdir(temp_path)
+    rmtree(temp_path, ignore_errors=True)
+    makedirs(temp_path, exist_ok=True)
     archive_path = path.join(temp_path, path.basename(url))
     download_file_from_url(url=url, filename=archive_path)
     with tarfile.open(archive_path) as archive:
@@ -344,3 +345,33 @@ def download_smallsemi_data(data_path: str) -> None:
         path.join(temp_path, smallsemi_with_version, "data", "data2to7"),
         path.join(data_path, "smallsemi_data")
     )
+
+
+def print_report(totals: np.ndarray) -> pd.DataFrame:
+    """
+    print report in a pretty format
+
+    >>> totals = np.array([[4, 4], [0, 1], [1, 2]])
+    >>> print_report(totals)
+           puzzles  solved  (%)  hidden cells  guessed  in %
+    level
+    1      4             0    0             4        1    25
+    2      4             1   25             8        2    25
+
+    :param totals: a table with three columns:
+    * a column with total number of puzzles per level
+    * a column with numbers of correctly solved puzzles
+    * numbers of correctly guessed cells in all puzzles
+    :returns: the report in a form of ``pandas.DataFrame``
+    """
+    levels = range(1, totals.shape[1] + 1)
+    hidden_cells = totals[0] * levels
+    return pd.DataFrame({
+        "level": levels,
+        "puzzles": totals[0],
+        "solved": totals[1],
+        "(%)": totals[1] * 100 // totals[0],
+        "hidden cells": hidden_cells,
+        "guessed": totals[2],
+        "in %": totals[2] * 100 // hidden_cells
+    }).set_index("level")

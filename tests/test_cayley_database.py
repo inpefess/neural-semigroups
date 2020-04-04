@@ -126,3 +126,11 @@ class TestCayleyDatabase(TestCase):
     def test_model(self):
         with self.assertRaises(ValueError):
             self.cayley_db.model
+
+    def test_testing_report(self):
+        self.cayley_db.model = lambda x: x
+        np.random.seed(777)
+        self.assertTrue(np.allclose(
+            self.cayley_db.testing_report,
+            [[4, 4], [1, 0], [1, 1]]
+        ))

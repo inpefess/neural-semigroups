@@ -40,7 +40,10 @@ def find_semigroups(arg) -> List[np.ndarray]:
     semigroups = list()
     if magma.is_associative:
         semigroups.append(magma.cayley_table)
-    for _ in tqdm(range(batch_size)):
+    for _ in tqdm(
+            range(batch_size),
+            desc="searching semigroups in a batch"
+    ):
         magma = next_magma(magma)
         if magma.is_associative:
             semigroups.append(magma.cayley_table)
