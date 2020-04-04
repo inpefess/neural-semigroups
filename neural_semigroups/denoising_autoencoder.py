@@ -22,6 +22,8 @@ from torch import Tensor
 from torch.nn import BatchNorm1d, Linear, Module, ReLU, Sequential, Softmax2d
 from torch.nn.functional import dropout2d
 
+from neural_semigroups.constants import CURRENT_DEVICE
+
 
 class MagmaDAE(Module):
     """
@@ -60,14 +62,14 @@ class MagmaDAE(Module):
             )
         self.decoder_layers = Sequential(
             OrderedDict(reversed(decoder_layers.items()))
-        )
-        self.encoder_layers = Sequential(encoder_layers)
+        ).to(CURRENT_DEVICE)
+        self.encoder_layers = Sequential(encoder_layers).to(CURRENT_DEVICE)
         self._nearly_zero = torch.from_numpy(np.array(
-            [1e-6], dtype=np.float32))
+            [1e-6], dtype=np.float32)).to(CURRENT_DEVICE)
         self._nearly_one = torch.from_numpy(np.array(
             [1 - (self.cardinality - 1) * 1e-6],
             dtype=np.float32
-        ))
+        )).to(CURRENT_DEVICE)
 
     def encode(self, corrupted_input: Tensor) -> Tensor:
         """

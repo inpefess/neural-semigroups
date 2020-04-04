@@ -22,7 +22,7 @@ import torch
 from torch.nn import Module
 from tqdm import tqdm
 
-from neural_semigroups.constants import CAYLEY_DATABASE_PATH
+from neural_semigroups.constants import CAYLEY_DATABASE_PATH, CURRENT_DEVICE
 from neural_semigroups.magma import Magma
 from neural_semigroups.utils import (check_filename, check_smallsemi_filename,
                                      download_smallsemi_data,
@@ -154,7 +154,7 @@ class CayleyDatabase:
             cube.reshape([
                 -1, self.cardinality, self.cardinality, self.cardinality
             ])
-        )).detach().numpy()[0]
+        ).to(CURRENT_DEVICE)).cpu().detach().numpy()[0]
         return (prediction.argmax(axis=-1), prediction)
 
     def load_model(self, filename: str) -> None:

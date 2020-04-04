@@ -15,5 +15,12 @@
 """
 from os import environ, path
 
+import torch
+
 GAP_PACKAGES_URL = "https://www.gap-system.org/pub/gap/gap4/tar.bz2/packages/"
 CAYLEY_DATABASE_PATH = path.join(environ["HOME"], "neural-semigroups-data")
+CURRENT_DEVICE = (
+    f"cuda:{torch.cuda.current_device()}"
+    if torch.cuda.is_available()
+    else "cpu"
+)
