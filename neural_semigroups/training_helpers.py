@@ -44,7 +44,7 @@ def load_database_as_cubes(
     """
     load a database file to probability cubes representation
 
-    :param cardinality: cardinality of Cayley database (from ``smallsemi``) to read
+    :param cardinality: cardinality of Cayley database (from ``smallsemi``)
     :param train_size: number of tables for training
     :param validation_size: number of tables for validation
     :returns: three arrays of probability Cayley cubes (train, validation, test
@@ -56,11 +56,13 @@ def load_database_as_cubes(
     train, validation, test = cayley_db.train_test_split(
         train_size, validation_size
     )
+    train.augment_by_equivalent_tables()
     train_cubes = list()
     for cayley_table in tqdm(train.database, desc="generating train cubes"):
         train_cubes.append(Magma(cayley_table).probabilistic_cube)
     validation_cubes = list()
-    for cayley_table in tqdm(validation.database, desc="generating validation cubes"):
+    for cayley_table in tqdm(validation.database,
+                             desc="generating validation cubes"):
         validation_cubes.append(Magma(cayley_table).probabilistic_cube)
     test_cubes = list()
     for cayley_table in tqdm(test.database, desc="generating test cubes"):
@@ -150,7 +152,7 @@ def learning_pipeline(
         val_loss = engine.state.metrics["loss"]
         return -val_loss
     handler = EarlyStopping(
-        patience=100, score_function=score_function, trainer=trainer
+        patience=10, score_function=score_function, trainer=trainer
     )
     evaluator.add_event_handler(Events.COMPLETED, handler)
     writer = SummaryWriter()

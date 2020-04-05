@@ -23,6 +23,7 @@ from torch.nn import Module
 from tqdm import tqdm
 
 from neural_semigroups.constants import CAYLEY_DATABASE_PATH, CURRENT_DEVICE
+from neural_semigroups.denoising_autoencoder import MagmaDAE
 from neural_semigroups.magma import Magma
 from neural_semigroups.utils import (check_filename, check_smallsemi_filename,
                                      download_smallsemi_data,
@@ -104,7 +105,8 @@ class CayleyDatabase:
             cayley_table: List[List[int]]
     ) -> List[np.ndarray]:
         """
-        get a list of possible completions of a partially filled Cayley table (unknow entries are filled by ``-1``)
+        get a list of possible completions of a partially filled Cayley table
+        (unknown entries are filled by ``-1``)
 
         :param cayley_table: a partially filled Cayley table (unknow entries are filled by ``-1``)
         :returns: a list of Cayley tables
@@ -130,12 +132,16 @@ class CayleyDatabase:
             cayley_table: List[List[int]]
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
-        get a list of possible completions of a partially filled Cayley
-        table (unknow entries are filled by ``-1``) using a machine learning model
+        get a list of possible completions of a partially filled Cayley table
+        (unknow entries are filled by ``-1``) using a machine learning model
 
         :param cayley_table: a partially filled Cayley table (unknow entries are filled by ``-1``)
         :returns: a tuple: (most probable completion, probabilistic cube)
         """
+        if isinstance(self.model, MagmaDAE):
+            self.model.apply_corruption = False
+        if isinstance(self.model, Module):
+            self.model.eval()
         if not self._check_input(cayley_table):
             raise ValueError(
                 f"invalid Cayley table of {self.cardinality} elements"
@@ -218,13 +224,14 @@ class CayleyDatabase:
         """
         this functions:
 
-        * takes 1000 random Cayley tables from the database (if there are less tables,
-          it simply takes all of them)
+        * takes 1000 random Cayley tables from the database
+          (if there are less tables, it simply takes all of them)
         * for each Cayley table generates ``cardinality ** 2 // 2`` puzzles
-        * each puzzle is created from an original table by omitting several cell values
-        * for each full table the function omits 1, 2, and up to a half of all cells
+        * each puzzle is created from a table by omitting several cell values
+        * for each table the function omits 1, 2, and up to a half of all cells
         * each puzzle is given to a pre-trained model of that database
-        * if the model returns an associative table (not necessary the original one)
+        * if the model returns an associative table
+          (not necessary the original one)
           it is considered to be a sucessfull solution
         * in addition, all correctly filled cells are counted
           (despite leading to a full associative table)
