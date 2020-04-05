@@ -46,6 +46,10 @@ jobs:
           command: |
             . venv/bin/activate
             mypy --config-file mypy.ini neural_semigroups scripts tests
+      - run:
+          name: upload data to codecov
+          command: |
+            bash <(curl -s https://codecov.io/bash)
       - store_artifacts:
           path: build
       - store_test_results:
