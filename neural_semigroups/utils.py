@@ -65,8 +65,8 @@ def random_semigroup(dim: int, maximal_tries: int) -> Tuple[bool, np.ndarray]:
 
     :param dim: number of elements in a semigroup
     :param maximal_tries: how many times to try at most
-    :returns: a pair (whether the Cayley table is associative,
-    a Cayley table of a magma)
+    :returns: a pair (whether the Cayley table is associative, a Cayley table of a magma)
+
     """
     associative = False
     try_count = 0
@@ -212,7 +212,9 @@ def import_smallsemi_format(lines: List[bytes]) -> np.ndarray:
 
     :param lines: lines read from a file of `smallsemi` format
     :returns: a list of Cayley tables
+
     .. _GAP package: https://www.gap-system.org/Manuals/pkg/smallsemi-0.6.12/doc/chap0.html
+
     """
     raw_tables = np.array(
         [list(map(int, list(line.decode("utf-8")[:-1]))) for line in lines[1:]]
@@ -359,10 +361,13 @@ def print_report(totals: np.ndarray) -> pd.DataFrame:
     2      4             1   25             8        2    25
 
     :param totals: a table with three columns:
+
     * a column with total number of puzzles per level
     * a column with numbers of correctly solved puzzles
     * numbers of correctly guessed cells in all puzzles
+
     :returns: the report in a form of ``pandas.DataFrame``
+
     """
     levels = range(1, totals.shape[1] + 1)
     hidden_cells = totals[0] * levels

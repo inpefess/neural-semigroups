@@ -36,3 +36,8 @@ Associator Loss
 .. autoclass:: neural_semigroups.AssociatorLoss
    :special-members: __init__
    :members:
+
+utils
+-----
+.. automodule:: neural_semigroups.utils
+   :members:

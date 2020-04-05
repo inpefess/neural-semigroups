@@ -152,7 +152,7 @@ def learning_pipeline(
         val_loss = engine.state.metrics["loss"]
         return -val_loss
     handler = EarlyStopping(
-        patience=100, score_function=score_function, trainer=trainer
+        patience=10, score_function=score_function, trainer=trainer
     )
     evaluator.add_event_handler(Events.COMPLETED, handler)
     writer = SummaryWriter()

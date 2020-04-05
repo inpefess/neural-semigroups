@@ -23,6 +23,7 @@ from torch.nn import Module
 from tqdm import tqdm
 
 from neural_semigroups.constants import CAYLEY_DATABASE_PATH, CURRENT_DEVICE
+from neural_semigroups.denoising_autoencoder import MagmaDAE
 from neural_semigroups.magma import Magma
 from neural_semigroups.utils import (check_filename, check_smallsemi_filename,
                                      download_smallsemi_data,
@@ -137,6 +138,10 @@ class CayleyDatabase:
         :param cayley_table: a partially filled Cayley table (unknow entries are filled by ``-1``)
         :returns: a tuple: (most probable completion, probabilistic cube)
         """
+        if isinstance(self.model, MagmaDAE):
+            self.model.apply_corruption = False
+        if isinstance(self.model, Module):
+            self.model.eval()
         if not self._check_input(cayley_table):
             raise ValueError(
                 f"invalid Cayley table of {self.cardinality} elements"
