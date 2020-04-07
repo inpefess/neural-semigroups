@@ -988,7 +988,7 @@ description = "Python parsing module"
 name = "pyparsing"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
-version = "2.4.6"
+version = "2.4.7"
 
 [[package]]
 category = "dev"
@@ -1427,7 +1427,7 @@ description = "What-If Tool TensorBoard plugin."
 name = "tensorboard-plugin-wit"
 optional = false
 python-versions = "*"
-version = "1.6.0.post2"
+version = "1.6.0.post3"
 
 [[package]]
 category = "dev"
@@ -2180,8 +2180,8 @@ pylint = [
     {file = "pylint-2.4.4.tar.gz", hash = "sha256:3db5468ad013380e987410a8d6956226963aed94ecb5f9d3a28acca6d9ac36cd"},
 ]
 pyparsing = [
-    {file = "pyparsing-2.4.6-py2.py3-none-any.whl", hash = "sha256:c342dccb5250c08d45fd6f8b4a559613ca603b57498511740e65cd11a2e7dcec"},
-    {file = "pyparsing-2.4.6.tar.gz", hash = "sha256:4c830582a84fb022400b85429791bc551f1f4871c33f23e44f353119e92f969f"},
+    {file = "pyparsing-2.4.7-py2.py3-none-any.whl", hash = "sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b"},
+    {file = "pyparsing-2.4.7.tar.gz", hash = "sha256:c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1"},
 ]
 pyrsistent = [
     {file = "pyrsistent-0.16.0.tar.gz", hash = "sha256:28669905fe725965daa16184933676547c5bb40a5153055a8dee2a4bd7933ad3"},
@@ -2417,8 +2417,8 @@ tensorboard = [
     {file = "tensorboard-2.2.0-py3-none-any.whl", hash = "sha256:bb6bbc75ad2d8511ba6cbd49e4417276979f49866e11841e83da8298727dbaed"},
 ]
 tensorboard-plugin-wit = [
-    {file = "tensorboard_plugin_wit-1.6.0.post2-py2-none-any.whl", hash = "sha256:0f4468c988a7b94e9530f1546daa32e1d22d7c8fd8f84843ae4176d573a8e24b"},
-    {file = "tensorboard_plugin_wit-1.6.0.post2-py3-none-any.whl", hash = "sha256:2154662accfef72c9ac52bddf6cb89ecb35d61cd1092f6e5313d8eb2f34465ad"},
+    {file = "tensorboard_plugin_wit-1.6.0.post3-py2-none-any.whl", hash = "sha256:243f117d117f9e81a21dc64b602b2bcb256ca5ba038867b96022d02271b17106"},
+    {file = "tensorboard_plugin_wit-1.6.0.post3-py3-none-any.whl", hash = "sha256:1fdf4ac343f1665453205aef8bb227b0204893bb5ffb792d2ed4509b1daf3d4f"},
 ]
 terminado = [
     {file = "terminado-0.8.3-py2.py3-none-any.whl", hash = "sha256:a43dcb3e353bc680dd0783b1d9c3fc28d529f190bc54ba9a229f72fe6e7a54d7"},
