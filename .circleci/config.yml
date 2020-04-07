@@ -31,7 +31,7 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            pytest --cov neural_semigroups --cov-report html --cov-fail-under=88\
+            pytest --cov neural_semigroups --cov-report xml --cov-fail-under=88\
                    --junit-xml test-results/neural-semigroups.xml\
                    --doctest-modules neural_semigroups tests
       - run:
@@ -49,7 +49,7 @@ jobs:
       - run:
           name: upload data to codecov
           command: |
-            bash <(curl -s https://codecov.io/bash)
+            bash <(curl -s https://codecov.io/bash) -X gcov -X coveragepy
       - store_artifacts:
           path: build
       - store_test_results:
