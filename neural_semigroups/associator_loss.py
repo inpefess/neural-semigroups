@@ -32,13 +32,27 @@ class AssociatorLoss(Module):
         """
         finds a probabilistic associator of a given probabilistic Cayley cube
 
-:math:`P\\left\\{e_i\\left(e_je_k\\right)=e_l\\right\\}=
-\\sum\\limits_{m=1}^nP\\left\\{e_i\\left(e_je_k\\right)=e_l\\vert
-e_je_k=e_m\\right\\}P\\left\\{e_je_k=e_m\\right\\}=
-\\sum\\limits_{m=1}^na_{iml}a_{jkm}`
+        First, we build two 4-index tensors representating probability distributions of products :math:`a\\left(bc\\right)`
+        and :math:`\\left(ab\\right)c`, respectively:
+
+        :math:`T_{ijkl}=P\\left\\{e_i\\left(e_je_k\\right)=e_l\\right\\}=
+        \\sum\\limits_{m=1}^nP\\left\\{e_ie_m=e_l\\vert e_je_k=e_m\\right\\}
+        P\\left\\{e_je_k=e_m\\right\\}=\\sum\\limits_{m=1}^na_{iml}a_{jkm}`
+
+        and
+
+        :math:`T\\prime_{ijkl}=P\\left\\{\\left(e_ie_j\\right)e_k=e_l\\right\\}=
+        \\sum\\limits_{m=1}^nP\\left\\{e_me_k=e_l\\vert e_ie_j=e_m\\right\\}
+        P\\left\\{e_ie_j=e_m\\right\\}=\\sum\\limits_{m=1}^na_{mkl}a_{ijm}`
+
+        Then we calculate `Kullback-Leibler divergence`_ between :math:`T_{ijkl}`
+        and :math:`T\\prime_{ijkl}` to find a continuous measure of associativity of the input table.
 
         :param cayley_cube: this is a probabilistic Cayley cube
         :returns: the probabilistic associator
+
+        .. _Kullback-Leibler divergence: https://en.wikipedia.org/wiki/Kullback-Leibler_divergence
+
         """
         one = einsum("biml,bjkm->bijkl", cayley_cube, cayley_cube)
         two = einsum("bmkl,bijm->bijkl", cayley_cube, cayley_cube)
