@@ -17,7 +17,6 @@ import numpy as np
 from tqdm import tqdm
 
 from neural_semigroups.magma import Magma
-from neural_semigroups.utils import random_magma
 
 
 def generate_data():
@@ -27,11 +26,11 @@ def generate_data():
     positive = dict()
     negative = dict()
     for _ in tqdm(range(total)):
-        cayley_table = random_magma(cardinality)
-        if Magma(cayley_table).is_associative:
-            positive[str(cayley_table)] = cayley_table
+        magma = Magma(cardinality=cardinality)
+        if magma.is_associative:
+            positive[magma] = magma.cayley_table
         elif len(positive) > len(negative):
-            negative[str(cayley_table)] = cayley_table
+            negative[magma] = magma.cayley_table
     np.savez(
         f"databases/semigroup.{cardinality}.npz",
         database=np.stack(list(positive.values()) + list(negative.values())),

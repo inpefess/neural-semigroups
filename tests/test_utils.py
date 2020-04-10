@@ -17,14 +17,12 @@ from unittest import TestCase
 
 import numpy as np
 
-from neural_semigroups.magma import Magma
 from neural_semigroups.utils import (FOUR_GROUP, check_filename,
                                      check_smallsemi_filename,
                                      get_anti_isomorphic_magmas,
                                      get_equivalent_magmas,
                                      get_isomorphic_magmas, get_magma_by_index,
-                                     import_smallsemi_format, next_magma,
-                                     random_magma, random_semigroup)
+                                     import_smallsemi_format, random_semigroup)
 
 
 class TestUtils(TestCase):
@@ -57,12 +55,6 @@ class TestUtils(TestCase):
             ]
         ]
 
-    def test_random_magma(self):
-        self.assertTrue(np.allclose(
-            random_magma(2),
-            np.array([[0, 1], [1, 0]])
-        ))
-
     def test_random_semigroup(self):
         success, cayley_table = random_semigroup(2, 1)
         self.assertTrue(success)
@@ -70,22 +62,6 @@ class TestUtils(TestCase):
             cayley_table,
             np.array([[0, 1], [1, 0]])
         ))
-
-    def test_next_magma(self):
-        self.assertTrue(np.allclose(
-            next_magma(Magma(
-                np.array([[0, 1], [1, 0]])
-            )).cayley_table,
-            np.array([[0, 1], [1, 1]])
-        ))
-        self.assertTrue(np.allclose(
-            next_magma(Magma(
-                np.array([[0, 1], [1, 1]])
-            )).cayley_table,
-            np.array([[1, 0], [0, 0]])
-        ))
-        with self.assertRaises(Exception):
-            next_magma(Magma(np.array([[1, 1], [1, 1]])))
 
     def test_check_filename(self):
         with self.assertRaises(Exception):

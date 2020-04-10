@@ -44,20 +44,6 @@ NON_ASSOCIATIVE_MAGMA = np.array([
 ])
 
 
-def random_magma(cardinality: int) -> np.ndarray:
-    """
-    randomly generate a Cayley table for a magma
-
-    :param cardinality: number of elements in a magma
-    :returns: Cayley table of some magma
-    """
-    return np.random.randint(
-        low=0,
-        high=cardinality,
-        size=cardinality * cardinality
-    ).reshape(cardinality, cardinality)
-
-
 def random_semigroup(dim: int, maximal_tries: int) -> Tuple[bool, np.ndarray]:
     """
     randomly serch for a semigroup Cayley table.
@@ -71,40 +57,10 @@ def random_semigroup(dim: int, maximal_tries: int) -> Tuple[bool, np.ndarray]:
     associative = False
     try_count = 0
     while not associative and try_count <= maximal_tries:
-        mult = random_magma(dim)
-        associative = Magma(mult).is_associative
+        mult = Magma(cardinality=dim)
+        associative = mult.is_associative
         try_count += 1
-    return associative, mult
-
-
-def next_magma(magma: Magma) -> Magma:
-    """
-    goes to the next magma Cayley table in their lexicographical
-    order
-
-    :param magma: a magma
-    :returns: a magma
-    """
-    next_table = magma.cayley_table.copy()
-    one = 1
-    row = magma.cardinality - 1
-    column = magma.cardinality - 1
-    while one == 1:
-        if next_table[row, column] < magma.cardinality - 1:
-            next_table[row, column] += 1
-            one = 0
-        else:
-            if column > 0:
-                next_table[row, column] = 0
-                column -= 1
-            else:
-                if row > 0:
-                    next_table[row, column] = 0
-                    row -= 1
-                    column = magma.cardinality - 1
-                else:
-                    raise Exception("there is no next magma!")
-    return Magma(next_table)
+    return associative, mult.cayley_table
 
 
 def check_filename(filename: str) -> int:
