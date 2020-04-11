@@ -15,8 +15,8 @@
 """
 import tarfile
 from itertools import permutations
-from os import makedirs, path, rename
-from os.path import basename
+from os import listdir, makedirs, path, rename
+from os.path import basename, getmtime, join
 from shutil import rmtree
 from typing import List, Tuple
 
@@ -337,3 +337,26 @@ def print_report(totals: np.ndarray) -> pd.DataFrame:
         "guessed": totals[2],
         "in %": totals[2] * 100 // hidden_cells
     }).set_index("level")
+
+
+def get_newest_file(path: str) -> str:
+    """
+    get the last modified file from a diretory
+
+    >>> from pathlib import Path
+    >>> rmtree("/tmp/tmp/", ignore_errors=True)
+    >>> makedirs("/tmp/tmp/")
+    >>> Path("/tmp/tmp/one").touch()
+    >>> from time import sleep
+    >>> sleep(0.01)
+    >>> Path("/tmp/tmp/two").touch()
+    >>> get_newest_file("/tmp/tmp/")
+    '/tmp/tmp/two'
+
+    :param path: a diretory path
+    :returns: the last modified file's name
+    """
+    return max(
+        [join(path, filename) for filename in listdir(path)],
+        key=getmtime
+    )
