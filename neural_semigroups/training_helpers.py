@@ -161,7 +161,8 @@ def learning_pipeline(
     ProgressBar().attach(trainer, output_transform=lambda x: x,
                          event_name=Events.EPOCH_COMPLETED,
                          closing_event_name=Events.COMPLETED)
-    tb_logger = TensorboardLogger(log_dir=f"runs/{datetime.now()}")
+    tb_logger = TensorboardLogger(
+        log_dir=f"runs/{datetime.now()}", flush_secs=1)
     training_loss = OutputHandler(
         "training", ["loss"],
         global_step_transform=global_step_from_engine(trainer))
