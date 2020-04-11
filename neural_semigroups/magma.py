@@ -13,6 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+from typing import Optional
+
 import numpy as np
 
 
@@ -24,11 +26,63 @@ class Magma:
     """
     cayley_table: np.ndarray
 
-    def __init__(self, cayley_table: np.ndarray):
+    def __init__(
+            self,
+            cayley_table: Optional[np.ndarray] = None,
+            cardinality: Optional[int] = None
+    ):
         """
-        :param cayley_table: a Cayley table for a magma
+        constucts a new magma
+
+        >>> np.random.seed(777)
+        >>> Magma(cardinality=2)
+        [[1 1]
+         [1 0]]
+        >>> Magma(np.array([[0, 1], [1, 0]]))
+        [[0 1]
+         [1 0]]
+        >>> Magma()
+        Traceback (most recent call last):
+            ...
+        ValueError: at least one argument must be given
+        >>> Magma(np.array([[0]]), 2)
+        Traceback (most recent call last):
+            ...
+        ValueError: inconsistent argument values
+        >>> Magma([[0, 1]])
+        Traceback (most recent call last):
+            ...
+        ValueError: a cayley_table must be a numpy array of shape (n, n)
+
+        :param cayley_table: a Cayley table for a magma.
+                             If not provided, a random table is generated.
+        :param cardinality: a number of elements in a magma to generate a random one
         """
-        self.cayley_table = cayley_table
+        if cayley_table is None:
+            if cardinality is None:
+                raise ValueError("at least one argument must be given")
+            self.cayley_table = np.random.randint(
+                low=0,
+                high=cardinality,
+                size=cardinality * cardinality
+            ).reshape(cardinality, cardinality)
+        else:
+            all_right = False
+            if isinstance(cayley_table, np.ndarray):
+                if len(cayley_table.shape) == 2:
+                    if cayley_table.shape[0] == cayley_table.shape[1]:
+                        self.cayley_table = cayley_table
+                        all_right = True
+            if cardinality is not None and all_right:
+                if cayley_table.shape[0] != cardinality:
+                    raise ValueError("inconsistent argument values")
+            if not all_right:
+                raise ValueError(
+                    "a cayley_table must be a numpy array of shape (n, n)"
+                )
+
+    def __repr__(self) -> str:
+        return str(self.cayley_table)
 
     @property
     def cardinality(self) -> int:
@@ -121,3 +175,42 @@ class Magma:
             for j in range(self.cardinality):
                 cube[i, j, self.cayley_table[i, j]] = 1.0
         return cube
+
+    @property
+    def next_magma(self) -> "Magma":
+        """
+        goes to the next magma Cayley table in their lexicographical order
+
+        >>> Magma(np.array([[0, 1], [1, 0]])).next_magma
+        [[0 1]
+        [1 1]]
+        >>> Magma(np.array([[0, 1], [1, 1]])).next_magma
+        [[1 0]
+        [0 0]]
+        >>> Magma(np.array([[1, 1], [1, 1]])).next_magma
+        Traceback (most recent call last):
+            ...
+        ValueError: there is no next magma!
+
+        :returns: another magma
+        """
+        next_table = self.cayley_table.copy()
+        one = 1
+        row = self.cardinality - 1
+        column = self.cardinality - 1
+        while one == 1:
+            if next_table[row, column] < self.cardinality - 1:
+                next_table[row, column] += 1
+                one = 0
+            else:
+                if column > 0:
+                    next_table[row, column] = 0
+                    column -= 1
+                else:
+                    if row > 0:
+                        next_table[row, column] = 0
+                        row -= 1
+                        column = self.cardinality - 1
+                    else:
+                        raise ValueError("there is no next magma!")
+        return Magma(next_table)

@@ -12,6 +12,7 @@ venv
 pyvenv.cfg
 #*.*#
 runs
+checkpoints
 *.gl
 .mypy_cache
 htmlcov/

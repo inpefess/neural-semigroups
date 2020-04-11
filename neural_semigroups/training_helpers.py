@@ -13,20 +13,22 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-import logging
 from argparse import ArgumentParser, Namespace
-from time import time
+from datetime import datetime
 from typing import Dict, Tuple, Union
 
 import numpy as np
 import torch
-from ignite.engine import Engine, Events, create_supervised_trainer
-from ignite.handlers import EarlyStopping
+from ignite.contrib.handlers.tensorboard_logger import (
+    OutputHandler, TensorboardLogger, global_step_from_engine)
+from ignite.contrib.handlers.tqdm_logger import ProgressBar
+from ignite.engine import (Events, create_supervised_evaluator,
+                           create_supervised_trainer)
+from ignite.handlers import EarlyStopping, ModelCheckpoint
 from ignite.metrics.loss import Loss
 from torch.nn import Module
 from torch.optim import Adam
 from torch.utils.data import DataLoader, TensorDataset
-from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from neural_semigroups.cayley_database import CayleyDatabase
@@ -51,8 +53,6 @@ def load_database_as_cubes(
     ) and three arrays of labels for them
     """
     cayley_db = CayleyDatabase(cardinality)
-    logging.info("reading data from disk")
-    logging.info("splitting by train and test")
     train, validation, test = cayley_db.train_test_split(
         train_size, validation_size
     )
@@ -126,8 +126,8 @@ def get_arguments() -> Namespace:
 
 def learning_pipeline(
         params: Dict[str, Union[int, float]],
+        cardinality: int,
         model: Module,
-        evaluator: Engine,
         loss: Loss,
         data_loaders: Tuple[DataLoader, DataLoader],
 ) -> None:
@@ -135,60 +135,43 @@ def learning_pipeline(
     run a comon learning pipeline
 
     :param params: parameters of learning: epochs, learning_rate.
-                   Cardinality also goes here
+    :param cardinality: a semigroup cardinality
     :param model: a network architecture
-    :param evaluator: an ``ignite`` engine which evaluates the model's quality
     :param loss: the criterion to optimize
     :oaram data_loader: train and validation data loaders
     """
-    logging.info("data prepared")
-    optimizer = Adam(
-        model.parameters(),
-        lr=params["learning_rate"]
-    )
-    trainer = create_supervised_trainer(model, optimizer, loss)
-
-    def score_function(engine):
-        val_loss = engine.state.metrics["loss"]
-        return -val_loss
-    handler = EarlyStopping(
-        patience=10, score_function=score_function, trainer=trainer
-    )
-    evaluator.add_event_handler(Events.COMPLETED, handler)
-    writer = SummaryWriter()
-    logger = logging.getLogger("training")
+    trainer = create_supervised_trainer(
+        model, Adam(model.parameters(), lr=params["learning_rate"]), loss)
+    train_evaluator = create_supervised_evaluator(model, {"loss": Loss(loss)})
+    evaluator = create_supervised_evaluator(model, {"loss": Loss(loss)})
     @trainer.on(Events.EPOCH_COMPLETED)
-    # pylint: disable=unused-variable
-    def log_training_results(trainer):
-        evaluator.run(data_loaders[0])
-        # pylint: disable=no-member
-        for metric in evaluator.state.metrics.keys():
-            writer.add_scalars(
-                metric,
-                # pylint: disable=no-member
-                {"training": evaluator.state.metrics[metric]},
-                global_step=trainer.state.iteration,
-                walltime=int(time())
-            )
-
-    @trainer.on(Events.EPOCH_COMPLETED)
-    # pylint: disable=unused-variable
-    def log_validation_results(trainer):
+    # pylint: disable=unused-argument,unused-variable
+    def validate(trainer):
+        train_evaluator.run(data_loaders[0])
         evaluator.run(data_loaders[1])
-        # pylint: disable=no-member
-        for metric in evaluator.state.metrics.keys():
-            writer.add_scalars(
-                metric,
-                # pylint: disable=no-member
-                {"validation": evaluator.state.metrics[metric]},
-                global_step=trainer.state.iteration,
-                walltime=int(time())
-            )
-        # pylint: disable=no-member
-        logger.debug(evaluator.state.metrics["loss"])
-        torch.save(model, f"semigroups.{params['cardinality']}.model")
-    logging.info("training started")
+
+    def score(engine):
+        return -engine.state.metrics["loss"]
+    early_stopping = EarlyStopping(10, score, trainer)
+    evaluator.add_event_handler(Events.COMPLETED, early_stopping)
+    checkpoint = ModelCheckpoint(
+        "checkpoints", "", score_function=score, require_empty=False)
+    evaluator.add_event_handler(
+        Events.EPOCH_COMPLETED, checkpoint, {f"semigroup{cardinality}": model})
+    ProgressBar().attach(trainer, output_transform=lambda x: x,
+                         event_name=Events.EPOCH_COMPLETED,
+                         closing_event_name=Events.COMPLETED)
+    tb_logger = TensorboardLogger(log_dir=f"runs/{datetime.now()}")
+    training_loss = OutputHandler(
+        "training", ["loss"],
+        global_step_transform=global_step_from_engine(trainer))
+    tb_logger.attach(train_evaluator, training_loss, Events.COMPLETED)
+    validation_loss = OutputHandler(
+        "validation", ["loss"],
+        global_step_transform=global_step_from_engine(trainer))
+    tb_logger.attach(evaluator, validation_loss, Events.COMPLETED)
     trainer.run(data_loaders[0], max_epochs=params["epochs"])
+    tb_logger.close()
 
 
 def get_loaders(

@@ -23,7 +23,7 @@ import numpy as np
 from tqdm import tqdm
 
 from neural_semigroups.magma import Magma
-from neural_semigroups.utils import get_magma_by_index, next_magma
+from neural_semigroups.utils import get_magma_by_index
 
 
 def find_semigroups(arg) -> List[np.ndarray]:
@@ -44,7 +44,7 @@ def find_semigroups(arg) -> List[np.ndarray]:
             range(batch_size),
             desc="searching semigroups in a batch"
     ):
-        magma = next_magma(magma)
+        magma = magma.next_magma
         if magma.is_associative:
             semigroups.append(magma.cayley_table)
     return semigroups
