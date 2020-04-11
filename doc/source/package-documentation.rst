@@ -4,6 +4,7 @@ Package Documentation
 Magma
 -----
 .. autoclass:: neural_semigroups.Magma
+   :special-members: __init__
    :members:
 
 Cyclic Group

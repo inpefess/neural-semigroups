@@ -1,10 +1,3 @@
-.. _getting-started:
-
-Getting Started with Neural Semigroups
-======================================
-
-The simplest way is to run an example notebook in `Google Colaboratory`_.
-
 More about data
 ---------------
 
@@ -20,4 +13,3 @@ To get some data, just: ::
 
 
 .. _the GAP page: https://www.gap-system.org/pub/gap/gap4/tar.gz/packages/smallsemi-0.6.12.tar.gz
-.. _Google Colaboratory: https://colab.research.google.com/github/inpefess/neural-semigroups/blob/master/examples/train_a_model.ipynb

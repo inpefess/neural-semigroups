@@ -56,7 +56,7 @@ class Magma:
 
         :param cayley_table: a Cayley table for a magma.
                              If not provided, a random table is generated.
-        :param cardinality: a number of elements in magma to generate a random one
+        :param cardinality: a number of elements in a magma to generate a random one
         """
         if cayley_table is None:
             if cardinality is None:

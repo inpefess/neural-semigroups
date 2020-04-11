@@ -161,7 +161,7 @@ def import_smallsemi_format(lines: List[bytes]) -> np.ndarray:
     * there are exactly :math:`n^2` lines in a file
     * the first line is a header starting with '#' symbol
     * each line is a string of :math:`N` digits from :math:`0` to :math:`n-1`
-    * :math`N` is the number of semigroups in the database
+    * :math:`N` is the number of semigroups in the database
     * each column represents a serialised Cayley table
     * the database contains only cells starting from the second
     * the first cell of each Cayley table is assumed to be filled with ``0``
@@ -251,6 +251,7 @@ def download_file_from_url(
 ) -> None:
     """
     downloads some file from the Web to a specified destination
+
     >>> download_file_from_url("https://python.org/", "/tmp/test.html")
     >>> import subprocess
     >>> subprocess.run("ls /tmp/test.html", shell=True).returncode
