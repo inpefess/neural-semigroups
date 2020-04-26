@@ -28,19 +28,21 @@ class TestMagmaClassifier(TestCase):
         torch.manual_seed(0)
         self.cardinality = 4
         self.classifier = MagmaClassifier(
-            cardinality=self.cardinality,
-            hidden_dims=[4]
+            cardinality=self.cardinality, hidden_dims=[4]
         )
 
     def test_forward(self):
         cayley_cube = torch.from_numpy(
-            np.stack([
-                Magma(FOUR_GROUP).probabilistic_cube,
-                Magma(FOUR_GROUP).probabilistic_cube
-            ])
+            np.stack(
+                [
+                    Magma(FOUR_GROUP).probabilistic_cube,
+                    Magma(FOUR_GROUP).probabilistic_cube,
+                ]
+            )
         ).view(-1, 4, 4, 4)
         true_value = 0.5 * np.ones((2, 2))
-        self.assertTrue(np.allclose(
-            self.classifier(cayley_cube).detach().numpy(),
-            true_value
-        ))
+        self.assertTrue(
+            np.allclose(
+                self.classifier(cayley_cube).detach().numpy(), true_value
+            )
+        )

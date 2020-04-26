@@ -38,7 +38,7 @@ jobs:
           name: run linters
           command: |
             . venv/bin/activate
-            pycodestyle --max-doc-length 160 --ignore E501,W504\
+            pycodestyle --max-doc-length 160 --ignore E203,E501,W503\
                         neural_semigroups scripts tests
             pylint --rcfile=.pylintrc neural_semigroups scripts
       - run:

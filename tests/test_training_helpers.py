@@ -19,8 +19,11 @@ from unittest.mock import patch
 
 import numpy as np
 
-from neural_semigroups.training_helpers import (get_arguments, get_loaders,
-                                                load_database_as_cubes)
+from neural_semigroups.training_helpers import (
+    get_arguments,
+    get_loaders,
+    load_database_as_cubes,
+)
 
 
 class TestTrainingHelpers(TestCase):
@@ -36,7 +39,12 @@ class TestTrainingHelpers(TestCase):
         validation = np.array([3])
         validation_labels = np.array([4])
         load_database_as_cubes_mock.return_value = (
-            train, validation, None, train_labels, validation_labels, None
+            train,
+            validation,
+            None,
+            train_labels,
+            validation_labels,
+            None,
         )
         train_loader, validation_loader = get_loaders(
             "filename", 1, 1, 1, True

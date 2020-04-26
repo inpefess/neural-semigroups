@@ -29,19 +29,12 @@ from neural_semigroups.constants import GAP_PACKAGES_URL
 from neural_semigroups.magma import Magma
 
 # the Cayley table of Klein Vierergruppe
-FOUR_GROUP = np.array([
-    [0, 1, 2, 3],
-    [1, 0, 3, 2],
-    [2, 3, 0, 1],
-    [3, 2, 1, 0]
-])
+FOUR_GROUP = np.array([[0, 1, 2, 3], [1, 0, 3, 2], [2, 3, 0, 1], [3, 2, 1, 0]])
 
 # some non associative magma
 # (0 * 1) * 2 = 0 * 2 = 0
 # 0 * (1 * 2) = 0 * 0 = 1
-NON_ASSOCIATIVE_MAGMA = np.array([
-    [1, 0, 0], [2, 2, 0], [2, 2, 2]
-])
+NON_ASSOCIATIVE_MAGMA = np.array([[1, 0, 0], [2, 2, 0], [2, 2, 2]])
 
 
 def random_semigroup(dim: int, maximal_tries: int) -> Tuple[bool, np.ndarray]:
@@ -139,16 +132,20 @@ def get_magma_by_index(cardinality: int, index: int) -> Magma:
     """
     square = cardinality ** 2
     if index < 0 or index >= cardinality ** square:
-        raise ValueError("""
-        An index must be non negative and less than $n^(n^2)$""")
+        raise ValueError(
+            """
+        An index must be non negative and less than $n^(n^2)$"""
+        )
     cayley_table = list()
     residual = index
     for _ in range(square):
         cayley_table.append(residual % cardinality)
         residual = residual // cardinality
-    return Magma(np.array(
-        list(reversed(cayley_table))
-    ).reshape(cardinality, cardinality))
+    return Magma(
+        np.array(list(reversed(cayley_table))).reshape(
+            cardinality, cardinality
+        )
+    )
 
 
 def import_smallsemi_format(lines: List[bytes]) -> np.ndarray:
@@ -175,10 +172,9 @@ def import_smallsemi_format(lines: List[bytes]) -> np.ndarray:
     raw_tables = np.array(
         [list(map(int, list(line.decode("utf-8")[:-1]))) for line in lines[1:]]
     ).T
-    tables = np.hstack([
-        np.zeros([raw_tables.shape[0], 1], dtype=int),
-        raw_tables
-    ])
+    tables = np.hstack(
+        [np.zeros([raw_tables.shape[0], 1], dtype=int), raw_tables]
+    )
     cardinality = int(tables.max()) + 1
     return tables.reshape(tables.shape[0], cardinality, cardinality)
 
@@ -194,9 +190,9 @@ def get_isomorphic_magmas(cayley_table: np.ndarray) -> np.ndarray:
     isomorphic_cayley_tables = list()
     dim = cayley_table.shape[0]
     for permutation in permutations(range(dim)):
-        isomorphic_cayley_table = np.array(np.zeros_like(
-            cayley_table, dtype=int
-        ))
+        isomorphic_cayley_table = np.array(
+            np.zeros_like(cayley_table, dtype=int)
+        )
         for i in range(dim):
             for j in range(dim):
                 isomorphic_cayley_table[
@@ -217,9 +213,9 @@ def get_anti_isomorphic_magmas(cayley_table: np.ndarray) -> np.ndarray:
     anti_isomorphic_cayley_tables = list()
     dim = cayley_table.shape[0]
     for permutation in permutations(range(dim)):
-        anti_isomorphic_cayley_table = np.array(np.zeros_like(
-            cayley_table, dtype=int
-        ))
+        anti_isomorphic_cayley_table = np.array(
+            np.zeros_like(cayley_table, dtype=int)
+        )
         for i in range(dim):
             for j in range(dim):
                 anti_isomorphic_cayley_table[
@@ -237,17 +233,18 @@ def get_equivalent_magmas(cayley_table: np.ndarray) -> np.ndarray:
     :param cayley_table: a Cayley table of a magma
     :returns: a list of Cayley tables of isomorphic and anti-isomorphic magmas
     """
-    equivalent_tables = np.concatenate([
-        get_isomorphic_magmas(cayley_table),
-        get_anti_isomorphic_magmas(cayley_table)
-    ], axis=0)
+    equivalent_tables = np.concatenate(
+        [
+            get_isomorphic_magmas(cayley_table),
+            get_anti_isomorphic_magmas(cayley_table),
+        ],
+        axis=0,
+    )
     return np.unique(equivalent_tables, axis=0)
 
 
 def download_file_from_url(
-        url: str,
-        filename: str,
-        buffer_size: int = 1024
+    url: str, filename: str, buffer_size: int = 1024
 ) -> None:
     """
     downloads some file from the Web to a specified destination
@@ -269,7 +266,7 @@ def download_file_from_url(
         response.iter_content(chunk_size=buffer_size),
         f"Downloading {filename}",
         total=int(file_size / buffer_size),
-        unit="kB"
+        unit="kB",
     )
     with open(filename, "wb") as file:
         for data in progress:
@@ -289,9 +286,7 @@ def download_smallsemi_data(data_path: str) -> None:
         starting_index = package_name.find("smallsemi")
         if starting_index >= 0:
             ending_index = package_name.find(".tar.bz2")
-            smallsemi_with_version = package_name[
-                starting_index: ending_index
-            ]
+            smallsemi_with_version = package_name[starting_index:ending_index]
     url = f"{GAP_PACKAGES_URL}{smallsemi_with_version}.tar.bz2"
     temp_path = path.join(data_path, "tmp")
     rmtree(temp_path, ignore_errors=True)
@@ -302,7 +297,7 @@ def download_smallsemi_data(data_path: str) -> None:
         archive.extractall(temp_path)
     rename(
         path.join(temp_path, smallsemi_with_version, "data", "data2to7"),
-        path.join(data_path, "smallsemi_data")
+        path.join(data_path, "smallsemi_data"),
     )
 
 
@@ -328,15 +323,17 @@ def print_report(totals: np.ndarray) -> pd.DataFrame:
     """
     levels = range(1, totals.shape[1] + 1)
     hidden_cells = totals[0] * levels
-    return pd.DataFrame({
-        "level": levels,
-        "puzzles": totals[0],
-        "solved": totals[1],
-        "(%)": totals[1] * 100 // totals[0],
-        "hidden cells": hidden_cells,
-        "guessed": totals[2],
-        "in %": totals[2] * 100 // hidden_cells
-    }).set_index("level")
+    return pd.DataFrame(
+        {
+            "level": levels,
+            "puzzles": totals[0],
+            "solved": totals[1],
+            "(%)": totals[1] * 100 // totals[0],
+            "hidden cells": hidden_cells,
+            "guessed": totals[2],
+            "in %": totals[2] * 100 // hidden_cells,
+        }
+    ).set_index("level")
 
 
 def get_newest_file(path: str) -> str:
@@ -357,6 +354,5 @@ def get_newest_file(path: str) -> str:
     :returns: the last modified file's name
     """
     return max(
-        [join(path, filename) for filename in listdir(path)],
-        key=getmtime
+        [join(path, filename) for filename in listdir(path)], key=getmtime
     )

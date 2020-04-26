@@ -24,11 +24,8 @@ class MagmaClassifier(Module):
     """
     Feed Forward Network for probability Cayley cubes of magmas
     """
-    def __init__(
-            self,
-            cardinality: int,
-            hidden_dims: List[int]
-    ):
+
+    def __init__(self, cardinality: int, hidden_dims: List[int]):
         """
         :param cardinality: the number of elements in a magma
         :param hidden_dims: a list of sizes of hidden layers of a feed-forward network

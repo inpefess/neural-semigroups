@@ -29,13 +29,11 @@ class MagmaDAE(Module):
     """
     Denoising Autoencoder for probability Cayley cubes of magmas
     """
+
     apply_corruption: bool = True
 
     def __init__(
-            self,
-            cardinality: int,
-            hidden_dims: List[int],
-            corruption_rate: float
+        self, cardinality: int, hidden_dims: List[int], corruption_rate: float
     ):
         """
         :param cardinality: the number of elements in a magma
@@ -64,12 +62,12 @@ class MagmaDAE(Module):
             OrderedDict(reversed(decoder_layers.items()))
         ).to(CURRENT_DEVICE)
         self.encoder_layers = Sequential(encoder_layers).to(CURRENT_DEVICE)
-        self._nearly_zero = torch.from_numpy(np.array(
-            [1e-6], dtype=np.float32)).to(CURRENT_DEVICE)
-        self._nearly_one = torch.from_numpy(np.array(
-            [1 - (self.cardinality - 1) * 1e-6],
-            dtype=np.float32
-        )).to(CURRENT_DEVICE)
+        self._nearly_zero = torch.from_numpy(
+            np.array([1e-6], dtype=np.float32)
+        ).to(CURRENT_DEVICE)
+        self._nearly_one = torch.from_numpy(
+            np.array([1 - (self.cardinality - 1) * 1e-6], dtype=np.float32)
+        ).to(CURRENT_DEVICE)
 
     def encode(self, corrupted_input: Tensor) -> Tensor:
         """
@@ -92,17 +90,19 @@ class MagmaDAE(Module):
             1 - self.corruption_rate if self.apply_corruption else 1.0
         )
         return (
-            dropout_norm *
-            dropout2d(
+            dropout_norm
+            * dropout2d(
                 cayley_cube.view(
                     -1,
                     self.cardinality * self.cardinality,
                     self.cardinality,
-                    1
-                ) - 1 / self.cardinality,
+                    1,
+                )
+                - 1 / self.cardinality,
                 self.corruption_rate,
-                self.apply_corruption
-            ) + 1 / self.cardinality
+                self.apply_corruption,
+            )
+            + 1 / self.cardinality
         ).view(-1, self.cardinality, self.cardinality, self.cardinality)
 
     def decode(self, encoded_input: Tensor) -> Tensor:
@@ -113,9 +113,16 @@ class MagmaDAE(Module):
         :param encoded_input: an embedding vector
         :returns: a vector of values from ``0`` to ``1`` (kind of probabilities)
         """
-        return Softmax2d()(self.decoder_layers(encoded_input).view(
-            -1, self.cardinality, self.cardinality, self.cardinality
-        ).transpose(1, 3).transpose(2, 3)).transpose(2, 3).transpose(1, 3)
+        return (
+            Softmax2d()(
+                self.decoder_layers(encoded_input)
+                .view(-1, self.cardinality, self.cardinality, self.cardinality)
+                .transpose(1, 3)
+                .transpose(2, 3)
+            )
+            .transpose(2, 3)
+            .transpose(1, 3)
+        )
 
     # pylint: disable=arguments-differ
     @no_type_check
@@ -133,8 +140,6 @@ class MagmaDAE(Module):
             corrupted_input == 1.0,
             self._nearly_one,
             torch.where(
-                corrupted_input == 0.0,
-                self._nearly_zero,
-                decoded_input
-            )
+                corrupted_input == 0.0, self._nearly_zero, decoded_input
+            ),
         )

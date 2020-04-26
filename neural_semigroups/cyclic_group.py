@@ -22,6 +22,7 @@ class CyclicGroup(Magma):
     """
     finite cyclic group
     """
+
     def __init__(self, cardinality: int):
         """
         :param cardinality: number of elements in a cyclic group

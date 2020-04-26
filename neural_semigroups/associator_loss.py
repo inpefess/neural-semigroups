@@ -26,6 +26,7 @@ class AssociatorLoss(Module):
     """
     probabilistic associator loss
     """
+
     # pylint: disable=arguments-differ
     @no_type_check
     def forward(self, cayley_cube: Tensor) -> Tensor:
@@ -56,5 +57,6 @@ class AssociatorLoss(Module):
         """
         one = einsum("biml,bjkm->bijkl", cayley_cube, cayley_cube)
         two = einsum("bmkl,bijm->bijkl", cayley_cube, cayley_cube)
-        return (kl_div(torch.log(one), two, reduction="sum") /
-                cayley_cube.shape[0])
+        return (
+            kl_div(torch.log(one), two, reduction="sum") / cayley_cube.shape[0]
+        )

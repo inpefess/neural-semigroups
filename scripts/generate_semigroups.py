@@ -40,10 +40,7 @@ def find_semigroups(arg) -> List[np.ndarray]:
     semigroups = list()
     if magma.is_associative:
         semigroups.append(magma.cayley_table)
-    for _ in tqdm(
-            range(batch_size),
-            desc="searching semigroups in a batch"
-    ):
+    for _ in tqdm(range(batch_size), desc="searching semigroups in a batch"):
         magma = magma.next_magma
         if magma.is_associative:
             semigroups.append(magma.cayley_table)
@@ -51,8 +48,7 @@ def find_semigroups(arg) -> List[np.ndarray]:
 
 
 def get_starting_magmas(
-        batch_count: int,
-        cardinality: int
+    batch_count: int, cardinality: int
 ) -> Tuple[List[Magma], List[int]]:
     """
     generates a list of starting points of parallel search
@@ -75,10 +71,7 @@ def get_starting_magmas(
 def main() -> None:
     """ do all """
     argument_parser = ArgumentParser()
-    argument_parser.add_argument(
-        "--dim", type=int,
-        help="magma cardinality"
-    )
+    argument_parser.add_argument("--dim", type=int, help="magma cardinality")
     args = argument_parser.parse_args()
     cpu_count = os.cpu_count()
     if cpu_count:
@@ -88,15 +81,11 @@ def main() -> None:
     starting_magmas, batch_sizes = get_starting_magmas(batch_count, args.dim)
     with Pool(batch_count) as pool:
         semigroups_lists = pool.map(
-            find_semigroups,
-            zip(
-                starting_magmas,
-                batch_sizes
-            )
+            find_semigroups, zip(starting_magmas, batch_sizes)
         )
     np.savez(
         f"./databases/semigroup.{args.dim}.npz",
-        database=np.stack(list(chain.from_iterable(semigroups_lists)))
+        database=np.stack(list(chain.from_iterable(semigroups_lists))),
     )
 
 
