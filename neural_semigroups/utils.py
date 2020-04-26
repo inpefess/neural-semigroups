@@ -190,9 +190,7 @@ def get_isomorphic_magmas(cayley_table: np.ndarray) -> np.ndarray:
     isomorphic_cayley_tables = list()
     dim = cayley_table.shape[0]
     for permutation in permutations(range(dim)):
-        isomorphic_cayley_table = np.array(
-            np.zeros_like(cayley_table, dtype=int)
-        )
+        isomorphic_cayley_table = np.zeros(cayley_table.shape, dtype=int)
         for i in range(dim):
             for j in range(dim):
                 isomorphic_cayley_table[
@@ -213,9 +211,7 @@ def get_anti_isomorphic_magmas(cayley_table: np.ndarray) -> np.ndarray:
     anti_isomorphic_cayley_tables = list()
     dim = cayley_table.shape[0]
     for permutation in permutations(range(dim)):
-        anti_isomorphic_cayley_table = np.array(
-            np.zeros_like(cayley_table, dtype=int)
-        )
+        anti_isomorphic_cayley_table = np.zeros(cayley_table.shape, dtype=int)
         for i in range(dim):
             for j in range(dim):
                 anti_isomorphic_cayley_table[
@@ -336,7 +332,7 @@ def print_report(totals: np.ndarray) -> pd.DataFrame:
     ).set_index("level")
 
 
-def get_newest_file(path: str) -> str:
+def get_newest_file(dir_path: str) -> str:
     """
     get the last modified file from a diretory
 
@@ -354,5 +350,6 @@ def get_newest_file(path: str) -> str:
     :returns: the last modified file's name
     """
     return max(
-        [join(path, filename) for filename in listdir(path)], key=getmtime
+        [join(dir_path, filename) for filename in listdir(dir_path)],
+        key=getmtime,
     )
