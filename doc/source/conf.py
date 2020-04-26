@@ -35,7 +35,12 @@ master_doc = "index"
 extensions = ["sphinx.ext.autodoc"]
 
 autodoc_mock_imports = [
-    "torch", "tqdm", "pytorch-ignite", "tensorboard", "numpy", "pandas"
+    "torch",
+    "tqdm",
+    "pytorch-ignite",
+    "tensorboard",
+    "numpy",
+    "pandas",
 ]
 
 # Add any paths that contain templates here, relative to this directory.

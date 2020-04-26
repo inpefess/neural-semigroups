@@ -22,15 +22,12 @@ from neural_semigroups.cyclic_group import CyclicGroup
 class TestCyclicGroup(TestCase):
     def test_cyclic_group(self):
         cyclic_group = CyclicGroup(4)
-        self.assertTrue(np.allclose(
-            cyclic_group.cayley_table,
-            [
-                [0, 1, 2, 3],
-                [1, 2, 3, 0],
-                [2, 3, 0, 1],
-                [3, 0, 1, 2]
-            ]
-        ))
+        self.assertTrue(
+            np.allclose(
+                cyclic_group.cayley_table,
+                [[0, 1, 2, 3], [1, 2, 3, 0], [2, 3, 0, 1], [3, 0, 1, 2]],
+            )
+        )
         self.assertTrue(cyclic_group.is_associative)
         self.assertTrue(cyclic_group.is_commutative)
         self.assertEqual(cyclic_group.identity, 0)

@@ -34,10 +34,12 @@ def generate_data():
     np.savez(
         f"databases/semigroup.{cardinality}.npz",
         database=np.stack(list(positive.values()) + list(negative.values())),
-        labels=np.concatenate([
-            np.ones(len(positive), dtype=np.int64),
-            np.zeros(len(negative), dtype=np.int64)
-        ])
+        labels=np.concatenate(
+            [
+                np.ones(len(positive), dtype=np.int64),
+                np.zeros(len(negative), dtype=np.int64),
+            ]
+        ),
     )
 
 

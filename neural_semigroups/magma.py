@@ -24,12 +24,13 @@ class Magma:
 
     .. _a magma: https://en.wikipedia.org/wiki/Magma_%28algebra%29
     """
+
     cayley_table: np.ndarray
 
     def __init__(
-            self,
-            cayley_table: Optional[np.ndarray] = None,
-            cardinality: Optional[int] = None
+        self,
+        cayley_table: Optional[np.ndarray] = None,
+        cardinality: Optional[int] = None,
     ):
         """
         constucts a new magma
@@ -62,9 +63,7 @@ class Magma:
             if cardinality is None:
                 raise ValueError("at least one argument must be given")
             self.cayley_table = np.random.randint(
-                low=0,
-                high=cardinality,
-                size=cardinality * cardinality
+                low=0, high=cardinality, size=cardinality * cardinality
             ).reshape(cardinality, cardinality)
         else:
             all_right = False
@@ -103,12 +102,8 @@ class Magma:
         for one in a_range:
             for two in a_range:
                 if (
-                        self.cayley_table[
-                            self.cayley_table[one, two], a_range
-                        ] !=
-                        self.cayley_table[
-                            one, self.cayley_table[two, a_range]
-                        ]
+                    self.cayley_table[self.cayley_table[one, two], a_range]
+                    != self.cayley_table[one, self.cayley_table[two, a_range]]
                 ).any():
                     return False
         return True
@@ -121,9 +116,7 @@ class Magma:
         :returns: whether the input table is commutative or not
 
         """
-        return np.allclose(
-            self.cayley_table, self.cayley_table.T
-        )
+        return np.allclose(self.cayley_table, self.cayley_table.T)
 
     @property
     def identity(self) -> int:
@@ -148,13 +141,10 @@ class Magma:
         identity_row = np.arange(self.cardinality)
         has_inverses = True
         for i in identity_row:
-            if (
-                    not np.allclose(
-                        np.sort(self.cayley_table[i, :]), identity_row
-                    ) or
-                    not np.allclose(
-                        np.sort(self.cayley_table[:, i]), identity_row
-                    )
+            if not np.allclose(
+                np.sort(self.cayley_table[i, :]), identity_row
+            ) or not np.allclose(
+                np.sort(self.cayley_table[:, i]), identity_row
             ):
                 has_inverses = False
                 break
@@ -169,7 +159,7 @@ class Magma:
         """
         cube = np.zeros(
             [self.cardinality, self.cardinality, self.cardinality],
-            dtype=np.float32
+            dtype=np.float32,
         )
         for i in range(self.cardinality):
             for j in range(self.cardinality):

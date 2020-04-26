@@ -24,14 +24,10 @@ from neural_semigroups.magma import Magma
 def main():
     """ do all """
     parser = ArgumentParser()
-    parser.add_argument(
-        "--dim", type=int,
-        help="magma cardinality"
-    )
+    parser.add_argument("--dim", type=int, help="magma cardinality")
     choices = ["identity", "inverses"]
     parser.add_argument(
-        "--filter", choices=choices,
-        help="additional property"
+        "--filter", choices=choices, help="additional property"
     )
     args = parser.parse_args()
     input_file = "semigroup" if args.filter == choices[0] else "monoid"
@@ -49,7 +45,7 @@ def main():
             filtered.append(cayley_table)
     np.savez(
         f"./databases/{output_file}.{args.dim}.npz",
-        database=np.stack(filtered)
+        database=np.stack(filtered),
     )
 
 

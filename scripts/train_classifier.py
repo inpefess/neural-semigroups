@@ -19,8 +19,11 @@ from ignite.metrics.loss import Loss
 from torch.nn import CrossEntropyLoss
 
 from neural_semigroups import MagmaClassifier
-from neural_semigroups.training_helpers import (get_arguments, get_loaders,
-                                                learning_pipeline)
+from neural_semigroups.training_helpers import (
+    get_arguments,
+    get_loaders,
+    learning_pipeline,
+)
 
 
 def train_classifier():
@@ -33,15 +36,14 @@ def train_classifier():
     )
     loss = CrossEntropyLoss()
     evaluator = create_supervised_evaluator(
-        classifier,
-        metrics={"loss": Loss(loss), "accuracy": Accuracy()}
+        classifier, metrics={"loss": Loss(loss), "accuracy": Accuracy()}
     )
     data_loaders = get_loaders(
         cardinality=magma_cardinality,
         batch_size=args.batch_size,
         train_size=args.train_size,
         validation_size=args.validation_size,
-        use_labels=True
+        use_labels=True,
     )
     learning_pipeline(args, classifier, evaluator, loss, data_loaders)
 

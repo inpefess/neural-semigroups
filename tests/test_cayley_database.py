@@ -25,10 +25,14 @@ class TestCayleyDatabase(TestCase):
     def setUp(self):
         np.random.seed(43)
         self.cayley_db = CayleyDatabase(2, data_path="./tests")
-        self.cayley_db.database = np.array([
-            [[0, 1], [1, 0]], [[1, 0], [1, 1]],
-            [[1, 1], [1, 0]], [[1, 1], [1, 1]]
-        ])
+        self.cayley_db.database = np.array(
+            [
+                [[0, 1], [1, 0]],
+                [[1, 0], [1, 1]],
+                [[1, 1], [1, 0]],
+                [[1, 1], [1, 1]],
+            ]
+        )
         self.cayley_db.labels = np.arange(4)
 
     @patch("numpy.load")
@@ -70,13 +74,12 @@ class TestCayleyDatabase(TestCase):
         self.assertEqual(table.dtype, int)
         self.assertEqual(cube.dtype, np.float32)
         self.assertTrue(np.allclose(table, np.array([[0, 0], [0, 1]])))
-        self.assertTrue(np.allclose(
-            cube,
-            np.array([
-                [[0.5, 0.5], [1.0, 0.0]],
-                [[1.0, 0.0], [0.0, 1.0]]
-            ])
-        ))
+        self.assertTrue(
+            np.allclose(
+                cube,
+                np.array([[[0.5, 0.5], [1.0, 0.0]], [[1.0, 0.0], [0.0, 1.0]]]),
+            )
+        )
         with self.assertRaises(Exception):
             self.cayley_db.fill_in_with_model("no good")
 
@@ -88,34 +91,38 @@ class TestCayleyDatabase(TestCase):
         self.assertFalse(self.cayley_db._check_input([[2, 0], [0, 0]]))
 
     def test_augment_by_equivalent_tables(self):
-        database = np.array([
-            np.array([[0, 1], [1, 0]]), np.array([[1, 0], [0, 1]]),
-            np.array([[1, 0], [1, 1]])
-        ])
-        true_database = np.array([
-            np.array([[0, 0], [1, 0]]), np.array([[0, 1], [0, 0]]),
-            np.array([[0, 1], [1, 0]]), np.array([[1, 0], [0, 1]]),
-            np.array([[1, 0], [1, 1]]), np.array([[1, 1], [0, 1]])
-        ])
+        database = np.array(
+            [
+                np.array([[0, 1], [1, 0]]),
+                np.array([[1, 0], [0, 1]]),
+                np.array([[1, 0], [1, 1]]),
+            ]
+        )
+        true_database = np.array(
+            [
+                np.array([[0, 0], [1, 0]]),
+                np.array([[0, 1], [0, 0]]),
+                np.array([[0, 1], [1, 0]]),
+                np.array([[1, 0], [0, 1]]),
+                np.array([[1, 0], [1, 1]]),
+                np.array([[1, 1], [0, 1]]),
+            ]
+        )
         self.cayley_db.database = database
         self.cayley_db.augment_by_equivalent_tables()
-        self.assertTrue(np.allclose(
-            true_database, self.cayley_db.database
-        ))
+        self.assertTrue(np.allclose(true_database, self.cayley_db.database))
 
     def test_train_test_split(self):
         train, validation, test = self.cayley_db.train_test_split(2, 1)
-        self.assertTrue(np.allclose(
-            train.database, self.cayley_db.database[[2, 1]]
-        ))
+        self.assertTrue(
+            np.allclose(train.database, self.cayley_db.database[[2, 1]])
+        )
         self.assertTrue(np.allclose(train.labels, [2, 1]))
-        self.assertTrue(np.allclose(
-            validation.database, self.cayley_db.database[3]
-        ))
+        self.assertTrue(
+            np.allclose(validation.database, self.cayley_db.database[3])
+        )
         self.assertTrue(np.allclose(validation.labels, [3]))
-        self.assertTrue(np.allclose(
-            test.database, self.cayley_db.database[0]
-        ))
+        self.assertTrue(np.allclose(test.database, self.cayley_db.database[0]))
         self.assertTrue(np.allclose(test.labels, [0]))
 
     @patch("torch.load")
@@ -130,7 +137,8 @@ class TestCayleyDatabase(TestCase):
     def test_testing_report(self):
         self.cayley_db.model = lambda x: x
         np.random.seed(777)
-        self.assertTrue(np.allclose(
-            self.cayley_db.testing_report,
-            [[4, 4], [1, 0], [1, 1]]
-        ))
+        self.assertTrue(
+            np.allclose(
+                self.cayley_db.testing_report, [[4, 4], [1, 0], [1, 1]]
+            )
+        )

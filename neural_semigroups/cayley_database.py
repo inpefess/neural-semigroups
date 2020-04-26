@@ -25,23 +25,27 @@ from tqdm import tqdm
 from neural_semigroups.constants import CAYLEY_DATABASE_PATH, CURRENT_DEVICE
 from neural_semigroups.denoising_autoencoder import MagmaDAE
 from neural_semigroups.magma import Magma
-from neural_semigroups.utils import (check_filename, check_smallsemi_filename,
-                                     download_smallsemi_data,
-                                     get_equivalent_magmas,
-                                     import_smallsemi_format)
+from neural_semigroups.utils import (
+    check_filename,
+    check_smallsemi_filename,
+    download_smallsemi_data,
+    get_equivalent_magmas,
+    import_smallsemi_format,
+)
 
 
 class CayleyDatabase:
     """
     a database of Cayley tables with different utility functions
     """
+
     _model: Optional[Module] = None
 
     def __init__(
-            self,
-            cardinality: int,
-            database_filename: Optional[str] = None,
-            data_path: str = CAYLEY_DATABASE_PATH
+        self,
+        cardinality: int,
+        database_filename: Optional[str] = None,
+        data_path: str = CAYLEY_DATABASE_PATH,
     ):
         """
         :param cardinality: the number of elements in underlying magmas
@@ -77,8 +81,7 @@ class CayleyDatabase:
         """
         database: List[np.ndarray] = []
         for table in tqdm(
-                self.database,
-                desc="augmenting by equivalent tables"
+            self.database, desc="augmenting by equivalent tables"
         ):
             database += [get_equivalent_magmas(table)]
         self.database = np.unique(np.concatenate(database, axis=0), axis=0)
@@ -101,8 +104,7 @@ class CayleyDatabase:
         return correct
 
     def search_database(
-            self,
-            cayley_table: List[List[int]]
+        self, cayley_table: List[List[int]]
     ) -> List[np.ndarray]:
         """
         get a list of possible completions of a partially filled Cayley table
@@ -120,16 +122,14 @@ class CayleyDatabase:
             partial_table = np.array(cayley_table)
             rows, cols = np.where(partial_table != -1)
             for table in tqdm(
-                    self.database,
-                    desc="full scan over Cayley database"
+                self.database, desc="full scan over Cayley database"
             ):
                 if np.alltrue(table[rows, cols] == partial_table[rows, cols]):
                     completions.append(table)
         return completions
 
     def fill_in_with_model(
-            self,
-            cayley_table: List[List[int]]
+        self, cayley_table: List[List[int]]
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         get a list of possible completions of a partially filled Cayley table
@@ -150,17 +150,29 @@ class CayleyDatabase:
         inv_cardinality = 1 / self.cardinality
         cube = np.zeros(
             [self.cardinality, self.cardinality, self.cardinality],
-            dtype=np.float32
+            dtype=np.float32,
         )
         rows, cols = np.where(table != -1)
         cube[rows, cols, table[rows, cols]] = 1.0
         rows, cols = np.where(table == -1)
         cube[rows, cols, :] = inv_cardinality
-        prediction = self.model(torch.from_numpy(
-            cube.reshape([
-                -1, self.cardinality, self.cardinality, self.cardinality
-            ])
-        ).to(CURRENT_DEVICE)).cpu().detach().numpy()[0]
+        prediction = (
+            self.model(
+                torch.from_numpy(
+                    cube.reshape(
+                        [
+                            -1,
+                            self.cardinality,
+                            self.cardinality,
+                            self.cardinality,
+                        ]
+                    )
+                ).to(CURRENT_DEVICE)
+            )
+            .cpu()
+            .detach()
+            .numpy()[0]
+        )
         return (prediction.argmax(axis=-1), prediction)
 
     def load_model(self, filename: str) -> None:
@@ -173,9 +185,7 @@ class CayleyDatabase:
         self._model = torch.load(filename)
 
     def train_test_split(
-            self,
-            train_size: int,
-            validation_size: int
+        self, train_size: int, validation_size: int
     ) -> Tuple["CayleyDatabase", "CayleyDatabase", "CayleyDatabase"]:
         """
         split a database of Cayley table in three: train, validation, and test
@@ -189,9 +199,9 @@ class CayleyDatabase:
         np.random.shuffle(all_indices)
         train_indices = all_indices[:train_size]
         validation_indices = all_indices[
-            train_size:train_size + validation_size
+            train_size : train_size + validation_size
         ]
-        test_indices = all_indices[train_size + validation_size:]
+        test_indices = all_indices[train_size + validation_size :]
         train = CayleyDatabase(self.cardinality, data_path=self.data_path)
         train.database = self.database[train_indices]
         train.labels = self.labels[train_indices]
@@ -244,17 +254,19 @@ class CayleyDatabase:
         totals = np.zeros((3, max_level), dtype=np.int32)
         database_size = len(self.database)
         test_indices = np.random.choice(
-            range(database_size),
-            min(database_size, 1000),
-            replace=False
+            range(database_size), min(database_size, 1000), replace=False
         )
         for i in tqdm(test_indices, desc="generating and solving puzzles"):
             cayley_table = self.database[i]
             for level in range(1, max_level + 1):
-                rows, cols = zip(*[
-                    (point // cardinality, point % cardinality)
-                    for point in np.random.randint(0, cardinality ** 2, level)
-                ])
+                rows, cols = zip(
+                    *[
+                        (point // cardinality, point % cardinality)
+                        for point in np.random.randint(
+                            0, cardinality ** 2, level
+                        )
+                    ]
+                )
                 puzzle = cayley_table.copy()
                 puzzle[rows, cols] = -1
                 solution, _ = self.fill_in_with_model(puzzle)
