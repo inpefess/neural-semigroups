@@ -20,13 +20,14 @@ from multiprocessing import Pool
 from typing import List, Tuple
 
 import numpy as np
+import torch
 from tqdm import tqdm
 
 from neural_semigroups.magma import Magma
 from neural_semigroups.utils import get_magma_by_index
 
 
-def find_semigroups(arg) -> List[np.ndarray]:
+def find_semigroups(arg) -> List[torch.Tensor]:
     """ searches for semigroups iteratively going through magmas
 
     :param arg: a tuple (

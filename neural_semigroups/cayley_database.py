@@ -64,13 +64,13 @@ class CayleyDatabase:
                 download_smallsemi_data(self.data_path)
             with gzip.open(filename, "rb") as file:
                 self.database = import_smallsemi_format(file.readlines())
-            self.labels = np.ones(len(self.database), dtype=np.int64)
+            self.labels = torch.ones(len(self.database), dtype=torch.int64)
         else:
             check_filename(path.basename(database_filename))
             npz_file = np.load(database_filename)
             self.database = npz_file["database"]
             self.labels = npz_file.get(
-                "labels", np.zeros(len(self.database), dtype=np.int64)
+                "labels", torch.zeros(len(self.database), dtype=torch.int64)
             )
             npz_file.close()
 
@@ -79,12 +79,12 @@ class CayleyDatabase:
         for every Cayley table in a previously loaded database adds all of its
         equivalent tables to the database
         """
-        database: List[np.ndarray] = []
+        database: List[torch.Tensor] = []
         for table in tqdm(
             self.database, desc="augmenting by equivalent tables"
         ):
             database += [get_equivalent_magmas(table)]
-        self.database = np.unique(np.concatenate(database, axis=0), axis=0)
+        self.database = torch.unique(torch.cat(database, dim=0), dim=0)
 
     def _check_input(self, cayley_table: List[List[int]]) -> bool:
         """
@@ -94,10 +94,13 @@ class CayleyDatabase:
         :returns: whether the input is correct
         """
         correct = True
-        table = np.array(cayley_table)
-        if table.shape != (self.cardinality, self.cardinality):
+        # pylint: disable=not-callable
+        table = torch.tensor(cayley_table)
+        if table.shape != torch.Size([self.cardinality, self.cardinality]):
+            print(table.shape)
             correct = False
-        elif table.dtype != int:
+        elif table.dtype != torch.long:
+            print(table.dtype)
             correct = False
         elif table.max() >= self.cardinality or table.min() < -1:
             correct = False
@@ -105,7 +108,7 @@ class CayleyDatabase:
 
     def search_database(
         self, cayley_table: List[List[int]]
-    ) -> List[np.ndarray]:
+    ) -> List[torch.Tensor]:
         """
         get a list of possible completions of a partially filled Cayley table
         (unknown entries are filled by ``-1``)
@@ -119,18 +122,21 @@ class CayleyDatabase:
             )
         completions = list()
         if self.database is not None:
-            partial_table = np.array(cayley_table)
-            rows, cols = np.where(partial_table != -1)
+            # pylint: disable=not-callable
+            partial_table = torch.tensor(cayley_table)
+            rows, cols = torch.where(partial_table != -1)
             for table in tqdm(
                 self.database, desc="full scan over Cayley database"
             ):
-                if np.alltrue(table[rows, cols] == partial_table[rows, cols]):
+                if torch.allclose(
+                    table[rows, cols], partial_table[rows, cols]
+                ):
                     completions.append(table)
         return completions
 
     def fill_in_with_model(
         self, cayley_table: List[List[int]]
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         get a list of possible completions of a partially filled Cayley table
         (unknow entries are filled by ``-1``) using a machine learning model
@@ -146,32 +152,26 @@ class CayleyDatabase:
             raise ValueError(
                 f"invalid Cayley table of {self.cardinality} elements"
             )
-        table = np.array(cayley_table)
+        # pylint: disable=not-callable
+        table = torch.tensor(cayley_table)
         inv_cardinality = 1 / self.cardinality
-        cube = np.zeros(
+        cube = torch.zeros(
             [self.cardinality, self.cardinality, self.cardinality],
-            dtype=np.float32,
+            dtype=torch.float32,
         )
-        rows, cols = np.where(table != -1)
+        rows, cols = torch.where(table != -1)
         cube[rows, cols, table[rows, cols]] = 1.0
-        rows, cols = np.where(table == -1)
+        rows, cols = torch.where(table == -1)
         cube[rows, cols, :] = inv_cardinality
         prediction = (
             self.model(
-                torch.from_numpy(
-                    cube.reshape(
-                        [
-                            -1,
-                            self.cardinality,
-                            self.cardinality,
-                            self.cardinality,
-                        ]
-                    )
-                ).to(CURRENT_DEVICE)
+                cube.reshape(
+                    [-1, self.cardinality, self.cardinality, self.cardinality]
+                )
             )
+            .to(CURRENT_DEVICE)
             .cpu()
-            .detach()
-            .numpy()[0]
+            .detach()[0]
         )
         return (prediction.argmax(axis=-1), prediction)
 
@@ -197,10 +197,12 @@ class CayleyDatabase:
         """
         all_indices = np.arange(len(self.database))
         np.random.shuffle(all_indices)
+        all_indices = torch.from_numpy(all_indices)
         train_indices = all_indices[:train_size]
         validation_indices = all_indices[
             train_size : train_size + validation_size
         ]
+        print(all_indices, train_size, train_indices, validation_indices)
         test_indices = all_indices[train_size + validation_size :]
         train = CayleyDatabase(self.cardinality, data_path=self.data_path)
         train.database = self.database[train_indices]
@@ -230,7 +232,7 @@ class CayleyDatabase:
         self._model = model
 
     @property
-    def testing_report(self) -> np.ndarray:
+    def testing_report(self) -> torch.Tensor:
         """
         this functions:
 
@@ -251,7 +253,7 @@ class CayleyDatabase:
         """
         cardinality = self.cardinality
         max_level = cardinality ** 2 // 2
-        totals = np.zeros((3, max_level), dtype=np.int32)
+        totals = torch.zeros((3, max_level))
         database_size = len(self.database)
         test_indices = np.random.choice(
             range(database_size), min(database_size, 1000), replace=False
@@ -262,14 +264,14 @@ class CayleyDatabase:
                 rows, cols = zip(
                     *[
                         (point // cardinality, point % cardinality)
-                        for point in np.random.randint(
-                            0, cardinality ** 2, level
+                        for point in torch.randint(
+                            0, cardinality ** 2, [level]
                         )
                     ]
                 )
-                puzzle = cayley_table.copy()
+                puzzle = cayley_table.clone().detach()
                 puzzle[rows, cols] = -1
-                solution, _ = self.fill_in_with_model(puzzle)
+                solution, _ = self.fill_in_with_model(puzzle.tolist())
                 totals[0, level - 1] += 1
                 guessed_cells = sum(
                     solution[rows, cols] == cayley_table[rows, cols]

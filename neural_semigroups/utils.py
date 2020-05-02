@@ -20,24 +20,30 @@ from os.path import basename, getmtime, join
 from shutil import rmtree
 from typing import List, Tuple
 
-import numpy as np
 import pandas as pd
 import requests
+import torch
 from tqdm import tqdm
 
 from neural_semigroups.constants import GAP_PACKAGES_URL
 from neural_semigroups.magma import Magma
 
 # the Cayley table of Klein Vierergruppe
-FOUR_GROUP = np.array([[0, 1, 2, 3], [1, 0, 3, 2], [2, 3, 0, 1], [3, 2, 1, 0]])
+# pylint: disable=not-callable
+FOUR_GROUP = torch.tensor(
+    [[0, 1, 2, 3], [1, 0, 3, 2], [2, 3, 0, 1], [3, 2, 1, 0]]
+)
 
 # some non associative magma
 # (0 * 1) * 2 = 0 * 2 = 0
 # 0 * (1 * 2) = 0 * 0 = 1
-NON_ASSOCIATIVE_MAGMA = np.array([[1, 0, 0], [2, 2, 0], [2, 2, 2]])
+# pylint: disable=not-callable
+NON_ASSOCIATIVE_MAGMA = torch.tensor([[1, 0, 0], [2, 2, 0], [2, 2, 2]])
 
 
-def random_semigroup(dim: int, maximal_tries: int) -> Tuple[bool, np.ndarray]:
+def random_semigroup(
+    dim: int, maximal_tries: int
+) -> Tuple[bool, torch.Tensor]:
     """
     randomly serch for a semigroup Cayley table.
     Not recommended to use with dim > 4
@@ -142,13 +148,13 @@ def get_magma_by_index(cardinality: int, index: int) -> Magma:
         cayley_table.append(residual % cardinality)
         residual = residual // cardinality
     return Magma(
-        np.array(list(reversed(cayley_table))).reshape(
+        torch.tensor(list(reversed(cayley_table))).reshape(
             cardinality, cardinality
         )
     )
 
 
-def import_smallsemi_format(lines: List[bytes]) -> np.ndarray:
+def import_smallsemi_format(lines: List[bytes]) -> torch.Tensor:
     """
     imports lines in a format used by ``smallsemi`` `GAP package`.
     Format description:
@@ -169,17 +175,18 @@ def import_smallsemi_format(lines: List[bytes]) -> np.ndarray:
     .. _GAP package: https://www.gap-system.org/Manuals/pkg/smallsemi-0.6.12/doc/chap0.html
 
     """
-    raw_tables = np.array(
+    raw_tables = torch.tensor(
         [list(map(int, list(line.decode("utf-8")[:-1]))) for line in lines[1:]]
     ).T
-    tables = np.hstack(
-        [np.zeros([raw_tables.shape[0], 1], dtype=int), raw_tables]
+    tables = torch.cat(
+        [torch.zeros([raw_tables.shape[0], 1], dtype=torch.long), raw_tables],
+        dim=-1,
     )
     cardinality = int(tables.max()) + 1
     return tables.reshape(tables.shape[0], cardinality, cardinality)
 
 
-def get_isomorphic_magmas(cayley_table: np.ndarray) -> np.ndarray:
+def get_isomorphic_magmas(cayley_table: torch.Tensor) -> torch.Tensor:
     """
     given a Cayley table of a magma generate Cayley tables of isomorphic magmas
     by appying all possible permutations of the magma's elements
@@ -190,17 +197,19 @@ def get_isomorphic_magmas(cayley_table: np.ndarray) -> np.ndarray:
     isomorphic_cayley_tables = list()
     dim = cayley_table.shape[0]
     for permutation in permutations(range(dim)):
-        isomorphic_cayley_table = np.zeros(cayley_table.shape, dtype=int)
+        isomorphic_cayley_table = torch.zeros(
+            cayley_table.shape, dtype=torch.long
+        )
         for i in range(dim):
             for j in range(dim):
                 isomorphic_cayley_table[
                     permutation[i], permutation[j]
-                ] = permutation[cayley_table[i, j]]
+                ] = permutation[cayley_table[i, j].numpy()]
         isomorphic_cayley_tables.append(isomorphic_cayley_table)
-    return np.unique(np.array(isomorphic_cayley_tables), axis=0)
+    return torch.unique(torch.stack(isomorphic_cayley_tables), dim=0)
 
 
-def get_anti_isomorphic_magmas(cayley_table: np.ndarray) -> np.ndarray:
+def get_anti_isomorphic_magmas(cayley_table: torch.Tensor) -> torch.Tensor:
     """
     given a Cayley table of a magma generate Cayley tables of anti-isomorphic
     magmas by appying all possible permutations of the magma's elements
@@ -211,17 +220,19 @@ def get_anti_isomorphic_magmas(cayley_table: np.ndarray) -> np.ndarray:
     anti_isomorphic_cayley_tables = list()
     dim = cayley_table.shape[0]
     for permutation in permutations(range(dim)):
-        anti_isomorphic_cayley_table = np.zeros(cayley_table.shape, dtype=int)
+        anti_isomorphic_cayley_table = torch.zeros(
+            cayley_table.shape, dtype=torch.long
+        )
         for i in range(dim):
             for j in range(dim):
                 anti_isomorphic_cayley_table[
                     permutation[i], permutation[j]
-                ] = permutation[cayley_table[j, i]]
+                ] = permutation[cayley_table[j, i].numpy()]
         anti_isomorphic_cayley_tables.append(anti_isomorphic_cayley_table)
-    return np.unique(np.array(anti_isomorphic_cayley_tables), axis=0)
+    return torch.unique(torch.stack(anti_isomorphic_cayley_tables), dim=0)
 
 
-def get_equivalent_magmas(cayley_table: np.ndarray) -> np.ndarray:
+def get_equivalent_magmas(cayley_table: torch.Tensor) -> torch.Tensor:
     """
     given a Cayley table of a magma generate Cayley tables of isomorphic and
     anti-isomorphic magmas
@@ -229,14 +240,14 @@ def get_equivalent_magmas(cayley_table: np.ndarray) -> np.ndarray:
     :param cayley_table: a Cayley table of a magma
     :returns: a list of Cayley tables of isomorphic and anti-isomorphic magmas
     """
-    equivalent_tables = np.concatenate(
+    equivalent_tables = torch.cat(
         [
             get_isomorphic_magmas(cayley_table),
             get_anti_isomorphic_magmas(cayley_table),
         ],
-        axis=0,
+        dim=0,
     )
-    return np.unique(equivalent_tables, axis=0)
+    return torch.unique(equivalent_tables, dim=0)
 
 
 def download_file_from_url(
@@ -297,11 +308,11 @@ def download_smallsemi_data(data_path: str) -> None:
     )
 
 
-def print_report(totals: np.ndarray) -> pd.DataFrame:
+def print_report(totals: torch.Tensor) -> pd.DataFrame:
     """
     print report in a pretty format
 
-    >>> totals = np.array([[4, 4], [0, 1], [1, 2]])
+    >>> totals = torch.tensor([[4, 4], [0, 1], [1, 2]])
     >>> print_report(totals)
            puzzles  solved  (%)  hidden cells  guessed  in %
     level
@@ -317,7 +328,7 @@ def print_report(totals: np.ndarray) -> pd.DataFrame:
     :returns: the report in a form of ``pandas.DataFrame``
 
     """
-    levels = range(1, totals.shape[1] + 1)
+    levels = torch.arange(1, totals.shape[1] + 1)
     hidden_cells = totals[0] * levels
     return pd.DataFrame(
         {

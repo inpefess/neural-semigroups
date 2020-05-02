@@ -13,21 +13,23 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+# pylint: disable-all
 from unittest import TestCase
 
-import numpy as np
+import torch
+
 from neural_semigroups.magma import Magma
 from neural_semigroups.utils import FOUR_GROUP, NON_ASSOCIATIVE_MAGMA
 
 
 class TestMagma(TestCase):
     def setUp(self):
-        np.random.seed(0)
+        torch.manual_seed(777)
         self.some_magma = Magma(NON_ASSOCIATIVE_MAGMA)
         self.klein_group = Magma(FOUR_GROUP)
 
     def test_is_associative(self):
-        self.assertFalse(Magma(np.array([[0, 0], [1, 0]])).is_associative)
+        self.assertFalse(Magma(torch.tensor([[0, 0], [1, 0]])).is_associative)
         self.assertTrue(self.klein_group.is_associative)
         self.assertFalse(self.some_magma.is_associative)
 
@@ -45,37 +47,39 @@ class TestMagma(TestCase):
 
     def test_probabilistic_cube(self):
         cube = self.klein_group.probabilistic_cube
-        self.assertIsInstance(cube, np.ndarray)
+        self.assertIsInstance(cube, torch.Tensor)
         self.assertEqual(cube.shape, (4, 4, 4))
-        self.assertEqual(cube.dtype, np.float32)
+        self.assertEqual(cube.dtype, torch.float32)
         self.assertTrue(
-            np.allclose(
+            torch.allclose(
                 cube,
-                [
+                torch.tensor(
                     [
-                        [1.0, 0.0, 0.0, 0.0],
-                        [0.0, 1.0, 0.0, 0.0],
-                        [0.0, 0.0, 1.0, 0.0],
-                        [0.0, 0.0, 0.0, 1.0],
-                    ],
-                    [
-                        [0.0, 1.0, 0.0, 0.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                        [0.0, 0.0, 0.0, 1.0],
-                        [0.0, 0.0, 1.0, 0.0],
-                    ],
-                    [
-                        [0.0, 0.0, 1.0, 0.0],
-                        [0.0, 0.0, 0.0, 1.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                        [0.0, 1.0, 0.0, 0.0],
-                    ],
-                    [
-                        [0.0, 0.0, 0.0, 1.0],
-                        [0.0, 0.0, 1.0, 0.0],
-                        [0.0, 1.0, 0.0, 0.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                    ],
-                ],
+                        [
+                            [1.0, 0.0, 0.0, 0.0],
+                            [0.0, 1.0, 0.0, 0.0],
+                            [0.0, 0.0, 1.0, 0.0],
+                            [0.0, 0.0, 0.0, 1.0],
+                        ],
+                        [
+                            [0.0, 1.0, 0.0, 0.0],
+                            [1.0, 0.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0, 1.0],
+                            [0.0, 0.0, 1.0, 0.0],
+                        ],
+                        [
+                            [0.0, 0.0, 1.0, 0.0],
+                            [0.0, 0.0, 0.0, 1.0],
+                            [1.0, 0.0, 0.0, 0.0],
+                            [0.0, 1.0, 0.0, 0.0],
+                        ],
+                        [
+                            [0.0, 0.0, 0.0, 1.0],
+                            [0.0, 0.0, 1.0, 0.0],
+                            [0.0, 1.0, 0.0, 0.0],
+                            [1.0, 0.0, 0.0, 0.0],
+                        ],
+                    ]
+                ),
             )
         )

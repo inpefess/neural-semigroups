@@ -15,7 +15,7 @@
 """
 from typing import Optional
 
-import numpy as np
+import torch
 
 
 class Magma:
@@ -25,35 +25,35 @@ class Magma:
     .. _a magma: https://en.wikipedia.org/wiki/Magma_%28algebra%29
     """
 
-    cayley_table: np.ndarray
+    cayley_table: torch.Tensor
 
     def __init__(
         self,
-        cayley_table: Optional[np.ndarray] = None,
+        cayley_table: Optional[torch.Tensor] = None,
         cardinality: Optional[int] = None,
     ):
         """
         constucts a new magma
 
-        >>> np.random.seed(777)
+        >>> seed = torch.manual_seed(11)
         >>> Magma(cardinality=2)
-        [[1 1]
-         [1 0]]
-        >>> Magma(np.array([[0, 1], [1, 0]]))
-        [[0 1]
-         [1 0]]
+        tensor([[1, 1],
+                [0, 1]])
+        >>> Magma(torch.tensor([[0, 1], [1, 0]]))
+        tensor([[0, 1],
+                [1, 0]])
         >>> Magma()
         Traceback (most recent call last):
             ...
         ValueError: at least one argument must be given
-        >>> Magma(np.array([[0]]), 2)
+        >>> Magma(torch.tensor([[0]]), 2)
         Traceback (most recent call last):
             ...
         ValueError: inconsistent argument values
         >>> Magma([[0, 1]])
         Traceback (most recent call last):
             ...
-        ValueError: a cayley_table must be a numpy array of shape (n, n)
+        ValueError: cayley_table must be a `torch.Tensor` of shape (n, n)
 
         :param cayley_table: a Cayley table for a magma.
                              If not provided, a random table is generated.
@@ -62,12 +62,15 @@ class Magma:
         if cayley_table is None:
             if cardinality is None:
                 raise ValueError("at least one argument must be given")
-            self.cayley_table = np.random.randint(
-                low=0, high=cardinality, size=cardinality * cardinality
-            ).reshape(cardinality, cardinality)
+            self.cayley_table = torch.randint(
+                low=0,
+                high=cardinality,
+                size=[cardinality, cardinality],
+                dtype=torch.long,
+            )
         else:
             all_right = False
-            if isinstance(cayley_table, np.ndarray):
+            if isinstance(cayley_table, torch.Tensor):
                 if len(cayley_table.shape) == 2:
                     if cayley_table.shape[0] == cayley_table.shape[1]:
                         self.cayley_table = cayley_table
@@ -76,8 +79,9 @@ class Magma:
                 if cayley_table.shape[0] != cardinality:
                     raise ValueError("inconsistent argument values")
             if not all_right:
+                print(type(cayley_table))
                 raise ValueError(
-                    "a cayley_table must be a numpy array of shape (n, n)"
+                    "cayley_table must be a `torch.Tensor` of shape (n, n)"
                 )
 
     def __repr__(self) -> str:
@@ -116,7 +120,7 @@ class Magma:
         :returns: whether the input table is commutative or not
 
         """
-        return np.allclose(self.cayley_table, self.cayley_table.T)
+        return torch.allclose(self.cayley_table, self.cayley_table.T)
 
     @property
     def identity(self) -> int:
@@ -125,10 +129,11 @@ class Magma:
 
         :returns: the index of the identity element or -1 if there is no identity
         """
-        identity_row = np.arange(self.cardinality)
         identity = -1
-        for i in identity_row:
-            if np.allclose(self.cayley_table[i, :], identity_row):
+        for i in range(self.cardinality):
+            if torch.allclose(
+                self.cayley_table[i, :], torch.arange(self.cardinality)
+            ):
                 identity = i
                 break
         return identity
@@ -138,28 +143,28 @@ class Magma:
         """
         check whether there are solutions of equations :math:`ax=b` and :math:`xa=b``
         """
-        identity_row = np.arange(self.cardinality)
+        identity_row = torch.arange(self.cardinality)
         has_inverses = True
         for i in identity_row:
-            if not np.allclose(
-                np.sort(self.cayley_table[i, :]), identity_row
-            ) or not np.allclose(
-                np.sort(self.cayley_table[:, i]), identity_row
+            if not torch.allclose(
+                torch.sort(self.cayley_table[i, :])[0], identity_row
+            ) or not torch.allclose(
+                torch.sort(self.cayley_table[:, i])[0], identity_row
             ):
                 has_inverses = False
                 break
         return has_inverses
 
     @property
-    def probabilistic_cube(self) -> np.ndarray:
+    def probabilistic_cube(self) -> torch.Tensor:
         """
         a 3d array :math:`a` where :math:`a_{ijk}=P\\left\\{e_ie_j=e_k\\right\\}`
 
         :returns: a probabilistic cube representation of a Cayley table
         """
-        cube = np.zeros(
+        cube = torch.zeros(
             [self.cardinality, self.cardinality, self.cardinality],
-            dtype=np.float32,
+            dtype=torch.float32,
         )
         for i in range(self.cardinality):
             for j in range(self.cardinality):
@@ -171,20 +176,20 @@ class Magma:
         """
         goes to the next magma Cayley table in their lexicographical order
 
-        >>> Magma(np.array([[0, 1], [1, 0]])).next_magma
-        [[0 1]
-        [1 1]]
-        >>> Magma(np.array([[0, 1], [1, 1]])).next_magma
-        [[1 0]
-        [0 0]]
-        >>> Magma(np.array([[1, 1], [1, 1]])).next_magma
+        >>> Magma(torch.tensor([[0, 1], [1, 0]])).next_magma
+        tensor([[0, 1],
+                [1, 1]])
+        >>> Magma(torch.tensor([[0, 1], [1, 1]])).next_magma
+        tensor([[1, 0],
+                [0, 0]])
+        >>> Magma(torch.tensor([[1, 1], [1, 1]])).next_magma
         Traceback (most recent call last):
             ...
         ValueError: there is no next magma!
 
         :returns: another magma
         """
-        next_table = self.cayley_table.copy()
+        next_table = self.cayley_table.clone().detach()
         one = 1
         row = self.cardinality - 1
         column = self.cardinality - 1

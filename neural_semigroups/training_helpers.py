@@ -17,7 +17,6 @@ from argparse import ArgumentParser, Namespace
 from datetime import datetime
 from typing import Dict, Tuple, Union
 
-import numpy as np
 import torch
 from ignite.contrib.handlers.tensorboard_logger import (
     OutputHandler,
@@ -45,7 +44,12 @@ from neural_semigroups.magma import Magma
 def load_database_as_cubes(
     cardinality: int, train_size: int, validation_size: int
 ) -> Tuple[
-    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
 ]:
     """
     load a database file to probability cubes representation
@@ -73,9 +77,9 @@ def load_database_as_cubes(
     for cayley_table in tqdm(test.database, desc="generating test cubes"):
         test_cubes.append(Magma(cayley_table).probabilistic_cube)
     return (
-        np.stack(train_cubes),
-        np.stack(validation_cubes),
-        np.stack(test_cubes),
+        torch.stack(train_cubes),
+        torch.stack(validation_cubes),
+        torch.stack(test_cubes),
         train.labels,
         validation.labels,
         test.labels,

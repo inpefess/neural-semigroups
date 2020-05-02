@@ -60,7 +60,7 @@ class ConstantBaseline(Module):
         """
         forward pass inhereted from Module
 
-        >>> ConstantBaseline(2, 1)(torch.Tensor([
+        >>> ConstantBaseline(2, 1)(torch.tensor([
         ...     [[[0., 1.], [0.5, 0.5]], [[1., 0.], [0., 1.]]],
         ...     [[[0., 1.], [1.0, 0.0]], [[0.5, 0.5], [0., 1.]]]
         ... ]))

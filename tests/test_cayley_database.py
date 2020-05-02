@@ -13,19 +13,22 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+# pylint: disable-all
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 import numpy as np
+import torch
 
 from neural_semigroups.cayley_database import CayleyDatabase
 
 
 class TestCayleyDatabase(TestCase):
     def setUp(self):
+        torch.manual_seed(43)
         np.random.seed(43)
         self.cayley_db = CayleyDatabase(2, data_path="./tests")
-        self.cayley_db.database = np.array(
+        self.cayley_db.database = torch.tensor(
             [
                 [[0, 1], [1, 0]],
                 [[1, 0], [1, 1]],
@@ -33,11 +36,11 @@ class TestCayleyDatabase(TestCase):
                 [[1, 1], [1, 1]],
             ]
         )
-        self.cayley_db.labels = np.arange(4)
+        self.cayley_db.labels = torch.arange(4)
 
     @patch("numpy.load")
     def test_load_database(self, numpy_load_mock):
-        database = np.array([[[0, 1], [2, 3]], [[1, 0], [3, 2]]])
+        database = torch.tensor([[[0, 1], [2, 3]], [[1, 0], [3, 2]]])
         npz_file = MagicMock()
         npz_file.__getitem__ = (
             lambda x, y: database if y == "database" else None
@@ -48,16 +51,22 @@ class TestCayleyDatabase(TestCase):
             cayley_db = CayleyDatabase(2, "semigroup.2.npz")
             mock.assert_called_once()
         self.assertEqual(cayley_db.cardinality, 2)
-        self.assertTrue(np.allclose(cayley_db.database, database))
-        self.assertTrue(np.allclose(cayley_db.labels, np.zeros(2)))
+        self.assertTrue(torch.allclose(cayley_db.database, database))
+        self.assertTrue(
+            torch.allclose(cayley_db.labels, torch.zeros(2, dtype=torch.long))
+        )
 
     def test_search_database(self):
         self.cayley_db.cardinality = 2
         complete = self.cayley_db.search_database([[-1, 1], [1, 0]])
         self.assertIsInstance(complete, list)
         self.assertEqual(len(complete), 2)
-        self.assertTrue(np.allclose(complete[0], self.cayley_db.database[0]))
-        self.assertTrue(np.allclose(complete[1], self.cayley_db.database[2]))
+        self.assertTrue(
+            torch.allclose(complete[0], self.cayley_db.database[0])
+        )
+        self.assertTrue(
+            torch.allclose(complete[1], self.cayley_db.database[2])
+        )
         complete = self.cayley_db.search_database([[-1, -1], [0, 0]])
         self.assertIsInstance(complete, list)
         self.assertEqual(len(complete), 0)
@@ -69,15 +78,17 @@ class TestCayleyDatabase(TestCase):
         input = [[-1, 0], [0, 1]]
         self.cayley_db.model = lambda x: x
         table, cube = self.cayley_db.fill_in_with_model(input)
-        self.assertIsInstance(table, np.ndarray)
-        self.assertIsInstance(cube, np.ndarray)
-        self.assertEqual(table.dtype, int)
-        self.assertEqual(cube.dtype, np.float32)
-        self.assertTrue(np.allclose(table, np.array([[0, 0], [0, 1]])))
+        self.assertIsInstance(table, torch.Tensor)
+        self.assertIsInstance(cube, torch.Tensor)
+        self.assertEqual(table.dtype, torch.int64)
+        self.assertEqual(cube.dtype, torch.float)
+        self.assertTrue(torch.allclose(table, torch.tensor([[1, 0], [0, 1]])))
         self.assertTrue(
-            np.allclose(
+            torch.allclose(
                 cube,
-                np.array([[[0.5, 0.5], [1.0, 0.0]], [[1.0, 0.0], [0.0, 1.0]]]),
+                torch.tensor(
+                    [[[0.5, 0.5], [1.0, 0.0]], [[1.0, 0.0], [0.0, 1.0]]]
+                ),
             )
         )
         with self.assertRaises(Exception):
@@ -91,39 +102,37 @@ class TestCayleyDatabase(TestCase):
         self.assertFalse(self.cayley_db._check_input([[2, 0], [0, 0]]))
 
     def test_augment_by_equivalent_tables(self):
-        database = np.array(
-            [
-                np.array([[0, 1], [1, 0]]),
-                np.array([[1, 0], [0, 1]]),
-                np.array([[1, 0], [1, 1]]),
-            ]
+        database = torch.tensor(
+            [[[0, 1], [1, 0]], [[1, 0], [0, 1]], [[1, 0], [1, 1]]]
         )
-        true_database = np.array(
+        true_database = torch.tensor(
             [
-                np.array([[0, 0], [1, 0]]),
-                np.array([[0, 1], [0, 0]]),
-                np.array([[0, 1], [1, 0]]),
-                np.array([[1, 0], [0, 1]]),
-                np.array([[1, 0], [1, 1]]),
-                np.array([[1, 1], [0, 1]]),
+                [[0, 0], [1, 0]],
+                [[0, 1], [0, 0]],
+                [[0, 1], [1, 0]],
+                [[1, 0], [0, 1]],
+                [[1, 0], [1, 1]],
+                [[1, 1], [0, 1]],
             ]
         )
         self.cayley_db.database = database
         self.cayley_db.augment_by_equivalent_tables()
-        self.assertTrue(np.allclose(true_database, self.cayley_db.database))
+        self.assertTrue(torch.allclose(true_database, self.cayley_db.database))
 
     def test_train_test_split(self):
         train, validation, test = self.cayley_db.train_test_split(2, 1)
         self.assertTrue(
-            np.allclose(train.database, self.cayley_db.database[[2, 1]])
+            torch.allclose(train.database, self.cayley_db.database[[2, 1]])
         )
-        self.assertTrue(np.allclose(train.labels, [2, 1]))
+        self.assertTrue(torch.allclose(train.labels, torch.tensor([2, 1])))
         self.assertTrue(
-            np.allclose(validation.database, self.cayley_db.database[3])
+            torch.allclose(validation.database, self.cayley_db.database[3])
         )
-        self.assertTrue(np.allclose(validation.labels, [3]))
-        self.assertTrue(np.allclose(test.database, self.cayley_db.database[0]))
-        self.assertTrue(np.allclose(test.labels, [0]))
+        self.assertTrue(torch.allclose(validation.labels, torch.tensor([3])))
+        self.assertTrue(
+            torch.allclose(test.database, self.cayley_db.database[0])
+        )
+        self.assertTrue(torch.allclose(test.labels, torch.tensor([0])))
 
     @patch("torch.load")
     def test_load_model(self, load_mock):
@@ -136,9 +145,9 @@ class TestCayleyDatabase(TestCase):
 
     def test_testing_report(self):
         self.cayley_db.model = lambda x: x
-        np.random.seed(777)
+        torch.manual_seed(777)
         self.assertTrue(
-            np.allclose(
-                self.cayley_db.testing_report, [[4, 4], [1, 0], [1, 1]]
+            self.cayley_db.testing_report.equal(
+                torch.tensor([[4, 4], [3, 4], [3, 8]], dtype=torch.float)
             )
         )
