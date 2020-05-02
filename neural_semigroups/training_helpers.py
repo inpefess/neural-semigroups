@@ -37,7 +37,6 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 from neural_semigroups.cayley_database import CayleyDatabase
-from neural_semigroups.constants import CURRENT_DEVICE
 from neural_semigroups.magma import Magma
 
 
@@ -220,22 +219,16 @@ def get_loaders(
     :returns: a pair of train and validation data loaders
     """
     (
-        train,
-        validation,
+        train_tensor,
+        val_tensor,
         _,
         train_labels,
         validation_labels,
         _,
     ) = load_database_as_cubes(cardinality, train_size, validation_size)
-    train_tensor = torch.from_numpy(train).to(CURRENT_DEVICE)
-    val_tensor = torch.from_numpy(validation).to(CURRENT_DEVICE)
     if use_labels:
-        train_data = TensorDataset(
-            train_tensor, torch.from_numpy(train_labels).to(CURRENT_DEVICE)
-        )
-        val_data = TensorDataset(
-            val_tensor, torch.from_numpy(validation_labels).to(CURRENT_DEVICE)
-        )
+        train_data = TensorDataset(train_tensor, train_labels)
+        val_data = TensorDataset(val_tensor, validation_labels)
     else:
         train_data = TensorDataset(train_tensor, train_tensor)
         val_data = TensorDataset(val_tensor, val_tensor)

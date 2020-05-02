@@ -126,7 +126,6 @@ class TestUtils(TestCase):
         self.assertIsInstance(isomorphic_groups, torch.Tensor)
         n = isomorphic_groups.shape[0]
         self.assertEqual(n, 4)
-        print(isomorphic_groups)
         for i in range(n):
             self.assertIsInstance(isomorphic_groups[i], torch.Tensor)
             self.assertTrue(

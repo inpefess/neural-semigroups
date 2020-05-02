@@ -79,7 +79,6 @@ class Magma:
                 if cayley_table.shape[0] != cardinality:
                     raise ValueError("inconsistent argument values")
             if not all_right:
-                print(type(cayley_table))
                 raise ValueError(
                     "cayley_table must be a `torch.Tensor` of shape (n, n)"
                 )

@@ -97,10 +97,8 @@ class CayleyDatabase:
         # pylint: disable=not-callable
         table = torch.tensor(cayley_table)
         if table.shape != torch.Size([self.cardinality, self.cardinality]):
-            print(table.shape)
             correct = False
         elif table.dtype != torch.long:
-            print(table.dtype)
             correct = False
         elif table.max() >= self.cardinality or table.min() < -1:
             correct = False
@@ -202,7 +200,6 @@ class CayleyDatabase:
         validation_indices = all_indices[
             train_size : train_size + validation_size
         ]
-        print(all_indices, train_size, train_indices, validation_indices)
         test_indices = all_indices[train_size + validation_size :]
         train = CayleyDatabase(self.cardinality, data_path=self.data_path)
         train.database = self.database[train_indices]

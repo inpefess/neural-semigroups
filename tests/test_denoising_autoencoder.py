@@ -13,9 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+# pylint: disable-all
 from unittest import TestCase
 
-import numpy as np
 import torch
 
 from neural_semigroups.constants import CURRENT_DEVICE
@@ -35,11 +35,10 @@ class TestMagmaDAE(TestCase):
     def test_corruption(self):
         # first dimension is a batch size
         # for all x and y: x * y = 0
-        cayley_cube = np.zeros([1, 4, 4, 4])
+        cayley_cube = torch.zeros([1, 4, 4, 4])
         cayley_cube[:, :, :, 0] = 1.0
-        cayley_cube = torch.from_numpy(cayley_cube).to(CURRENT_DEVICE)
         self.magma_dae.train()
-        true_value = np.array(
+        true_value = torch.tensor(
             [
                 [
                     [
@@ -70,32 +69,25 @@ class TestMagmaDAE(TestCase):
             ]
         )
         self.assertTrue(
-            np.allclose(
-                self.magma_dae.corrupt_input(cayley_cube).numpy(), true_value
+            torch.allclose(
+                self.magma_dae.corrupt_input(cayley_cube), true_value
             )
         )
         self.magma_dae.apply_corruption = False
         self.assertTrue(
-            np.allclose(
-                self.magma_dae.corrupt_input(cayley_cube).numpy(),
-                cayley_cube.numpy(),
+            torch.allclose(
+                self.magma_dae.corrupt_input(cayley_cube), cayley_cube,
             )
         )
 
     def test_forward(self):
-        cayley_cube = (
-            torch.from_numpy(
-                np.stack(
-                    [
-                        Magma(FOUR_GROUP).probabilistic_cube,
-                        Magma(FOUR_GROUP).probabilistic_cube,
-                    ]
-                )
-            )
-            .to(CURRENT_DEVICE)
-            .view(-1, 4, 4, 4)
-        )
-        true_value = np.array(
+        cayley_cube = torch.stack(
+            [
+                Magma(FOUR_GROUP).probabilistic_cube,
+                Magma(FOUR_GROUP).probabilistic_cube,
+            ]
+        ).view(-1, 4, 4, 4)
+        true_value = torch.tensor(
             [
                 [
                     [
@@ -312,7 +304,5 @@ class TestMagmaDAE(TestCase):
             ]
         )
         self.assertTrue(
-            np.allclose(
-                self.magma_dae(cayley_cube).detach().numpy(), true_value
-            )
+            torch.allclose(self.magma_dae(cayley_cube).detach(), true_value)
         )
