@@ -19,6 +19,8 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from neural_semigroups.constants import CURRENT_DEVICE
+
 
 class ConstantBaseline(Module):
     """
@@ -49,7 +51,7 @@ class ConstantBaseline(Module):
         self.cardinality = cardinality
         self.constant_distribution = torch.zeros(
             cardinality, dtype=torch.float
-        )
+        ).to(CURRENT_DEVICE)
         self.constant_distribution[fill_in_with] = 1.0
 
     # pylint: disable=arguments-differ,unused-argument
@@ -58,7 +60,7 @@ class ConstantBaseline(Module):
         """
         forward pass inhereted from Module
 
-        >>> ConstantBaseline(2, 1)(torch.Tensor([
+        >>> ConstantBaseline(2, 1)(torch.tensor([
         ...     [[[0., 1.], [0.5, 0.5]], [[1., 0.], [0., 1.]]],
         ...     [[[0., 1.], [1.0, 0.0]], [[0.5, 0.5], [0., 1.]]]
         ... ]))

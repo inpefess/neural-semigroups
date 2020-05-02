@@ -13,9 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+# pylint: disable-all
 from unittest import TestCase
 
-import numpy as np
 import torch
 
 from neural_semigroups.classifier import MagmaClassifier
@@ -32,17 +32,13 @@ class TestMagmaClassifier(TestCase):
         )
 
     def test_forward(self):
-        cayley_cube = torch.from_numpy(
-            np.stack(
-                [
-                    Magma(FOUR_GROUP).probabilistic_cube,
-                    Magma(FOUR_GROUP).probabilistic_cube,
-                ]
-            )
+        cayley_cube = torch.stack(
+            [
+                Magma(FOUR_GROUP).probabilistic_cube,
+                Magma(FOUR_GROUP).probabilistic_cube,
+            ]
         ).view(-1, 4, 4, 4)
-        true_value = 0.5 * np.ones((2, 2))
+        true_value = 0.5 * torch.ones((2, 2))
         self.assertTrue(
-            np.allclose(
-                self.classifier(cayley_cube).detach().numpy(), true_value
-            )
+            torch.allclose(self.classifier(cayley_cube).detach(), true_value)
         )

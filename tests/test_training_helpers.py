@@ -13,17 +13,14 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+# pylint: disable-all
 import sys
 from unittest import TestCase
 from unittest.mock import patch
 
-import numpy as np
+import torch
 
-from neural_semigroups.training_helpers import (
-    get_arguments,
-    get_loaders,
-    load_database_as_cubes,
-)
+from neural_semigroups.training_helpers import get_arguments, get_loaders
 
 
 class TestTrainingHelpers(TestCase):
@@ -34,10 +31,10 @@ class TestTrainingHelpers(TestCase):
 
     @patch("neural_semigroups.training_helpers.load_database_as_cubes")
     def test_get_loaders(self, load_database_as_cubes_mock):
-        train = np.array([1])
-        train_labels = np.array([2])
-        validation = np.array([3])
-        validation_labels = np.array([4])
+        train = torch.tensor([1])
+        train_labels = torch.tensor([2])
+        validation = torch.tensor([3])
+        validation_labels = torch.tensor([4])
         load_database_as_cubes_mock.return_value = (
             train,
             validation,
@@ -52,23 +49,23 @@ class TestTrainingHelpers(TestCase):
         batch = [i for i in train_loader][0]
         self.assertIsInstance(batch, list)
         self.assertEqual(len(batch), 2)
-        self.assertTrue(np.allclose(batch[0].numpy(), train))
-        self.assertTrue(np.allclose(batch[1].numpy(), train_labels))
+        self.assertTrue(torch.allclose(batch[0], train))
+        self.assertTrue(torch.allclose(batch[1], train_labels))
         batch = [i for i in validation_loader][0]
         self.assertIsInstance(batch, list)
         self.assertEqual(len(batch), 2)
-        self.assertTrue(np.allclose(batch[0].numpy(), validation))
-        self.assertTrue(np.allclose(batch[1].numpy(), validation_labels))
+        self.assertTrue(torch.allclose(batch[0], validation))
+        self.assertTrue(torch.allclose(batch[1], validation_labels))
         train_loader, validation_loader = get_loaders(
             "filename", 1, 1, 1, False
         )
         batch = [i for i in train_loader][0]
         self.assertIsInstance(batch, list)
         self.assertEqual(len(batch), 2)
-        self.assertTrue(np.allclose(batch[0].numpy(), train))
-        self.assertTrue(np.allclose(batch[1].numpy(), train))
+        self.assertTrue(torch.allclose(batch[0], train))
+        self.assertTrue(torch.allclose(batch[1], train))
         batch = [i for i in validation_loader][0]
         self.assertIsInstance(batch, list)
         self.assertEqual(len(batch), 2)
-        self.assertTrue(np.allclose(batch[0].numpy(), validation))
-        self.assertTrue(np.allclose(batch[1].numpy(), validation))
+        self.assertTrue(torch.allclose(batch[0], validation))
+        self.assertTrue(torch.allclose(batch[1], validation))

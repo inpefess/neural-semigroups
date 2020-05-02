@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-import numpy as np
+import torch
 
 from neural_semigroups.magma import Magma
 
@@ -27,5 +27,5 @@ class CyclicGroup(Magma):
         """
         :param cardinality: number of elements in a cyclic group
         """
-        identity_row = np.arange(cardinality).reshape(cardinality, 1)
+        identity_row = torch.arange(cardinality).reshape(cardinality, 1)
         super().__init__((identity_row.T + identity_row) % cardinality)

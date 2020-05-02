@@ -13,9 +13,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+# pylint: disable-all
 from unittest import TestCase
 
-import numpy as np
+import torch
+
 from neural_semigroups.cyclic_group import CyclicGroup
 
 
@@ -23,9 +25,10 @@ class TestCyclicGroup(TestCase):
     def test_cyclic_group(self):
         cyclic_group = CyclicGroup(4)
         self.assertTrue(
-            np.allclose(
-                cyclic_group.cayley_table,
-                [[0, 1, 2, 3], [1, 2, 3, 0], [2, 3, 0, 1], [3, 0, 1, 2]],
+            cyclic_group.cayley_table.allclose(
+                torch.tensor(
+                    [[0, 1, 2, 3], [1, 2, 3, 0], [2, 3, 0, 1], [3, 0, 1, 2]]
+                )
             )
         )
         self.assertTrue(cyclic_group.is_associative)

@@ -17,7 +17,6 @@ from argparse import ArgumentParser, Namespace
 from datetime import datetime
 from typing import Dict, Tuple, Union
 
-import numpy as np
 import torch
 from ignite.contrib.handlers.tensorboard_logger import (
     OutputHandler,
@@ -38,14 +37,19 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 from neural_semigroups.cayley_database import CayleyDatabase
-from neural_semigroups.constants import CURRENT_DEVICE
 from neural_semigroups.magma import Magma
+from neural_semigroups.constants import CURRENT_DEVICE
 
 
 def load_database_as_cubes(
     cardinality: int, train_size: int, validation_size: int
 ) -> Tuple[
-    np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
+    torch.Tensor,
 ]:
     """
     load a database file to probability cubes representation
@@ -73,9 +77,9 @@ def load_database_as_cubes(
     for cayley_table in tqdm(test.database, desc="generating test cubes"):
         test_cubes.append(Magma(cayley_table).probabilistic_cube)
     return (
-        np.stack(train_cubes),
-        np.stack(validation_cubes),
-        np.stack(test_cubes),
+        torch.stack(train_cubes),
+        torch.stack(validation_cubes),
+        torch.stack(test_cubes),
         train.labels,
         validation.labels,
         test.labels,
@@ -150,10 +154,17 @@ def learning_pipeline(
     :oaram data_loader: train and validation data loaders
     """
     trainer = create_supervised_trainer(
-        model, Adam(model.parameters(), lr=params["learning_rate"]), loss
+        model,
+        Adam(model.parameters(), lr=params["learning_rate"]),
+        loss,
+        CURRENT_DEVICE,
     )
-    train_evaluator = create_supervised_evaluator(model, {"loss": Loss(loss)})
-    evaluator = create_supervised_evaluator(model, {"loss": Loss(loss)})
+    train_evaluator = create_supervised_evaluator(
+        model, {"loss": Loss(loss)}, CURRENT_DEVICE
+    )
+    evaluator = create_supervised_evaluator(
+        model, {"loss": Loss(loss)}, CURRENT_DEVICE
+    )
 
     @trainer.on(Events.EPOCH_COMPLETED)
     # pylint: disable=unused-argument,unused-variable
@@ -216,22 +227,16 @@ def get_loaders(
     :returns: a pair of train and validation data loaders
     """
     (
-        train,
-        validation,
+        train_tensor,
+        val_tensor,
         _,
         train_labels,
         validation_labels,
         _,
     ) = load_database_as_cubes(cardinality, train_size, validation_size)
-    train_tensor = torch.from_numpy(train).to(CURRENT_DEVICE)
-    val_tensor = torch.from_numpy(validation).to(CURRENT_DEVICE)
     if use_labels:
-        train_data = TensorDataset(
-            train_tensor, torch.from_numpy(train_labels).to(CURRENT_DEVICE)
-        )
-        val_data = TensorDataset(
-            val_tensor, torch.from_numpy(validation_labels).to(CURRENT_DEVICE)
-        )
+        train_data = TensorDataset(train_tensor, train_labels)
+        val_data = TensorDataset(val_tensor, validation_labels)
     else:
         train_data = TensorDataset(train_tensor, train_tensor)
         val_data = TensorDataset(val_tensor, val_tensor)
