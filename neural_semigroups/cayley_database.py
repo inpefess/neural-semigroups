@@ -63,8 +63,12 @@ class CayleyDatabase:
             if not path.exists(filename):
                 download_smallsemi_data(self.data_path)
             with gzip.open(filename, "rb") as file:
-                self.database = import_smallsemi_format(file.readlines())
-            self.labels = torch.ones(len(self.database), dtype=torch.int64)
+                self.database = import_smallsemi_format(file.readlines()).to(
+                    CURRENT_DEVICE
+                )
+            self.labels = torch.ones(
+                len(self.database), dtype=torch.int64, device=CURRENT_DEVICE
+            )
         else:
             check_filename(path.basename(database_filename))
             npz_file = np.load(database_filename)
@@ -156,21 +160,17 @@ class CayleyDatabase:
         cube = torch.zeros(
             [self.cardinality, self.cardinality, self.cardinality],
             dtype=torch.float32,
+            device=CURRENT_DEVICE,
         )
         rows, cols = torch.where(table != -1)
         cube[rows, cols, table[rows, cols]] = 1.0
         rows, cols = torch.where(table == -1)
         cube[rows, cols, :] = inv_cardinality
-        prediction = (
-            self.model(
-                cube.reshape(
-                    [-1, self.cardinality, self.cardinality, self.cardinality]
-                )
+        prediction = self.model(
+            cube.reshape(
+                [-1, self.cardinality, self.cardinality, self.cardinality]
             )
-            .to(CURRENT_DEVICE)
-            .cpu()
-            .detach()[0]
-        )
+        ).detach()[0]
         return (prediction.argmax(axis=-1), prediction)
 
     def load_model(self, filename: str) -> None:

@@ -38,6 +38,7 @@ from tqdm import tqdm
 
 from neural_semigroups.cayley_database import CayleyDatabase
 from neural_semigroups.magma import Magma
+from neural_semigroups.constants import CURRENT_DEVICE
 
 
 def load_database_as_cubes(
@@ -153,10 +154,17 @@ def learning_pipeline(
     :oaram data_loader: train and validation data loaders
     """
     trainer = create_supervised_trainer(
-        model, Adam(model.parameters(), lr=params["learning_rate"]), loss
+        model,
+        Adam(model.parameters(), lr=params["learning_rate"]),
+        loss,
+        CURRENT_DEVICE,
     )
-    train_evaluator = create_supervised_evaluator(model, {"loss": Loss(loss)})
-    evaluator = create_supervised_evaluator(model, {"loss": Loss(loss)})
+    train_evaluator = create_supervised_evaluator(
+        model, {"loss": Loss(loss)}, CURRENT_DEVICE
+    )
+    evaluator = create_supervised_evaluator(
+        model, {"loss": Loss(loss)}, CURRENT_DEVICE
+    )
 
     @trainer.on(Events.EPOCH_COMPLETED)
     # pylint: disable=unused-argument,unused-variable
