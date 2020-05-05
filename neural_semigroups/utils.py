@@ -104,17 +104,15 @@ def check_smallsemi_filename(filename: str) -> int:
     if not isinstance(filename, str):
         wrong_name = True
     else:
-        base_filename = basename(filename)
-        filename_parts = base_filename.split(".")
+        filename_parts = basename(filename).split(".")
         if len(filename_parts) != 3:
             wrong_name = True
-        elif filename_parts[2] != "gz":
-            wrong_name = True
-        elif filename_parts[1] != "gl":
-            wrong_name = True
-        elif filename_parts[0][:-1] != "data":
-            wrong_name = True
-        elif not filename_parts[0][-1].isdigit():
+        elif (
+            filename_parts[2] != "gz"
+            or filename_parts[1] != "gl"
+            or filename_parts[0][:-1] != "data"
+            or not filename_parts[0][-1].isdigit()
+        ):
             wrong_name = True
         else:
             cardinality = int(filename_parts[0][-1])
@@ -122,8 +120,7 @@ def check_smallsemi_filename(filename: str) -> int:
                 wrong_name = True
     if wrong_name:
         raise ValueError(
-            "filename should be of format data[2-7].gl.gz"
-            f" not {base_filename}"
+            "filename should be of format data[2-7].gl.gz" f" not {filename}"
         )
     return cardinality
 
