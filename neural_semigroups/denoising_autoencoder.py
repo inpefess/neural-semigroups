@@ -30,6 +30,7 @@ class MagmaDAE(Module):
     """
 
     apply_corruption: bool = True
+    do_sampling: bool = False
 
     def __init__(
         self, cardinality: int, hidden_dims: List[int], corruption_rate: float
@@ -123,6 +124,20 @@ class MagmaDAE(Module):
             .transpose(1, 3)
         )
 
+    def reparameterize(self, mu_and_sigma: Tensor) -> Tensor:
+        """
+        do a reparametrization trick
+
+        :param mu_and_sigma: vector of expectation and standard deviation
+        :returns: sample from a distribution
+        """
+        if self.do_sampling:
+            dim = mu_and_sigma.shape[1] // 2
+            sample = torch.normal(mu_and_sigma[:, :dim], mu_and_sigma[:, dim:])
+        else:
+            sample = mu_and_sigma
+        return sample
+
     # pylint: disable=arguments-differ
     @no_type_check
     def forward(self, cayley_cube: Tensor) -> Tensor:
@@ -134,7 +149,8 @@ class MagmaDAE(Module):
         """
         corrupted_input = self.corrupt_input(cayley_cube)
         encoded_input = self.encode(corrupted_input)
-        decoded_input = self.decode(encoded_input)
+        reparameterized_input = self.reparameterize(encoded_input)
+        decoded_input = self.decode(reparameterized_input)
         return torch.where(
             corrupted_input == 1.0,
             self._nearly_one,
