@@ -20,6 +20,7 @@ from typing import List, Optional, Tuple
 import numpy as np
 import torch
 from torch.nn import Module
+from torch.utils.data import TensorDataset, random_split
 from tqdm import tqdm
 
 from neural_semigroups.constants import CAYLEY_DATABASE_PATH, CURRENT_DEVICE
@@ -193,23 +194,26 @@ class CayleyDatabase:
         :param validation_size: number of tables in a validation set
         :returns: a triple of distinct Cayley tables databases: ``(train, validation, test)``
         """
-        all_indices = np.arange(len(self.database))
-        np.random.shuffle(all_indices)
-        all_indices = torch.from_numpy(all_indices)
-        train_indices = all_indices[:train_size]
-        validation_indices = all_indices[
-            train_size : train_size + validation_size
+        splits = random_split(
+            TensorDataset(self.database, self.labels),
+            [
+                train_size,
+                validation_size,
+                self.database.shape[0] - train_size - validation_size,
+            ],
+        )
+        train = CayleyDatabase(self.cardinality)
+        train.database, train.labels = [
+            torch.stack(i) for i in zip(*splits[0])  # type: ignore
         ]
-        test_indices = all_indices[train_size + validation_size :]
-        train = CayleyDatabase(self.cardinality, data_path=self.data_path)
-        train.database = self.database[train_indices]
-        train.labels = self.labels[train_indices]
-        validation = CayleyDatabase(self.cardinality, data_path=self.data_path)
-        validation.database = self.database[validation_indices]
-        validation.labels = self.labels[validation_indices]
-        test = CayleyDatabase(self.cardinality, data_path=self.data_path)
-        test.database = self.database[test_indices]
-        test.labels = self.labels[test_indices]
+        validation = CayleyDatabase(self.cardinality)
+        validation.database, validation.labels = [
+            torch.stack(i) for i in zip(*splits[1])  # type: ignore
+        ]
+        test = CayleyDatabase(self.cardinality)
+        test.database, test.labels = [
+            torch.stack(i) for i in zip(*splits[2])  # type: ignore
+        ]
         return train, validation, test
 
     @property

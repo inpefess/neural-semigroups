@@ -122,17 +122,15 @@ class TestCayleyDatabase(TestCase):
     def test_train_test_split(self):
         train, validation, test = self.cayley_db.train_test_split(2, 1)
         self.assertTrue(
-            torch.allclose(train.database, self.cayley_db.database[[2, 1]])
+            train.database.allclose(self.cayley_db.database[[0, 1]])
         )
-        self.assertTrue(torch.allclose(train.labels, torch.tensor([2, 1])))
+        self.assertTrue(train.labels.allclose(torch.tensor([0, 1])))
         self.assertTrue(
-            torch.allclose(validation.database, self.cayley_db.database[3])
+            validation.database.allclose(self.cayley_db.database[3])
         )
-        self.assertTrue(torch.allclose(validation.labels, torch.tensor([3])))
-        self.assertTrue(
-            torch.allclose(test.database, self.cayley_db.database[0])
-        )
-        self.assertTrue(torch.allclose(test.labels, torch.tensor([0])))
+        self.assertTrue(validation.labels.allclose(torch.tensor([3])))
+        self.assertTrue(test.database.allclose(self.cayley_db.database[2]))
+        self.assertTrue(test.labels.allclose(torch.tensor([2])))
 
     @patch("torch.load")
     def test_load_model(self, load_mock):
