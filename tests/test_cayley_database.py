@@ -17,7 +17,6 @@
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
-import numpy as np
 import torch
 
 from neural_semigroups.cayley_database import CayleyDatabase
@@ -26,7 +25,6 @@ from neural_semigroups.cayley_database import CayleyDatabase
 class TestCayleyDatabase(TestCase):
     def setUp(self):
         torch.manual_seed(43)
-        np.random.seed(43)
         self.cayley_db = CayleyDatabase(2, data_path="./tests")
         self.cayley_db.database = torch.tensor(
             [
@@ -144,6 +142,6 @@ class TestCayleyDatabase(TestCase):
         torch.manual_seed(777)
         self.assertTrue(
             self.cayley_db.testing_report(2).equal(
-                torch.tensor([[4, 4], [3, 4], [3, 8]], dtype=torch.float)
+                torch.tensor([[4, 4], [4, 4], [4, 8]], dtype=torch.float)
             )
         )

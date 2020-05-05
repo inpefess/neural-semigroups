@@ -17,7 +17,6 @@ import gzip
 from os import path
 from typing import List, Optional, Tuple
 
-import numpy as np
 import torch
 from torch.nn import Module
 from torch.utils.data import TensorDataset, random_split
@@ -256,9 +255,9 @@ class CayleyDatabase:
         max_level = cardinality ** 2 if max_level == -1 else max_level
         totals = torch.zeros((3, max_level))
         database_size = len(self.database)
-        test_indices = np.random.choice(
-            range(database_size), min(database_size, 1000), replace=False
-        )
+        test_indices = torch.randperm(database_size)[
+            : min(database_size, 1000)
+        ]
         for i in tqdm(test_indices, desc="generating and solving puzzles"):
             cayley_table = self.database[i]
             for level in range(1, max_level + 1):

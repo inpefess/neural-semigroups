@@ -1,3 +1,4 @@
+# type: ignore
 """
    Copyright 2019-2020 Boris Shminke
 
@@ -13,6 +14,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+# pylint: disable-all
 import os
 import sys
 
@@ -39,7 +41,6 @@ autodoc_mock_imports = [
     "tqdm",
     "pytorch-ignite",
     "tensorboard",
-    "numpy",
     "pandas",
 ]
 
