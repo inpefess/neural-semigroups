@@ -38,7 +38,7 @@ class TestCayleyDatabase(TestCase):
         )
         self.cayley_db.labels = torch.arange(4)
 
-    @patch("numpy.load")
+    @patch("torch.load")
     def test_load_database(self, numpy_load_mock):
         database = torch.tensor([[[0, 1], [2, 3]], [[1, 0], [3, 2]]])
         npz_file = MagicMock()
@@ -47,9 +47,7 @@ class TestCayleyDatabase(TestCase):
         )
         npz_file.get = lambda x, y: y if x == "labels" else None
         numpy_load_mock.return_value = npz_file
-        with patch.object(npz_file, "close") as mock:
-            cayley_db = CayleyDatabase(2, "semigroup.2.npz")
-            mock.assert_called_once()
+        cayley_db = CayleyDatabase(2, "semigroup.2.zip")
         self.assertEqual(cayley_db.cardinality, 2)
         self.assertTrue(torch.allclose(cayley_db.database, database))
         self.assertTrue(

@@ -72,12 +72,11 @@ class CayleyDatabase:
             )
         else:
             check_filename(path.basename(database_filename))
-            npz_file = np.load(database_filename)
-            self.database = npz_file["database"]
-            self.labels = npz_file.get(
+            torch_zip_file = torch.load(database_filename)
+            self.database = torch_zip_file["database"]
+            self.labels = torch_zip_file.get(
                 "labels", torch.zeros(len(self.database), dtype=torch.int64)
             )
-            npz_file.close()
 
     def augment_by_equivalent_tables(self) -> None:
         """

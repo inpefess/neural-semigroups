@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-import numpy as np
+import torch
 from tqdm import tqdm
 
 from neural_semigroups.magma import Magma
@@ -31,15 +31,20 @@ def generate_data():
             positive[magma] = magma.cayley_table
         elif len(positive) > len(negative):
             negative[magma] = magma.cayley_table
-    np.savez(
-        f"databases/semigroup.{cardinality}.npz",
-        database=np.stack(list(positive.values()) + list(negative.values())),
-        labels=np.concatenate(
-            [
-                np.ones(len(positive), dtype=np.int64),
-                np.zeros(len(negative), dtype=np.int64),
-            ]
-        ),
+    torch.save(
+        {
+            "database": torch.stack(
+                list(positive.values()) + list(negative.values())
+            ),
+            "labels": torch.cat(
+                [
+                    torch.ones(len(positive), dtype=torch.long),
+                    torch.zeros(len(negative), dtype=torch.long),
+                ]
+            ),
+        },
+        f"databases/semigroup.{cardinality}.zip",
+        _use_new_zipfile_serialization=True,
     )
 
 

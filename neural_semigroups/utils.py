@@ -25,7 +25,7 @@ import requests
 import torch
 from tqdm import tqdm
 
-from neural_semigroups.constants import GAP_PACKAGES_URL, CURRENT_DEVICE
+from neural_semigroups.constants import CURRENT_DEVICE, GAP_PACKAGES_URL
 from neural_semigroups.magma import Magma
 
 # the Cayley table of Klein Vierergruppe
@@ -79,7 +79,7 @@ def check_filename(filename: str) -> int:
             wrong_name = True
         elif filename_parts[0] not in ("semigroup", "monoid", "group"):
             wrong_name = True
-        elif filename_parts[2] != "npz":
+        elif filename_parts[2] != "zip":
             wrong_name = True
         elif not filename_parts[1].isdigit():
             wrong_name = True
@@ -88,7 +88,7 @@ def check_filename(filename: str) -> int:
     if wrong_name:
         raise ValueError(
             "filename should be of format"
-            f"[semigroup|monoid|group].[int].npz, not {base_filename}"
+            f"[semigroup|monoid|group].[int].zip, not {base_filename}"
         )
     return cardinality
 
