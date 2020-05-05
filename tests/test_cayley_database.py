@@ -66,7 +66,7 @@ class TestCayleyDatabase(TestCase):
         complete = self.cayley_db.search_database([[-1, -1], [0, 0]])
         self.assertIsInstance(complete, list)
         self.assertEqual(len(complete), 0)
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             self.cayley_db.search_database("no good")
 
     def test_fill_in_with_model(self):
@@ -87,7 +87,7 @@ class TestCayleyDatabase(TestCase):
                 ),
             )
         )
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             self.cayley_db.fill_in_with_model("no good")
 
     def test_check_input(self):
