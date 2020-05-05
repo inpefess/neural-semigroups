@@ -17,9 +17,9 @@ import gzip
 from os import path
 from typing import List, Optional, Tuple
 
-import numpy as np
 import torch
 from torch.nn import Module
+from torch.utils.data import TensorDataset, random_split
 from tqdm import tqdm
 
 from neural_semigroups.constants import CAYLEY_DATABASE_PATH, CURRENT_DEVICE
@@ -71,12 +71,11 @@ class CayleyDatabase:
             )
         else:
             check_filename(path.basename(database_filename))
-            npz_file = np.load(database_filename)
-            self.database = npz_file["database"]
-            self.labels = npz_file.get(
+            torch_zip_file = torch.load(database_filename)
+            self.database = torch_zip_file["database"]
+            self.labels = torch_zip_file.get(
                 "labels", torch.zeros(len(self.database), dtype=torch.int64)
             )
-            npz_file.close()
 
     def augment_by_equivalent_tables(self) -> None:
         """
@@ -190,26 +189,29 @@ class CayleyDatabase:
 
         :param cayley_db: a database of Cayley tables
         :param train_size: number of tables in a train set
-        :param train_size: number of tables in a validation set
+        :param validation_size: number of tables in a validation set
         :returns: a triple of distinct Cayley tables databases: ``(train, validation, test)``
         """
-        all_indices = np.arange(len(self.database))
-        np.random.shuffle(all_indices)
-        all_indices = torch.from_numpy(all_indices)
-        train_indices = all_indices[:train_size]
-        validation_indices = all_indices[
-            train_size : train_size + validation_size
+        splits = random_split(
+            TensorDataset(self.database, self.labels),
+            [
+                train_size,
+                validation_size,
+                self.database.shape[0] - train_size - validation_size,
+            ],
+        )
+        train = CayleyDatabase(self.cardinality)
+        train.database, train.labels = [
+            torch.stack(i) for i in zip(*splits[0])  # type: ignore
         ]
-        test_indices = all_indices[train_size + validation_size :]
-        train = CayleyDatabase(self.cardinality, data_path=self.data_path)
-        train.database = self.database[train_indices]
-        train.labels = self.labels[train_indices]
-        validation = CayleyDatabase(self.cardinality, data_path=self.data_path)
-        validation.database = self.database[validation_indices]
-        validation.labels = self.labels[validation_indices]
-        test = CayleyDatabase(self.cardinality, data_path=self.data_path)
-        test.database = self.database[test_indices]
-        test.labels = self.labels[test_indices]
+        validation = CayleyDatabase(self.cardinality)
+        validation.database, validation.labels = [
+            torch.stack(i) for i in zip(*splits[1])  # type: ignore
+        ]
+        test = CayleyDatabase(self.cardinality)
+        test.database, test.labels = [
+            torch.stack(i) for i in zip(*splits[2])  # type: ignore
+        ]
         return train, validation, test
 
     @property
@@ -228,16 +230,15 @@ class CayleyDatabase:
         """
         self._model = model
 
-    @property
-    def testing_report(self) -> torch.Tensor:
+    def testing_report(self, max_level: int = -1) -> torch.Tensor:
         """
-        this functions:
+        this function:
 
         * takes 1000 random Cayley tables from the database
           (if there are less tables, it simply takes all of them)
-        * for each Cayley table generates ``cardinality ** 2 // 2`` puzzles
+        * for each Cayley table generates ``max_level`` puzzles
         * each puzzle is created from a table by omitting several cell values
-        * for each table the function omits 1, 2, and up to a half of all cells
+        * for each table the function omits 1, 2, and up to ``max_level`` of all cells
         * each puzzle is given to a pre-trained model of that database
         * if the model returns an associative table
           (not necessary the original one)
@@ -245,16 +246,18 @@ class CayleyDatabase:
         * in addition, all correctly filled cells are counted
           (despite leading to a full associative table)
 
+        :param max_level: up to how many cells to omit when creating a puzzle;
+            when not provided or explicitly set to ``-1`` it defaults to the total number of cells in a table
         :returns: statistics of solved puzzles splitted by the levels of difficulty
                   (number of cells omitted)
         """
         cardinality = self.cardinality
-        max_level = cardinality ** 2 // 2
+        max_level = cardinality ** 2 if max_level == -1 else max_level
         totals = torch.zeros((3, max_level))
         database_size = len(self.database)
-        test_indices = np.random.choice(
-            range(database_size), min(database_size, 1000), replace=False
-        )
+        test_indices = torch.randperm(database_size)[
+            : min(database_size, 1000)
+        ]
         for i in tqdm(test_indices, desc="generating and solving puzzles"):
             cayley_table = self.database[i]
             for level in range(1, max_level + 1):

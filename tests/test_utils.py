@@ -60,8 +60,8 @@ class TestUtils(TestCase):
         with self.assertRaises(Exception):
             check_filename("semigroup.strange.name")
         with self.assertRaises(Exception):
-            check_filename("semigroup.name.npz")
-        self.assertEqual(check_filename("monoid.1.npz"), 1)
+            check_filename("semigroup.name.zip")
+        self.assertEqual(check_filename("monoid.1.zip"), 1)
 
     def test_check_smallsemi_filename(self):
         with self.assertRaises(Exception):

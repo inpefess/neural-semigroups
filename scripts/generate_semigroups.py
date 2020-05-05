@@ -19,7 +19,6 @@ from itertools import chain
 from multiprocessing import Pool
 from typing import List, Tuple
 
-import numpy as np
 import torch
 from tqdm import tqdm
 
@@ -84,9 +83,10 @@ def main() -> None:
         semigroups_lists = pool.map(
             find_semigroups, zip(starting_magmas, batch_sizes)
         )
-    np.savez(
-        f"./databases/semigroup.{args.dim}.npz",
-        database=np.stack(list(chain.from_iterable(semigroups_lists))),
+    torch.save(
+        {"database": torch.stack(list(chain.from_iterable(semigroups_lists)))},
+        f"./databases/semigroup.{args.dim}.zip",
+        _use_new_zipfile_serialization=True,
     )
 
 

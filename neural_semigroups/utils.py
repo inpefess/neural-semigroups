@@ -25,7 +25,7 @@ import requests
 import torch
 from tqdm import tqdm
 
-from neural_semigroups.constants import GAP_PACKAGES_URL, CURRENT_DEVICE
+from neural_semigroups.constants import CURRENT_DEVICE, GAP_PACKAGES_URL
 from neural_semigroups.magma import Magma
 
 # the Cayley table of Klein Vierergruppe
@@ -79,7 +79,7 @@ def check_filename(filename: str) -> int:
             wrong_name = True
         elif filename_parts[0] not in ("semigroup", "monoid", "group"):
             wrong_name = True
-        elif filename_parts[2] != "npz":
+        elif filename_parts[2] != "zip":
             wrong_name = True
         elif not filename_parts[1].isdigit():
             wrong_name = True
@@ -88,7 +88,7 @@ def check_filename(filename: str) -> int:
     if wrong_name:
         raise ValueError(
             "filename should be of format"
-            f"[semigroup|monoid|group].[int].npz, not {base_filename}"
+            f"[semigroup|monoid|group].[int].zip, not {base_filename}"
         )
     return cardinality
 
@@ -197,14 +197,15 @@ def get_isomorphic_magmas(cayley_table: torch.Tensor) -> torch.Tensor:
     isomorphic_cayley_tables = list()
     dim = cayley_table.shape[0]
     for permutation in permutations(range(dim)):
+        permutation_tensor = torch.tensor(permutation, device=CURRENT_DEVICE)
         isomorphic_cayley_table = torch.zeros(
             cayley_table.shape, dtype=torch.long, device=CURRENT_DEVICE
         )
         for i in range(dim):
             for j in range(dim):
                 isomorphic_cayley_table[
-                    permutation[i], permutation[j]
-                ] = permutation[cayley_table[i, j].cpu().numpy()]
+                    permutation_tensor[i], permutation_tensor[j]
+                ] = permutation_tensor[cayley_table[i, j]]
         isomorphic_cayley_tables.append(isomorphic_cayley_table)
     return torch.unique(torch.stack(isomorphic_cayley_tables), dim=0)
 
@@ -223,11 +224,12 @@ def get_anti_isomorphic_magmas(cayley_table: torch.Tensor) -> torch.Tensor:
         anti_isomorphic_cayley_table = torch.zeros(
             cayley_table.shape, dtype=torch.long, device=CURRENT_DEVICE
         )
+        permutation_tensor = torch.tensor(permutation, device=CURRENT_DEVICE)
         for i in range(dim):
             for j in range(dim):
                 anti_isomorphic_cayley_table[
-                    permutation[i], permutation[j]
-                ] = permutation[cayley_table[j, i].cpu().numpy()]
+                    permutation_tensor[i], permutation_tensor[j]
+                ] = permutation_tensor[cayley_table[j, i]]
         anti_isomorphic_cayley_tables.append(anti_isomorphic_cayley_table)
     return torch.unique(torch.stack(anti_isomorphic_cayley_tables), dim=0)
 

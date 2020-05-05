@@ -2,5 +2,6 @@
 
 generated-members=torch.*
 max-line-length=79
-ignore-long-lines=(https://|:math:|:param|:returns:|ValueError:)
+ignore-long-lines=(https://|:math:|:param|:returns:|ValueError:|``.*``)
 disable=bad-continuation
+max-statements=30

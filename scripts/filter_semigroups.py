@@ -15,7 +15,7 @@
 """
 from argparse import ArgumentParser
 
-import numpy as np
+import torch
 from tqdm import tqdm
 
 from neural_semigroups.magma import Magma
@@ -31,8 +31,10 @@ def main():
     )
     args = parser.parse_args()
     input_file = "semigroup" if args.filter == choices[0] else "monoid"
-    with np.load(f"./databases/{input_file}.{args.dim}.npz") as npz_file:
-        cayley_tables = npz_file["database"]
+    with torch.load(
+        f"./databases/{input_file}.{args.dim}.zip"
+    ) as torch_zip_file:
+        cayley_tables = torch_zip_file["database"]
     output_file = "monoid" if args.filter == choices[0] else "group"
     filtered = list()
     for cayley_table in tqdm(cayley_tables):
@@ -43,9 +45,10 @@ def main():
             append_to_list = Magma(cayley_table).has_inverses
         if append_to_list:
             filtered.append(cayley_table)
-    np.savez(
-        f"./databases/{output_file}.{args.dim}.npz",
-        database=np.stack(filtered),
+    torch.save(
+        {"database": torch.stack(filtered)},
+        f"./databases/{output_file}.{args.dim}.zip",
+        _use_new_zipfile_serialization=True,
     )
 
 

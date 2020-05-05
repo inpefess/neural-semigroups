@@ -17,7 +17,6 @@
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
-import numpy as np
 import torch
 
 from neural_semigroups.cayley_database import CayleyDatabase
@@ -26,7 +25,6 @@ from neural_semigroups.cayley_database import CayleyDatabase
 class TestCayleyDatabase(TestCase):
     def setUp(self):
         torch.manual_seed(43)
-        np.random.seed(43)
         self.cayley_db = CayleyDatabase(2, data_path="./tests")
         self.cayley_db.database = torch.tensor(
             [
@@ -38,18 +36,16 @@ class TestCayleyDatabase(TestCase):
         )
         self.cayley_db.labels = torch.arange(4)
 
-    @patch("numpy.load")
-    def test_load_database(self, numpy_load_mock):
+    @patch("torch.load")
+    def test_load_database(self, torch_load_mock):
         database = torch.tensor([[[0, 1], [2, 3]], [[1, 0], [3, 2]]])
         npz_file = MagicMock()
         npz_file.__getitem__ = (
             lambda x, y: database if y == "database" else None
         )
         npz_file.get = lambda x, y: y if x == "labels" else None
-        numpy_load_mock.return_value = npz_file
-        with patch.object(npz_file, "close") as mock:
-            cayley_db = CayleyDatabase(2, "semigroup.2.npz")
-            mock.assert_called_once()
+        torch_load_mock.return_value = npz_file
+        cayley_db = CayleyDatabase(2, "semigroup.2.zip")
         self.assertEqual(cayley_db.cardinality, 2)
         self.assertTrue(torch.allclose(cayley_db.database, database))
         self.assertTrue(
@@ -122,17 +118,15 @@ class TestCayleyDatabase(TestCase):
     def test_train_test_split(self):
         train, validation, test = self.cayley_db.train_test_split(2, 1)
         self.assertTrue(
-            torch.allclose(train.database, self.cayley_db.database[[2, 1]])
+            train.database.allclose(self.cayley_db.database[[0, 1]])
         )
-        self.assertTrue(torch.allclose(train.labels, torch.tensor([2, 1])))
+        self.assertTrue(train.labels.allclose(torch.tensor([0, 1])))
         self.assertTrue(
-            torch.allclose(validation.database, self.cayley_db.database[3])
+            validation.database.allclose(self.cayley_db.database[3])
         )
-        self.assertTrue(torch.allclose(validation.labels, torch.tensor([3])))
-        self.assertTrue(
-            torch.allclose(test.database, self.cayley_db.database[0])
-        )
-        self.assertTrue(torch.allclose(test.labels, torch.tensor([0])))
+        self.assertTrue(validation.labels.allclose(torch.tensor([3])))
+        self.assertTrue(test.database.allclose(self.cayley_db.database[2]))
+        self.assertTrue(test.labels.allclose(torch.tensor([2])))
 
     @patch("torch.load")
     def test_load_model(self, load_mock):
@@ -147,7 +141,7 @@ class TestCayleyDatabase(TestCase):
         self.cayley_db.model = lambda x: x
         torch.manual_seed(777)
         self.assertTrue(
-            self.cayley_db.testing_report.equal(
-                torch.tensor([[4, 4], [3, 4], [3, 8]], dtype=torch.float)
+            self.cayley_db.testing_report(2).equal(
+                torch.tensor([[4, 4], [4, 4], [4, 8]], dtype=torch.float)
             )
         )
