@@ -17,7 +17,7 @@
 from unittest import TestCase
 
 import torch
-from torch.functional import inf
+from torch._six import inf
 
 from neural_semigroups.associator_loss import AssociatorLoss
 from neural_semigroups.constants import CURRENT_DEVICE
