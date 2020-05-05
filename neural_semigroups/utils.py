@@ -197,14 +197,15 @@ def get_isomorphic_magmas(cayley_table: torch.Tensor) -> torch.Tensor:
     isomorphic_cayley_tables = list()
     dim = cayley_table.shape[0]
     for permutation in permutations(range(dim)):
+        permutation_tensor = torch.tensor(permutation, device=CURRENT_DEVICE)
         isomorphic_cayley_table = torch.zeros(
             cayley_table.shape, dtype=torch.long, device=CURRENT_DEVICE
         )
         for i in range(dim):
             for j in range(dim):
                 isomorphic_cayley_table[
-                    permutation[i], permutation[j]
-                ] = permutation[cayley_table[i, j].cpu().numpy()]
+                    permutation_tensor[i], permutation_tensor[j]
+                ] = permutation_tensor[cayley_table[i, j]]
         isomorphic_cayley_tables.append(isomorphic_cayley_table)
     return torch.unique(torch.stack(isomorphic_cayley_tables), dim=0)
 
@@ -223,11 +224,12 @@ def get_anti_isomorphic_magmas(cayley_table: torch.Tensor) -> torch.Tensor:
         anti_isomorphic_cayley_table = torch.zeros(
             cayley_table.shape, dtype=torch.long, device=CURRENT_DEVICE
         )
+        permutation_tensor = torch.tensor(permutation, device=CURRENT_DEVICE)
         for i in range(dim):
             for j in range(dim):
                 anti_isomorphic_cayley_table[
-                    permutation[i], permutation[j]
-                ] = permutation[cayley_table[j, i].cpu().numpy()]
+                    permutation_tensor[i], permutation_tensor[j]
+                ] = permutation_tensor[cayley_table[j, i]]
         anti_isomorphic_cayley_tables.append(anti_isomorphic_cayley_table)
     return torch.unique(torch.stack(anti_isomorphic_cayley_tables), dim=0)
 
