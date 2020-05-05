@@ -190,7 +190,7 @@ class CayleyDatabase:
 
         :param cayley_db: a database of Cayley tables
         :param train_size: number of tables in a train set
-        :param train_size: number of tables in a validation set
+        :param validation_size: number of tables in a validation set
         :returns: a triple of distinct Cayley tables databases: ``(train, validation, test)``
         """
         all_indices = np.arange(len(self.database))
@@ -228,16 +228,15 @@ class CayleyDatabase:
         """
         self._model = model
 
-    @property
-    def testing_report(self) -> torch.Tensor:
+    def testing_report(self, max_level: int = -1) -> torch.Tensor:
         """
-        this functions:
+        this function:
 
         * takes 1000 random Cayley tables from the database
           (if there are less tables, it simply takes all of them)
-        * for each Cayley table generates ``cardinality ** 2 // 2`` puzzles
+        * for each Cayley table generates ``max_level`` puzzles
         * each puzzle is created from a table by omitting several cell values
-        * for each table the function omits 1, 2, and up to a half of all cells
+        * for each table the function omits 1, 2, and up to ``max_level`` of all cells
         * each puzzle is given to a pre-trained model of that database
         * if the model returns an associative table
           (not necessary the original one)
@@ -245,11 +244,13 @@ class CayleyDatabase:
         * in addition, all correctly filled cells are counted
           (despite leading to a full associative table)
 
+        :param max_level: up to how many cells to omit when creating a puzzle;
+            when not provided or explicitly set to ``-1`` it defaults to the total number of cells in a table
         :returns: statistics of solved puzzles splitted by the levels of difficulty
                   (number of cells omitted)
         """
         cardinality = self.cardinality
-        max_level = cardinality ** 2 // 2
+        max_level = cardinality ** 2 if max_level == -1 else max_level
         totals = torch.zeros((3, max_level))
         database_size = len(self.database)
         test_indices = np.random.choice(

@@ -147,7 +147,7 @@ class TestCayleyDatabase(TestCase):
         self.cayley_db.model = lambda x: x
         torch.manual_seed(777)
         self.assertTrue(
-            self.cayley_db.testing_report.equal(
+            self.cayley_db.testing_report(2).equal(
                 torch.tensor([[4, 4], [3, 4], [3, 8]], dtype=torch.float)
             )
         )
