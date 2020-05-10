@@ -38,13 +38,11 @@ def main():
     output_file = "monoid" if args.filter == choices[0] else "group"
     filtered = list()
     for cayley_table in tqdm(cayley_tables):
-        append_to_list = False
-        if args.filter == choices[0]:
-            append_to_list = Magma(cayley_table).identity >= 0
-        elif args.filter == choices[1]:
-            append_to_list = Magma(cayley_table).has_inverses
-        if append_to_list:
+        if args.filter == choices[0] and Magma(cayley_table).identity >= 0:
             filtered.append(cayley_table)
+        elif args.filter == choices[1] and Magma(cayley_table).has_inverses:
+            filtered.append(cayley_table)
+
     torch.save(
         {"database": torch.stack(filtered)},
         f"./databases/{output_file}.{args.dim}.zip",

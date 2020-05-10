@@ -14,6 +14,7 @@
    limitations under the License.
 """
 from argparse import ArgumentParser, Namespace
+from collections import namedtuple
 from datetime import datetime
 from typing import Dict, Tuple, Union
 
@@ -25,6 +26,7 @@ from ignite.contrib.handlers.tensorboard_logger import (
 )
 from ignite.contrib.handlers.tqdm_logger import ProgressBar
 from ignite.engine import (
+    Engine,
     Events,
     create_supervised_evaluator,
     create_supervised_trainer,
@@ -36,9 +38,11 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
+from neural_semigroups.associator_loss import AssociatorLoss
 from neural_semigroups.cayley_database import CayleyDatabase
-from neural_semigroups.magma import Magma
 from neural_semigroups.constants import CURRENT_DEVICE
+from neural_semigroups.magma import Magma
+from neural_semigroups.utils import get_newest_file
 
 
 def load_database_as_cubes(
@@ -137,40 +141,72 @@ def get_arguments() -> Namespace:
     return parser.parse_args()
 
 
-def learning_pipeline(
-    params: Dict[str, Union[int, float]],
-    cardinality: int,
-    model: Module,
-    loss: Loss,
-    data_loaders: Tuple[DataLoader, DataLoader],
-) -> None:
+# pylint: disable=unused-argument
+def associative_ratio(
+    prediction: torch.Tensor, target: torch.Tensor
+) -> torch.Tensor:
     """
-    run a comon learning pipeline
+    a wrapper around a discrete case of ``AssociatorLoss``
 
-    :param params: parameters of learning: epochs, learning_rate.
-    :param cardinality: a semigroup cardinality
-    :param model: a network architecture
-    :param loss: the criterion to optimize
-    :oaram data_loader: train and validation data loaders
+    :param prediction: a batch of generated Cayley tables
+    :param target: unused argument needed for compatibility
+    :returns: a percentage of associative tables in a batch
     """
-    trainer = create_supervised_trainer(
+    return AssociatorLoss(True)(prediction)
+
+
+def get_associator_evaluator(model: Module, loss: Module) -> Engine:
+    """
+    get an ``ignite`` evaluator for semigroups completion task
+
+    :param model: a network to train
+    :param loss: a loss to minimise (usually based on an ``AssociatorLoss``)
+    :returns: an ``ignite`` evaluator
+    """
+    return create_supervised_evaluator(
         model,
-        Adam(model.parameters(), lr=params["learning_rate"]),
-        loss,
+        {"loss": Loss(loss), "associative_ratio": Loss(associative_ratio)},
         CURRENT_DEVICE,
     )
-    train_evaluator = create_supervised_evaluator(
-        model, {"loss": Loss(loss)}, CURRENT_DEVICE
-    )
-    evaluator = create_supervised_evaluator(
-        model, {"loss": Loss(loss)}, CURRENT_DEVICE
+
+
+ThreeEvaluators = namedtuple(
+    "ThreeEvaluators", ["train", "validation", "test"]
+)
+
+
+def get_three_evaluators(model: Module, loss: Module) -> ThreeEvaluators:
+    """
+    a factory of named tuples ``ThreeEvaluators``
+
+    >>> isinstance(get_three_evaluators(Module(), Module()), ThreeEvaluators)
+    True
+
+    :param model: a network to train
+    :param loss: a loss to minimise during training
+    :returns: a triple of train, validation, and test ``ignite`` evaluators
+    """
+    return ThreeEvaluators(
+        train=get_associator_evaluator(model, loss),
+        validation=get_associator_evaluator(model, loss),
+        test=get_associator_evaluator(model, loss),
     )
 
-    @trainer.on(Events.EPOCH_COMPLETED)
-    # pylint: disable=unused-argument,unused-variable
-    def validate(trainer):
-        train_evaluator.run(data_loaders[0])
-        evaluator.run(data_loaders[1])
+
+def add_early_stopping_and_checkpoint(
+    evaluator: Engine, trainer: Engine, checkpoint_filename: str, model: Module
+) -> None:
+    """
+    adds two event handlers to an ``ignite`` trainer/evaluator pair:
+
+    * early stopping
+    * best model checkpoint saver
+
+    :param evaluator: an evaluator to add hooks to
+    :param trainer: a trainer from which to make a checkpoint
+    :param checkpoint_filename: some pretty name for a checkpoint
+    :param model: a network which is saved in checkpoints
+    """
 
     def score(engine):
         return -engine.state.metrics["loss"]
@@ -181,7 +217,48 @@ def learning_pipeline(
         "checkpoints", "", score_function=score, require_empty=False
     )
     evaluator.add_event_handler(
-        Events.EPOCH_COMPLETED, checkpoint, {f"semigroup{cardinality}": model}
+        Events.EPOCH_COMPLETED, checkpoint, {checkpoint_filename: model}
+    )
+
+
+def learning_pipeline(
+    params: Dict[str, Union[int, float]],
+    cardinality: int,
+    model: Module,
+    loss: Loss,
+    data_loaders: Tuple[DataLoader, DataLoader, DataLoader],
+) -> None:
+    """
+    run a comon learning pipeline
+
+    :param params: parameters of learning: epochs, learning_rate.
+    :param cardinality: a semigroup cardinality
+    :param model: a network architecture
+    :param loss: the criterion to optimize
+    :param data_loaders: train, validation, and test data loaders
+    """
+    trainer = create_supervised_trainer(
+        model,
+        Adam(model.parameters(), lr=params["learning_rate"]),
+        loss,
+        CURRENT_DEVICE,
+    )
+    evaluators = get_three_evaluators(model, loss)
+
+    @trainer.on(Events.EPOCH_COMPLETED)
+    # pylint: disable=unused-argument,unused-variable
+    def validate(trainer):
+        evaluators.train.run(data_loaders[0])
+        evaluators.validation.run(data_loaders[1])
+
+    @trainer.on(Events.COMPLETED)
+    # pylint: disable=unused-argument,unused-variable
+    def test(trainer):
+        model.load_state_dict(torch.load(get_newest_file("checkpoints")))
+        evaluators.test.run(data_loaders[2])
+
+    add_early_stopping_and_checkpoint(
+        evaluators.validation, trainer, f"semigroup{cardinality}", model
     )
     ProgressBar().attach(
         trainer,
@@ -197,13 +274,19 @@ def learning_pipeline(
         ["loss"],
         global_step_transform=global_step_from_engine(trainer),
     )
-    tb_logger.attach(train_evaluator, training_loss, Events.COMPLETED)
+    tb_logger.attach(evaluators.train, training_loss, Events.COMPLETED)
     validation_loss = OutputHandler(
         "validation",
-        ["loss"],
+        ["loss", "associative_ratio"],
         global_step_transform=global_step_from_engine(trainer),
     )
-    tb_logger.attach(evaluator, validation_loss, Events.COMPLETED)
+    tb_logger.attach(evaluators.validation, validation_loss, Events.COMPLETED)
+    test_loss = OutputHandler(
+        "test",
+        ["loss", "associative_ratio"],
+        global_step_transform=global_step_from_engine(trainer),
+    )
+    tb_logger.attach(evaluators.test, test_loss, Events.COMPLETED)
     trainer.run(data_loaders[0], max_epochs=params["epochs"])
     tb_logger.close()
 
@@ -214,7 +297,7 @@ def get_loaders(
     train_size: int,
     validation_size: int,
     use_labels: bool = False,
-) -> Tuple[DataLoader, DataLoader]:
+) -> Tuple[DataLoader, DataLoader, DataLoader]:
     """
     get train and validation data loaders
 
@@ -224,23 +307,26 @@ def get_loaders(
     :param validation_size: number of tables for validation
     :param use_labels: whether to set a target as labels from database (for
     classifier) or to use X's as labels (for autoencoder)
-    :returns: a pair of train and validation data loaders
+    :returns: a triple of train, validation, and test data loaders
     """
     (
         train_tensor,
         val_tensor,
-        _,
+        test_tensor,
         train_labels,
         validation_labels,
-        _,
+        test_labels,
     ) = load_database_as_cubes(cardinality, train_size, validation_size)
     if use_labels:
         train_data = TensorDataset(train_tensor, train_labels)
         val_data = TensorDataset(val_tensor, validation_labels)
+        test_data = TensorDataset(test_tensor, test_labels)
     else:
         train_data = TensorDataset(train_tensor, train_tensor)
         val_data = TensorDataset(val_tensor, val_tensor)
+        test_data = TensorDataset(test_tensor, test_tensor)
     return (
         DataLoader(train_data, batch_size=batch_size, shuffle=True),
         DataLoader(val_data, batch_size=batch_size, shuffle=True),
+        DataLoader(test_data, batch_size=batch_size, shuffle=True),
     )
