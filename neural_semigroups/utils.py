@@ -77,11 +77,11 @@ def check_filename(filename: str) -> int:
         filename_parts = base_filename.split(".")
         if len(filename_parts) != 3:
             wrong_name = True
-        elif filename_parts[0] not in ("semigroup", "monoid", "group"):
-            wrong_name = True
-        elif filename_parts[2] != "zip":
-            wrong_name = True
-        elif not filename_parts[1].isdigit():
+        elif (
+            filename_parts[0] not in ("semigroup", "monoid", "group")
+            or filename_parts[2] != "zip"
+            or not filename_parts[1].isdigit()
+        ):
             wrong_name = True
         else:
             cardinality = int(filename_parts[1])
@@ -363,3 +363,47 @@ def get_newest_file(dir_path: str) -> str:
         [join(dir_path, filename) for filename in listdir(dir_path)],
         key=getmtime,
     )
+
+
+def make_discrete(cayley_cubes: torch.Tensor) -> torch.Tensor:
+    """
+    transforms a batch of probabilistic Cayley cubes and in the following way:
+
+    * maximal probabilities in the last dimension become ones
+    * all other probabilies become zeros
+
+    >>> make_discrete(torch.tensor([
+    ...    [[[0.9, 0.1], [0.1, 0.9]], [[0.8, 0.2], [0.2, 0.8]]],
+    ...    [[[0.7, 0.3], [0.3, 0.7]], [[0.7, 0.3], [0.3, 0.7]]],
+    ... ]))
+    tensor([[[[1., 0.],
+              [0., 1.]],
+    <BLANKLINE>
+             [[1., 0.],
+              [0., 1.]]],
+    <BLANKLINE>
+    <BLANKLINE>
+            [[[1., 0.],
+              [0., 1.]],
+    <BLANKLINE>
+             [[1., 0.],
+              [0., 1.]]]])
+
+    :param cayley_cubes: a batch of probabilistic cubes representing Cayley tables
+    :returns: a batch of probabilistic cubes filled in with ``0`` or ``1``
+    """
+    cardinality = cayley_cubes.shape[1]
+    batch_size = cayley_cubes.shape[0]
+    cayley_table = cayley_cubes.max(dim=-1)[1]
+    cube = torch.zeros(
+        [batch_size, cardinality, cardinality, cardinality],
+        dtype=torch.float32,
+    )
+    a_range = torch.arange(cardinality)
+    one = a_range.repeat_interleave(cardinality).repeat(batch_size)
+    two = a_range.repeat(cardinality).repeat(batch_size)
+    sample_index = torch.arange(batch_size).repeat_interleave(
+        cardinality * cardinality
+    )
+    cube[sample_index, one, two, cayley_table[sample_index, one, two]] = 1.0
+    return cube

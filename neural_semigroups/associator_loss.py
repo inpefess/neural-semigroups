@@ -21,6 +21,8 @@ from torch.functional import einsum
 from torch.nn import Module
 from torch.nn.functional import kl_div
 
+from neural_semigroups.utils import make_discrete
+
 
 class AssociatorLoss(Module):
     """
@@ -37,7 +39,7 @@ class AssociatorLoss(Module):
 
     # pylint: disable=arguments-differ
     @no_type_check
-    def forward(self, cayley_cube: Tensor) -> Tensor:
+    def forward(self, cayley_cubes: Tensor) -> Tensor:
         """
         finds a probabilistic associator of a given probabilistic Cayley cube
 
@@ -57,33 +59,18 @@ class AssociatorLoss(Module):
         Then we calculate `Kullback-Leibler divergence`_ between :math:`T_{ijkl}`
         and :math:`T\\prime_{ijkl}` to find a continuous measure of associativity of the input table.
 
-        :param cayley_cube: this is a probabilistic Cayley cube
+        :param cayley_cubes: a batch of probabilistic Cayley cubes
         :returns: the probabilistic associator
 
         .. _Kullback-Leibler divergence: https://en.wikipedia.org/wiki/Kullback-Leibler_divergence
 
         """
         if self.discrete:
-            cardinality = cayley_cube.shape[1]
-            batch_size = cayley_cube.shape[0]
-            cayley_table = cayley_cube.max(dim=-1)[1]
-            cube = torch.zeros(
-                [batch_size, cardinality, cardinality, cardinality],
-                dtype=torch.float32,
-            )
-            a_range = torch.arange(cardinality)
-            one = a_range.repeat_interleave(cardinality).repeat(batch_size)
-            two = a_range.repeat(cardinality).repeat(batch_size)
-            sample_index = torch.arange(batch_size).repeat_interleave(
-                cardinality * cardinality
-            )
-            cube[
-                sample_index, one, two, cayley_table[sample_index, one, two]
-            ] = 1.0
+            cubes = make_discrete(cayley_cubes)
         else:
-            cube = cayley_cube
-        one = einsum("biml,bjkm->bijkl", cube, cube)
-        two = einsum("bmkl,bijm->bijkl", cube, cube)
+            cubes = cayley_cubes
+        one = einsum("biml,bjkm->bijkl", cubes, cubes)
+        two = einsum("bmkl,bijm->bijkl", cubes, cubes)
         if self.discrete:
             associator = (
                 torch.zeros(one.shape[0])
@@ -98,4 +85,4 @@ class AssociatorLoss(Module):
             )
         else:
             associator = kl_div(torch.log(one), two, reduction="sum")
-        return associator / cayley_cube.shape[0]
+        return associator / cayley_cubes.shape[0]
