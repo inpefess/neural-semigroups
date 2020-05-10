@@ -27,6 +27,14 @@ class AssociatorLoss(Module):
     probabilistic associator loss
     """
 
+    def __init__(self, discrete: bool = False):
+        """
+        :param discrete: when ``False``, the KL divergence is is used for measuring associativity in a continuous way.
+            when ``True``, returns ``1`` for associative and ``0`` for non associative samples.
+        """
+        super().__init__()
+        self.discrete = discrete
+
     # pylint: disable=arguments-differ
     @no_type_check
     def forward(self, cayley_cube: Tensor) -> Tensor:
@@ -55,8 +63,39 @@ class AssociatorLoss(Module):
         .. _Kullback-Leibler divergence: https://en.wikipedia.org/wiki/Kullback-Leibler_divergence
 
         """
-        one = einsum("biml,bjkm->bijkl", cayley_cube, cayley_cube)
-        two = einsum("bmkl,bijm->bijkl", cayley_cube, cayley_cube)
-        return (
-            kl_div(torch.log(one), two, reduction="sum") / cayley_cube.shape[0]
-        )
+        if self.discrete:
+            cardinality = cayley_cube.shape[1]
+            batch_size = cayley_cube.shape[0]
+            cayley_table = cayley_cube.max(dim=-1)[1]
+            cube = torch.zeros(
+                [batch_size, cardinality, cardinality, cardinality],
+                dtype=torch.float32,
+            )
+            a_range = torch.arange(cardinality)
+            one = a_range.repeat_interleave(cardinality).repeat(batch_size)
+            two = a_range.repeat(cardinality).repeat(batch_size)
+            sample_index = torch.arange(batch_size).repeat_interleave(
+                cardinality * cardinality
+            )
+            cube[
+                sample_index, one, two, cayley_table[sample_index, one, two]
+            ] = 1.0
+        else:
+            cube = cayley_cube
+        one = einsum("biml,bjkm->bijkl", cube, cube)
+        two = einsum("bmkl,bijm->bijkl", cube, cube)
+        if self.discrete:
+            associator = (
+                torch.zeros(one.shape[0])
+                .where(
+                    torch.abs(one - two)
+                    .reshape(one.shape[0], -1)
+                    .max(dim=1)[0]
+                    > 0,
+                    torch.ones(one.shape[0]),
+                )
+                .sum()
+            )
+        else:
+            associator = kl_div(torch.log(one), two, reduction="sum")
+        return associator / cayley_cube.shape[0]

@@ -36,9 +36,10 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
+from neural_semigroups.associator_loss import AssociatorLoss
 from neural_semigroups.cayley_database import CayleyDatabase
-from neural_semigroups.magma import Magma
 from neural_semigroups.constants import CURRENT_DEVICE
+from neural_semigroups.magma import Magma
 
 
 def load_database_as_cubes(
@@ -137,6 +138,20 @@ def get_arguments() -> Namespace:
     return parser.parse_args()
 
 
+# pylint: disable=unused-argument
+def associative_ratio(
+    prediction: torch.Tensor, target: torch.Tensor
+) -> torch.Tensor:
+    """
+    a wrapper around a discrete case of ``AssociatorLoss``
+
+    :param prediction: a batch of generated Cayley tables
+    :param target: unused argument needed for compatibility
+    :returns: a percentage of associative tables in a batch
+    """
+    return AssociatorLoss(True)(prediction)
+
+
 def learning_pipeline(
     params: Dict[str, Union[int, float]],
     cardinality: int,
@@ -163,7 +178,9 @@ def learning_pipeline(
         model, {"loss": Loss(loss)}, CURRENT_DEVICE
     )
     evaluator = create_supervised_evaluator(
-        model, {"loss": Loss(loss)}, CURRENT_DEVICE
+        model,
+        {"loss": Loss(loss), "associative_ratio": Loss(associative_ratio)},
+        CURRENT_DEVICE,
     )
 
     @trainer.on(Events.EPOCH_COMPLETED)
@@ -200,7 +217,7 @@ def learning_pipeline(
     tb_logger.attach(train_evaluator, training_loss, Events.COMPLETED)
     validation_loss = OutputHandler(
         "validation",
-        ["loss"],
+        ["loss", "associative_ratio"],
         global_step_transform=global_step_from_engine(trainer),
     )
     tb_logger.attach(evaluator, validation_loss, Events.COMPLETED)

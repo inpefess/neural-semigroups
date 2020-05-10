@@ -51,6 +51,8 @@ class TestAssociatorLoss(TestCase):
             .to(CURRENT_DEVICE)
             .view(-1, 3, 3, 3)
         )
-        # for deterministic magmas which are note semigroups
+        # for deterministic magmas which are not semigroups
         # the associator is infinite
         self.assertEqual(associator_loss(cayley_cube), inf)
+        # but if we use a discrete version, everything is finite
+        self.assertEqual(AssociatorLoss(True)(cayley_cube), 0.5)
