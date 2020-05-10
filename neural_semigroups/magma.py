@@ -101,15 +101,16 @@ class Magma:
         :returns: whether the input table is assosiative or not
 
         """
-        a_range = range(self.cardinality)
-        for one in a_range:
-            for two in a_range:
-                if (
-                    self.cayley_table[self.cayley_table[one, two], a_range]
-                    != self.cayley_table[one, self.cayley_table[two, a_range]]
-                ).any():
-                    return False
-        return True
+        a_range = torch.arange(self.cardinality)
+        square = self.cardinality ** 2
+        one = a_range.repeat_interleave(square)
+        two = a_range.repeat_interleave(self.cardinality).repeat(
+            self.cardinality
+        )
+        three = a_range.repeat(square)
+        return self.cayley_table[self.cayley_table[one, two], three].equal(
+            self.cayley_table[one, self.cayley_table[two, three]]
+        )
 
     @property
     def is_commutative(self) -> bool:
@@ -128,13 +129,19 @@ class Magma:
 
         :returns: the index of the identity element or -1 if there is no identity
         """
-        identity = -1
-        for i in range(self.cardinality):
-            if torch.allclose(
-                self.cayley_table[i, :], torch.arange(self.cardinality)
-            ):
-                identity = i
-                break
+        a_range = torch.arange(self.cardinality)
+        left_identity = (self.cayley_table == a_range).min(dim=1)[0].max(dim=0)
+        right_identity = (
+            (self.cayley_table.T == a_range).min(dim=1)[0].max(dim=0)
+        )
+        if bool(
+            left_identity[0]
+            and right_identity[0]
+            and left_identity[1].equal(right_identity[1])
+        ):
+            identity = int(left_identity[1])
+        else:
+            identity = -1
         return identity
 
     @property
@@ -142,17 +149,11 @@ class Magma:
         """
         check whether there are solutions of equations :math:`ax=b` and :math:`xa=b``
         """
-        identity_row = torch.arange(self.cardinality)
-        has_inverses = True
-        for i in identity_row:
-            if not torch.allclose(
-                torch.sort(self.cayley_table[i, :])[0], identity_row
-            ) or not torch.allclose(
-                torch.sort(self.cayley_table[:, i])[0], identity_row
-            ):
-                has_inverses = False
-                break
-        return has_inverses
+        a_range = torch.arange(self.cardinality)
+        return bool(
+            (self.cayley_table.sort()[0] == a_range).min(dim=1)[0].min()
+            and (self.cayley_table.T.sort()[0] == a_range).min(dim=1)[0].min()
+        )
 
     @property
     def probabilistic_cube(self) -> torch.Tensor:
@@ -165,9 +166,10 @@ class Magma:
             [self.cardinality, self.cardinality, self.cardinality],
             dtype=torch.float32,
         )
-        for i in range(self.cardinality):
-            for j in range(self.cardinality):
-                cube[i, j, self.cayley_table[i, j]] = 1.0
+        a_range = torch.arange(self.cardinality)
+        one = a_range.repeat_interleave(self.cardinality)
+        two = a_range.repeat(self.cardinality)
+        cube[one, two, self.cayley_table[one, two]] = 1.0
         return cube
 
     @property
