@@ -14,7 +14,7 @@
    limitations under the License.
 """
 from collections import OrderedDict
-from typing import List, no_type_check
+from typing import List, Tuple, no_type_check
 
 import torch
 from torch import Tensor
@@ -22,6 +22,34 @@ from torch.nn import BatchNorm1d, Linear, Module, ReLU, Sequential, Softmax2d
 from torch.nn.functional import dropout2d
 
 from neural_semigroups.constants import CURRENT_DEVICE
+
+
+def get_encoder_and_decoder_layers(dims: List[int]) -> Tuple[Module, Module]:
+    """
+    construct symmetrical encoder and decoder modules
+
+    :param dims: the dimensions of layers in an encoder part (the same dimensions are used for a decoder)
+    :returns: a pair of two sequential models, representing encoder and decoder layers
+    """
+    encoder_layers: "OrderedDict[str, Module]" = OrderedDict()
+    decoder_layers: "OrderedDict[str, Module]" = OrderedDict()
+    for i in range(len(dims) - 1):
+        encoder_layers.update(
+            {f"linear0{i}": Linear(dims[i], dims[i + 1], bias=True)}
+        )
+        encoder_layers.update({f"relu0{i}": ReLU()})
+        encoder_layers.update({f"bn0{i}": BatchNorm1d(dims[i + 1])})
+        decoder_layers.update({f"bn1{i}": BatchNorm1d(dims[i])})
+        decoder_layers.update({f"relu1{i}": ReLU()})
+        decoder_layers.update(
+            {f"linear1{i}": Linear(dims[i + 1], dims[i], bias=True)}
+        )
+    return (
+        Sequential(encoder_layers).to(CURRENT_DEVICE),
+        Sequential(OrderedDict(reversed(decoder_layers.items()))).to(
+            CURRENT_DEVICE
+        ),
+    )
 
 
 class MagmaDAE(Module):
@@ -44,24 +72,10 @@ class MagmaDAE(Module):
         self.cardinality = cardinality
         self.corruption_rate = corruption_rate
         self.input_dim = cardinality ** 3
-        encoder_layers: "OrderedDict[str, Module]" = OrderedDict()
-        decoder_layers: "OrderedDict[str, Module]" = OrderedDict()
-        dims = [self.input_dim] + hidden_dims
-        for i in range(len(dims) - 1):
-            encoder_layers.update(
-                {f"linear0{i}": Linear(dims[i], dims[i + 1], bias=True)}
-            )
-            encoder_layers.update({f"relu0{i}": ReLU()})
-            encoder_layers.update({f"bn0{i}": BatchNorm1d(dims[i + 1])})
-            decoder_layers.update({f"bn1{i}": BatchNorm1d(dims[i])})
-            decoder_layers.update({f"relu1{i}": ReLU()})
-            decoder_layers.update(
-                {f"linear1{i}": Linear(dims[i + 1], dims[i], bias=True)}
-            )
-        self.decoder_layers = Sequential(
-            OrderedDict(reversed(decoder_layers.items()))
-        ).to(CURRENT_DEVICE)
-        self.encoder_layers = Sequential(encoder_layers).to(CURRENT_DEVICE)
+        (
+            self.encoder_layers,
+            self.decoder_layers,
+        ) = get_encoder_and_decoder_layers(dims=[self.input_dim] + hidden_dims)
         # pylint: disable=not-callable
         self._nearly_zero = torch.tensor([1e-6], device=CURRENT_DEVICE)
         # pylint: disable=not-callable

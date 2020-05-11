@@ -311,33 +311,28 @@ def print_report(totals: torch.Tensor) -> pd.DataFrame:
     """
     print report in a pretty format
 
-    >>> totals = torch.tensor([[4, 4], [0, 1], [1, 2]])
+    >>> totals = torch.tensor([[4, 4], [0, 1]])
     >>> print_report(totals)
-           puzzles  solved  (%)  hidden cells  guessed  in %
+           puzzles  solved  (%)
     level
-    1      4             0    0             4        1    25
-    2      4             1   25             8        2    25
+    1      4             0    0
+    2      4             1   25
 
     :param totals: a table with three columns:
 
     * a column with total number of puzzles per level
     * a column with numbers of correctly solved puzzles
-    * numbers of correctly guessed cells in all puzzles
 
     :returns: the report in a form of ``pandas.DataFrame``
 
     """
     levels = torch.arange(1, totals.shape[1] + 1)
-    hidden_cells = totals[0] * levels
     return pd.DataFrame(
         {
             "level": levels,
             "puzzles": totals[0],
             "solved": totals[1],
             "(%)": totals[1] * 100 // totals[0],
-            "hidden cells": hidden_cells,
-            "guessed": totals[2],
-            "in %": totals[2] * 100 // hidden_cells,
         }
     ).set_index("level")
 
