@@ -221,6 +221,39 @@ def add_early_stopping_and_checkpoint(
     )
 
 
+def get_tensorboard_logger(
+    trainer: Engine, evaluators: ThreeEvaluators
+) -> TensorboardLogger:
+    """
+    creates a ``tensorboard`` logger which read metrics from given evaluators and attaches it to a given trainer
+
+    :param trainer: an ``ignite`` trainer to attach to
+    :param ThreeEvaluators: a triple of train, validation, and test evaluators to get metrics from
+    """
+    tb_logger = TensorboardLogger(
+        log_dir=f"runs/{datetime.now()}", flush_secs=1
+    )
+    training_loss = OutputHandler(
+        "training",
+        ["loss"],
+        global_step_transform=global_step_from_engine(trainer),
+    )
+    tb_logger.attach(evaluators.train, training_loss, Events.COMPLETED)
+    validation_loss = OutputHandler(
+        "validation",
+        ["loss", "associative_ratio"],
+        global_step_transform=global_step_from_engine(trainer),
+    )
+    tb_logger.attach(evaluators.validation, validation_loss, Events.COMPLETED)
+    test_loss = OutputHandler(
+        "test",
+        ["loss", "associative_ratio"],
+        global_step_transform=global_step_from_engine(trainer),
+    )
+    tb_logger.attach(evaluators.test, test_loss, Events.COMPLETED)
+    return tb_logger
+
+
 def learning_pipeline(
     params: Dict[str, Union[int, float]],
     cardinality: int,
@@ -266,27 +299,7 @@ def learning_pipeline(
         event_name=Events.EPOCH_COMPLETED,
         closing_event_name=Events.COMPLETED,
     )
-    tb_logger = TensorboardLogger(
-        log_dir=f"runs/{datetime.now()}", flush_secs=1
-    )
-    training_loss = OutputHandler(
-        "training",
-        ["loss"],
-        global_step_transform=global_step_from_engine(trainer),
-    )
-    tb_logger.attach(evaluators.train, training_loss, Events.COMPLETED)
-    validation_loss = OutputHandler(
-        "validation",
-        ["loss", "associative_ratio"],
-        global_step_transform=global_step_from_engine(trainer),
-    )
-    tb_logger.attach(evaluators.validation, validation_loss, Events.COMPLETED)
-    test_loss = OutputHandler(
-        "test",
-        ["loss", "associative_ratio"],
-        global_step_transform=global_step_from_engine(trainer),
-    )
-    tb_logger.attach(evaluators.test, test_loss, Events.COMPLETED)
+    tb_logger = get_tensorboard_logger(trainer, evaluators)
     trainer.run(data_loaders[0], max_epochs=params["epochs"])
     tb_logger.close()
 

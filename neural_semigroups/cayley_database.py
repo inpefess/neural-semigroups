@@ -246,8 +246,6 @@ class CayleyDatabase:
         * if the model returns an associative table
           (not necessary the original one)
           it is considered to be a sucessfull solution
-        * in addition, all correctly filled cells are counted
-          (despite leading to a full associative table)
 
         :param max_level: up to how many cells to omit when creating a puzzle;
             when not provided or explicitly set to ``-1`` it defaults to the total number of cells in a table
@@ -256,7 +254,7 @@ class CayleyDatabase:
         """
         cardinality = self.cardinality
         max_level = cardinality ** 2 if max_level == -1 else max_level
-        totals = torch.zeros((3, max_level))
+        totals = torch.zeros((2, max_level))
         database_size = len(self.database)
         test_indices = torch.randperm(database_size)[
             : min(database_size, 1000)
@@ -283,5 +281,4 @@ class CayleyDatabase:
                     guessed_cells = level
                 if guessed_cells == level:
                     totals[1, level - 1] += 1
-                totals[2, level - 1] += guessed_cells
         return totals
