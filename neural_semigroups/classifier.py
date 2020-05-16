@@ -46,7 +46,7 @@ class MagmaClassifier(Module):
         top_layers.update(
             {f"linear{len(dims)}": Linear(dims[-1], 2, bias=False)}
         )
-        top_layers.update({f"sigmoid": Sigmoid()})
+        top_layers.update({"sigmoid": Sigmoid()})
         self.top_layers = Sequential(top_layers)
 
     # pylint: disable=arguments-differ
