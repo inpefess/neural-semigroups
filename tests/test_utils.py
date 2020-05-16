@@ -51,32 +51,32 @@ class TestUtils(TestCase):
         )
 
     def test_check_filename(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             check_filename(123)
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             check_filename("strange.name")
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             check_filename("very.strange.name")
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             check_filename("semigroup.strange.name")
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             check_filename("semigroup.name.zip")
         self.assertEqual(check_filename("monoid.1.zip"), 1)
 
     def test_check_smallsemi_filename(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             check_smallsemi_filename(123)
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             check_smallsemi_filename("very.very.strange.name")
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             check_smallsemi_filename("very.strange.name")
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             check_smallsemi_filename("strange.name.gz")
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             check_smallsemi_filename("name.gl.gz")
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             check_smallsemi_filename("datan.gl.gz")
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             check_smallsemi_filename("data1.gl.gz")
         self.assertEqual(check_smallsemi_filename("data2.gl.gz"), 2)
 
@@ -99,9 +99,9 @@ class TestUtils(TestCase):
                 torch.tensor([[0, 1], [1, 1]]),
             )
         )
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             get_magma_by_index(3, -1)
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             get_magma_by_index(3, 20000)
 
     def test_import_smallsemi_format(self):

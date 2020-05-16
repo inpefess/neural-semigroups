@@ -13,6 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+import gzip
 import tarfile
 from itertools import permutations
 from os import listdir, makedirs, path, rename
@@ -23,6 +24,7 @@ from typing import List, Tuple
 import pandas as pd
 import requests
 import torch
+from torch import Tensor
 from tqdm import tqdm
 
 from neural_semigroups.constants import CURRENT_DEVICE, GAP_PACKAGES_URL
@@ -69,28 +71,20 @@ def check_filename(filename: str) -> int:
     :param filename: filename to check
     :returns: magma cardinality extracted from the filename
     """
-    wrong_name = False
-    if not isinstance(filename, str):
-        wrong_name = True
-    else:
+    if isinstance(filename, str):
         base_filename = basename(filename)
         filename_parts = base_filename.split(".")
-        if len(filename_parts) != 3:
-            wrong_name = True
-        elif (
-            filename_parts[0] not in ("semigroup", "monoid", "group")
-            or filename_parts[2] != "zip"
-            or not filename_parts[1].isdigit()
-        ):
-            wrong_name = True
-        else:
-            cardinality = int(filename_parts[1])
-    if wrong_name:
-        raise ValueError(
-            "filename should be of format"
-            f"[semigroup|monoid|group].[int].zip, not {base_filename}"
-        )
-    return cardinality
+        if len(filename_parts) == 3:
+            if (
+                filename_parts[0] in ("semigroup", "monoid", "group")
+                and filename_parts[2] == "zip"
+                and filename_parts[1].isdigit()
+            ):
+                return int(filename_parts[1])
+    raise ValueError(
+        "filename should be of format"
+        f"[semigroup|monoid|group].[int].zip, not {filename}"
+    )
 
 
 def check_smallsemi_filename(filename: str) -> int:
@@ -100,29 +94,21 @@ def check_smallsemi_filename(filename: str) -> int:
     :param filename: filename from a `smallsemi` package to check
     :returns: magma cardinality extracted from the filename
     """
-    wrong_name = False
-    if not isinstance(filename, str):
-        wrong_name = True
-    else:
+    if isinstance(filename, str):
         filename_parts = basename(filename).split(".")
-        if len(filename_parts) != 3:
-            wrong_name = True
-        elif (
-            filename_parts[2] != "gz"
-            or filename_parts[1] != "gl"
-            or filename_parts[0][:-1] != "data"
-            or not filename_parts[0][-1].isdigit()
-        ):
-            wrong_name = True
-        else:
-            cardinality = int(filename_parts[0][-1])
-            if cardinality < 2 or cardinality > 7:
-                wrong_name = True
-    if wrong_name:
-        raise ValueError(
-            "filename should be of format data[2-7].gl.gz" f" not {filename}"
-        )
-    return cardinality
+        if len(filename_parts) == 3:
+            if (
+                filename_parts[2] == "gz"
+                and filename_parts[1] == "gl"
+                and filename_parts[0][:-1] == "data"
+                and filename_parts[0][-1].isdigit()
+            ):
+                cardinality = int(filename_parts[0][-1])
+                if 2 <= cardinality <= 7:
+                    return cardinality
+    raise ValueError(
+        "filename should be of format data[2-7].gl.gz" f" not {filename}"
+    )
 
 
 def get_magma_by_index(cardinality: int, index: int) -> Magma:
@@ -402,3 +388,45 @@ def make_discrete(cayley_cubes: torch.Tensor) -> torch.Tensor:
     )
     cube[sample_index, one, two, cayley_table[sample_index, one, two]] = 1.0
     return cube
+
+
+def load_data_and_labels_from_file(
+    database_filename: str,
+) -> Tuple[Tensor, Tensor]:
+    """
+    reads data from a special file format
+
+    :param database_filename: a special file to read data from
+    :returns: (a tensor with Cayley tables, a tensor of their labels)
+    """
+    check_filename(path.basename(database_filename))
+    torch_zip_file = torch.load(database_filename)
+    database = torch_zip_file["database"]
+    labels = torch_zip_file.get(
+        "labels", torch.zeros(len(database), dtype=torch.int64)
+    )
+    return database, labels
+
+
+def load_data_and_labels_from_smallsemi(
+    cardinality: int, data_path: str
+) -> Tuple[Tensor, Tensor]:
+    """
+    Loads data from ``smallsemi`` package
+
+    :param cardinality: which ``smallsemi`` file to use
+    :param data_path: where to seach for ``smallsemi`` data
+    :returns: (a tensor with Cayley tables, a tensor of their labels)
+    """
+    filename = path.join(
+        data_path, "smallsemi_data", f"data{cardinality}.gl.gz"
+    )
+    check_smallsemi_filename(filename)
+    if not path.exists(filename):
+        download_smallsemi_data(data_path)
+    with gzip.open(filename, "rb") as file:
+        database = import_smallsemi_format(file.readlines()).to(CURRENT_DEVICE)
+    labels = torch.ones(
+        len(database), dtype=torch.int64, device=CURRENT_DEVICE
+    )
+    return database, labels

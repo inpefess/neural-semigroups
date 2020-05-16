@@ -13,7 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
+from typing import List
 
 import torch
 from tqdm import tqdm
@@ -21,15 +22,25 @@ from tqdm import tqdm
 from neural_semigroups.magma import Magma
 
 
-def main():
-    """ do all """
+def get_arguments(choices: List[str]) -> Namespace:
+    """
+    get command line arguments
+
+    :param choices: what to filter
+    :returns: an ``argparse`` namespace
+    """
     parser = ArgumentParser()
     parser.add_argument("--dim", type=int, help="magma cardinality")
-    choices = ["identity", "inverses"]
     parser.add_argument(
         "--filter", choices=choices, help="additional property"
     )
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def main():
+    """ do all """
+    choices = ["identity", "inverses"]
+    args = get_arguments(choices)
     input_file = "semigroup" if args.filter == choices[0] else "monoid"
     with torch.load(
         f"./databases/{input_file}.{args.dim}.zip"
