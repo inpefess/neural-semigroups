@@ -66,7 +66,7 @@ class AssociatorLoss(Module):
 
         """
         if self.discrete:
-            cubes = make_discrete(cayley_cubes).unique(dim=0)
+            cubes = make_discrete(cayley_cubes)
         else:
             cubes = cayley_cubes
         one = einsum("biml,bjkm->bijkl", cubes, cubes)
