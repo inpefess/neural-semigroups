@@ -46,14 +46,14 @@ class Magma:
         Traceback (most recent call last):
             ...
         ValueError: at least one argument must be given
-        >>> Magma(torch.tensor([[0]]), 2)
-        Traceback (most recent call last):
-            ...
-        ValueError: inconsistent argument values
         >>> Magma([[0, 1]])
         Traceback (most recent call last):
             ...
-        ValueError: cayley_table must be a `torch.Tensor` of shape (n, n)
+        ValueError: cayley_table must be a `torch.Tensor` of shape (cardinality, cardinality)
+        >>> Magma([[0]], cardinality=2)
+        Traceback (most recent call last):
+            ...
+        ValueError: cayley_table must be a `torch.Tensor` of shape (cardinality, cardinality)
 
         :param cayley_table: a Cayley table for a magma.
                              If not provided, a random table is generated.
@@ -69,19 +69,18 @@ class Magma:
                 dtype=torch.long,
             )
         else:
-            all_right = False
             if isinstance(cayley_table, torch.Tensor):
                 if len(cayley_table.shape) == 2:
-                    if cayley_table.shape[0] == cayley_table.shape[1]:
+                    if cayley_table.shape[0] == cayley_table.shape[1] and (
+                        cardinality is None
+                        or cayley_table.shape[0] == cardinality
+                    ):
                         self.cayley_table = cayley_table
-                        all_right = True
-            if cardinality is not None and all_right:
-                if cayley_table.shape[0] != cardinality:
-                    raise ValueError("inconsistent argument values")
-            if not all_right:
-                raise ValueError(
-                    "cayley_table must be a `torch.Tensor` of shape (n, n)"
-                )
+                        return
+            raise ValueError(
+                "cayley_table must be a `torch.Tensor` of shape "
+                "(cardinality, cardinality)"
+            )
 
     def __repr__(self) -> str:
         return str(self.cayley_table)
@@ -191,22 +190,18 @@ class Magma:
         :returns: another magma
         """
         next_table = self.cayley_table.clone().detach()
-        one = 1
         row = self.cardinality - 1
         column = self.cardinality - 1
-        while one == 1:
-            if next_table[row, column] < self.cardinality - 1:
-                next_table[row, column] += 1
-                one = 0
+        while next_table[row, column] >= self.cardinality - 1:
+            if column > 0:
+                next_table[row, column] = 0
+                column -= 1
             else:
-                if column > 0:
+                if row > 0:
                     next_table[row, column] = 0
-                    column -= 1
+                    row -= 1
+                    column = self.cardinality - 1
                 else:
-                    if row > 0:
-                        next_table[row, column] = 0
-                        row -= 1
-                        column = self.cardinality - 1
-                    else:
-                        raise ValueError("there is no next magma!")
+                    raise ValueError("there is no next magma!")
+        next_table[row, column] += 1
         return Magma(next_table)

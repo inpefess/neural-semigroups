@@ -274,11 +274,6 @@ class CayleyDatabase:
                 puzzle[rows, cols] = -1
                 solution, _ = self.fill_in_with_model(puzzle.tolist())
                 totals[0, level - 1] += 1
-                guessed_cells = sum(
-                    solution[rows, cols] == cayley_table[rows, cols]
-                )
                 if Magma(solution).is_associative:
-                    guessed_cells = level
-                if guessed_cells == level:
                     totals[1, level - 1] += 1
         return totals
