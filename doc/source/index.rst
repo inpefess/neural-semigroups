@@ -1,7 +1,7 @@
 Welcome to Neural Semigroups' documentation!
 =============================================
 
-The simplest way is to run an example notebook in `Google Colaboratory`_.
+The simplest way to get started is to run an example notebook in `Google Colaboratory`_.
 
 .. toctree::
    :maxdepth: 2
