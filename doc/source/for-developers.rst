@@ -17,3 +17,7 @@ Then run several commands in a terminal: ::
 This could take some time (mostly downloading ``torch``).
 
 After that you can go to the project's directory and ``source ./venv/bin/activate`` to start a virtual environment there.
+
+It's also recommended to run ``pre-commit install`` from a repo root folder to get a pre-commit hook initialized.
+
+To run code check similar to what is going on at ``circleci`` simply ``./show_report.sh`` from the project's root.

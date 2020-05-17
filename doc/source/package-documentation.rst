@@ -40,5 +40,21 @@ Associator Loss
 
 utils
 -----
-.. automodule:: neural_semigroups.utils
-   :members:
+.. currentmodule:: neural_semigroups.utils
+
+A collection of different functions used by other modules.
+
+.. autofunction:: random_semigroup
+.. autofunction:: check_filename
+.. autofunction:: check_smallsemi_filename
+.. autofunction:: get_magma_by_index
+.. autofunction:: import_smallsemi_format
+.. autofunction:: get_equivalent_magmas
+.. autofunction:: download_file_from_url
+.. autofunction:: download_smallsemi_data
+.. autofunction:: print_report
+.. autofunction:: get_newest_file
+.. autofunction:: get_two_indices_per_sample
+.. autofunction:: make_discrete
+.. autofunction:: load_data_and_labels_from_file
+.. autofunction:: load_data_and_labels_from_smallsemi

@@ -13,11 +13,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-import gzip
-from os import path
 from typing import List, Optional, Tuple
 
 import torch
+from torch import Tensor
 from torch.nn import Module
 from torch.utils.data import TensorDataset, random_split
 from tqdm import tqdm
@@ -26,11 +25,9 @@ from neural_semigroups.constants import CAYLEY_DATABASE_PATH, CURRENT_DEVICE
 from neural_semigroups.denoising_autoencoder import MagmaDAE
 from neural_semigroups.magma import Magma
 from neural_semigroups.utils import (
-    check_filename,
-    check_smallsemi_filename,
-    download_smallsemi_data,
     get_equivalent_magmas,
-    import_smallsemi_format,
+    load_data_and_labels_from_file,
+    load_data_and_labels_from_smallsemi,
 )
 
 
@@ -55,39 +52,18 @@ class CayleyDatabase:
         """
         self.cardinality = cardinality
         self.data_path = data_path
-        if database_filename is None:
-            filename = path.join(
-                self.data_path, "smallsemi_data", f"data{cardinality}.gl.gz"
-            )
-            check_smallsemi_filename(filename)
-            if not path.exists(filename):
-                download_smallsemi_data(self.data_path)
-            with gzip.open(filename, "rb") as file:
-                self.database = import_smallsemi_format(file.readlines()).to(
-                    CURRENT_DEVICE
-                )
-            self.labels = torch.ones(
-                len(self.database), dtype=torch.int64, device=CURRENT_DEVICE
-            )
-        else:
-            check_filename(path.basename(database_filename))
-            torch_zip_file = torch.load(database_filename)
-            self.database = torch_zip_file["database"]
-            self.labels = torch_zip_file.get(
-                "labels", torch.zeros(len(self.database), dtype=torch.int64)
-            )
+        self.database, self.labels = (
+            load_data_and_labels_from_smallsemi(cardinality, data_path)
+            if database_filename is None
+            else load_data_and_labels_from_file(database_filename)
+        )
 
     def augment_by_equivalent_tables(self) -> None:
         """
         for every Cayley table in a previously loaded database adds all of its
         equivalent tables to the database
         """
-        database: List[torch.Tensor] = []
-        for table in tqdm(
-            self.database, desc="augmenting by equivalent tables"
-        ):
-            database += [get_equivalent_magmas(table)]
-        self.database = torch.unique(torch.cat(database, dim=0), dim=0)
+        self.database = get_equivalent_magmas(self.database)
 
     def _check_input(self, cayley_table: List[List[int]]) -> bool:
         """
@@ -110,9 +86,7 @@ class CayleyDatabase:
             correct = False
         return correct
 
-    def search_database(
-        self, cayley_table: List[List[int]]
-    ) -> List[torch.Tensor]:
+    def search_database(self, cayley_table: List[List[int]]) -> List[Tensor]:
         """
         get a list of possible completions of a partially filled Cayley table
         (unknown entries are filled by ``-1``)
@@ -140,7 +114,7 @@ class CayleyDatabase:
 
     def fill_in_with_model(
         self, cayley_table: List[List[int]]
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> Tuple[Tensor, Tensor]:
         """
         get a list of possible completions of a partially filled Cayley table
         (unknow entries are filled by ``-1``) using a machine learning model
@@ -233,7 +207,7 @@ class CayleyDatabase:
         """
         self._model = model
 
-    def testing_report(self, max_level: int = -1) -> torch.Tensor:
+    def testing_report(self, max_level: int = -1) -> Tensor:
         """
         this function:
 

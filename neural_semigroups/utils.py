@@ -13,6 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+import gzip
 import tarfile
 from itertools import permutations
 from os import listdir, makedirs, path, rename
@@ -23,6 +24,7 @@ from typing import List, Tuple
 import pandas as pd
 import requests
 import torch
+from torch import Tensor
 from tqdm import tqdm
 
 from neural_semigroups.constants import CURRENT_DEVICE, GAP_PACKAGES_URL
@@ -69,28 +71,20 @@ def check_filename(filename: str) -> int:
     :param filename: filename to check
     :returns: magma cardinality extracted from the filename
     """
-    wrong_name = False
-    if not isinstance(filename, str):
-        wrong_name = True
-    else:
+    if isinstance(filename, str):
         base_filename = basename(filename)
         filename_parts = base_filename.split(".")
-        if len(filename_parts) != 3:
-            wrong_name = True
-        elif (
-            filename_parts[0] not in ("semigroup", "monoid", "group")
-            or filename_parts[2] != "zip"
-            or not filename_parts[1].isdigit()
-        ):
-            wrong_name = True
-        else:
-            cardinality = int(filename_parts[1])
-    if wrong_name:
-        raise ValueError(
-            "filename should be of format"
-            f"[semigroup|monoid|group].[int].zip, not {base_filename}"
-        )
-    return cardinality
+        if len(filename_parts) == 3:
+            if (
+                filename_parts[0] in ("semigroup", "monoid", "group")
+                and filename_parts[2] == "zip"
+                and filename_parts[1].isdigit()
+            ):
+                return int(filename_parts[1])
+    raise ValueError(
+        "filename should be of format"
+        f"[semigroup|monoid|group].[int].zip, not {filename}"
+    )
 
 
 def check_smallsemi_filename(filename: str) -> int:
@@ -100,29 +94,21 @@ def check_smallsemi_filename(filename: str) -> int:
     :param filename: filename from a `smallsemi` package to check
     :returns: magma cardinality extracted from the filename
     """
-    wrong_name = False
-    if not isinstance(filename, str):
-        wrong_name = True
-    else:
+    if isinstance(filename, str):
         filename_parts = basename(filename).split(".")
-        if len(filename_parts) != 3:
-            wrong_name = True
-        elif (
-            filename_parts[2] != "gz"
-            or filename_parts[1] != "gl"
-            or filename_parts[0][:-1] != "data"
-            or not filename_parts[0][-1].isdigit()
-        ):
-            wrong_name = True
-        else:
-            cardinality = int(filename_parts[0][-1])
-            if cardinality < 2 or cardinality > 7:
-                wrong_name = True
-    if wrong_name:
-        raise ValueError(
-            "filename should be of format data[2-7].gl.gz" f" not {filename}"
-        )
-    return cardinality
+        if len(filename_parts) == 3:
+            if (
+                filename_parts[2] == "gz"
+                and filename_parts[1] == "gl"
+                and filename_parts[0][:-1] == "data"
+                and filename_parts[0][-1].isdigit()
+            ):
+                cardinality = int(filename_parts[0][-1])
+                if 2 <= cardinality <= 7:
+                    return cardinality
+    raise ValueError(
+        "filename should be of format data[2-7].gl.gz" f" not {filename}"
+    )
 
 
 def get_magma_by_index(cardinality: int, index: int) -> Magma:
@@ -183,70 +169,36 @@ def import_smallsemi_format(lines: List[bytes]) -> torch.Tensor:
     return tables.reshape(tables.shape[0], cardinality, cardinality)
 
 
-def get_isomorphic_magmas(cayley_table: torch.Tensor) -> torch.Tensor:
+def get_equivalent_magmas(cayley_tables: torch.Tensor) -> torch.Tensor:
     """
-    given a Cayley table of a magma generate Cayley tables of isomorphic magmas
-    by appying all possible permutations of the magma's elements
-
-    :param cayley_table: a Cayley table of a magma
-    :returns: a list of Cayley tables of isomorphic magmas
-    """
-    isomorphic_cayley_tables = list()
-    dim = cayley_table.shape[0]
-    for permutation in permutations(range(dim)):
-        permutation_tensor = torch.tensor(permutation, device=CURRENT_DEVICE)
-        isomorphic_cayley_table = torch.zeros(
-            cayley_table.shape, dtype=torch.long, device=CURRENT_DEVICE
-        )
-        for i in range(dim):
-            for j in range(dim):
-                isomorphic_cayley_table[
-                    permutation_tensor[i], permutation_tensor[j]
-                ] = permutation_tensor[cayley_table[i, j]]
-        isomorphic_cayley_tables.append(isomorphic_cayley_table)
-    return torch.unique(torch.stack(isomorphic_cayley_tables), dim=0)
-
-
-def get_anti_isomorphic_magmas(cayley_table: torch.Tensor) -> torch.Tensor:
-    """
-    given a Cayley table of a magma generate Cayley tables of anti-isomorphic
-    magmas by appying all possible permutations of the magma's elements
-
-    :param cayley_table: a Cayley table of a magma
-    :returns: a list of Cayley tables of anti-isomorphic magmas
-    """
-    anti_isomorphic_cayley_tables = list()
-    dim = cayley_table.shape[0]
-    for permutation in permutations(range(dim)):
-        anti_isomorphic_cayley_table = torch.zeros(
-            cayley_table.shape, dtype=torch.long, device=CURRENT_DEVICE
-        )
-        permutation_tensor = torch.tensor(permutation, device=CURRENT_DEVICE)
-        for i in range(dim):
-            for j in range(dim):
-                anti_isomorphic_cayley_table[
-                    permutation_tensor[i], permutation_tensor[j]
-                ] = permutation_tensor[cayley_table[j, i]]
-        anti_isomorphic_cayley_tables.append(anti_isomorphic_cayley_table)
-    return torch.unique(torch.stack(anti_isomorphic_cayley_tables), dim=0)
-
-
-def get_equivalent_magmas(cayley_table: torch.Tensor) -> torch.Tensor:
-    """
-    given a Cayley table of a magma generate Cayley tables of isomorphic and
+    given a Cayley tables batch generate Cayley tables of isomorphic and
     anti-isomorphic magmas
 
-    :param cayley_table: a Cayley table of a magma
-    :returns: a list of Cayley tables of isomorphic and anti-isomorphic magmas
+    :param cayley_tables: a batch of Cayley tables
+    :returns: a batch of Cayley tables of isomorphic and anti-isomorphic magmas
     """
-    equivalent_tables = torch.cat(
-        [
-            get_isomorphic_magmas(cayley_table),
-            get_anti_isomorphic_magmas(cayley_table),
-        ],
-        dim=0,
-    )
-    return torch.unique(equivalent_tables, dim=0)
+    equivalent_cayley_tables = list()
+    dim = cayley_tables.shape[1]
+    for permutation in permutations(range(dim)):
+        permutation_tensor = torch.tensor(permutation, device=CURRENT_DEVICE)
+        sample_index, one, two = get_two_indices_per_sample(
+            cayley_tables.shape[0], dim
+        )
+        isomorphic_cayley_tables = torch.zeros(
+            cayley_tables.shape, dtype=torch.long, device=CURRENT_DEVICE
+        )
+        isomorphic_cayley_tables[
+            sample_index, permutation_tensor[one], permutation_tensor[two]
+        ] = permutation_tensor[cayley_tables[sample_index, one, two]]
+        equivalent_cayley_tables.append(isomorphic_cayley_tables)
+        anti_isomorphic_cayley_tables = torch.zeros(
+            cayley_tables.shape, dtype=torch.long, device=CURRENT_DEVICE
+        )
+        anti_isomorphic_cayley_tables[
+            sample_index, permutation_tensor[one], permutation_tensor[two]
+        ] = permutation_tensor[cayley_tables[sample_index, two, one]]
+        equivalent_cayley_tables.append(anti_isomorphic_cayley_tables)
+    return torch.unique(torch.cat(equivalent_cayley_tables, dim=0), dim=0)
 
 
 def download_file_from_url(
@@ -360,6 +312,27 @@ def get_newest_file(dir_path: str) -> str:
     )
 
 
+def get_two_indices_per_sample(
+    batch_size: int, cardinality: int
+) -> Tuple[Tensor, Tensor, Tensor]:
+    """
+    generates all possible combination of two indices
+    for each sample in a batch
+
+    >>> get_two_indices_per_sample(1, 2)
+    (tensor([0, 0, 0, 0]), tensor([0, 0, 1, 1]), tensor([0, 1, 0, 1]))
+
+    :param batch_size: number of samples in a batch
+    :pamam cardinality: number of possible values of an index
+    """
+    a_range = torch.arange(cardinality)
+    return (
+        torch.arange(batch_size).repeat_interleave(cardinality * cardinality),
+        a_range.repeat_interleave(cardinality).repeat(batch_size),
+        a_range.repeat(cardinality).repeat(batch_size),
+    )
+
+
 def make_discrete(cayley_cubes: torch.Tensor) -> torch.Tensor:
     """
     transforms a batch of probabilistic Cayley cubes and in the following way:
@@ -394,11 +367,50 @@ def make_discrete(cayley_cubes: torch.Tensor) -> torch.Tensor:
         [batch_size, cardinality, cardinality, cardinality],
         dtype=torch.float32,
     )
-    a_range = torch.arange(cardinality)
-    one = a_range.repeat_interleave(cardinality).repeat(batch_size)
-    two = a_range.repeat(cardinality).repeat(batch_size)
-    sample_index = torch.arange(batch_size).repeat_interleave(
-        cardinality * cardinality
+    sample_index, one, two = get_two_indices_per_sample(
+        batch_size, cardinality
     )
     cube[sample_index, one, two, cayley_table[sample_index, one, two]] = 1.0
     return cube
+
+
+def load_data_and_labels_from_file(
+    database_filename: str,
+) -> Tuple[Tensor, Tensor]:
+    """
+    reads data from a special file format
+
+    :param database_filename: a special file to read data from
+    :returns: (a tensor with Cayley tables, a tensor of their labels)
+    """
+    check_filename(path.basename(database_filename))
+    torch_zip_file = torch.load(database_filename)
+    database = torch_zip_file["database"]
+    labels = torch_zip_file.get(
+        "labels", torch.zeros(len(database), dtype=torch.int64)
+    )
+    return database, labels
+
+
+def load_data_and_labels_from_smallsemi(
+    cardinality: int, data_path: str
+) -> Tuple[Tensor, Tensor]:
+    """
+    Loads data from ``smallsemi`` package
+
+    :param cardinality: which ``smallsemi`` file to use
+    :param data_path: where to seach for ``smallsemi`` data
+    :returns: (a tensor with Cayley tables, a tensor of their labels)
+    """
+    filename = path.join(
+        data_path, "smallsemi_data", f"data{cardinality}.gl.gz"
+    )
+    check_smallsemi_filename(filename)
+    if not path.exists(filename):
+        download_smallsemi_data(data_path)
+    with gzip.open(filename, "rb") as file:
+        database = import_smallsemi_format(file.readlines()).to(CURRENT_DEVICE)
+    labels = torch.ones(
+        len(database), dtype=torch.int64, device=CURRENT_DEVICE
+    )
+    return database, labels
