@@ -22,9 +22,7 @@ from neural_semigroups.utils import (
     FOUR_GROUP,
     check_filename,
     check_smallsemi_filename,
-    get_anti_isomorphic_magmas,
     get_equivalent_magmas,
-    get_isomorphic_magmas,
     get_magma_by_index,
     import_smallsemi_format,
     random_semigroup,
@@ -121,54 +119,8 @@ class TestUtils(TestCase):
                 torch.allclose(semigroups[i], torch.tensor(true_semigroups[i]))
             )
 
-    def test_get_isomorphic_magmas(self):
-        isomorphic_groups = get_isomorphic_magmas(FOUR_GROUP)
-        self.assertIsInstance(isomorphic_groups, torch.Tensor)
-        n = isomorphic_groups.shape[0]
-        self.assertEqual(n, 4)
-        for i in range(n):
-            self.assertIsInstance(isomorphic_groups[i], torch.Tensor)
-            self.assertTrue(
-                torch.allclose(
-                    isomorphic_groups[i], self.true_isomorphic_groups[i],
-                )
-            )
-        isomorphic_magmas = get_isomorphic_magmas(
-            torch.tensor([[1, 1], [0, 0]])
-        )
-        self.assertIsInstance(isomorphic_magmas, torch.Tensor)
-        n = isomorphic_magmas.shape[0]
-        self.assertEqual(n, 1)
-        isomorphic_magma = torch.tensor([[1, 1], [0, 0]])
-        self.assertIsInstance(isomorphic_magmas[0], torch.Tensor)
-        self.assertTrue(torch.allclose(isomorphic_magmas[0], isomorphic_magma))
-
-    def test_get_anti_isomorphic_magmas(self):
-        anti_isomorphic_groups = get_anti_isomorphic_magmas(FOUR_GROUP)
-        self.assertIsInstance(anti_isomorphic_groups, torch.Tensor)
-        n = anti_isomorphic_groups.shape[0]
-        self.assertEqual(n, 4)
-        for i in range(n):
-            self.assertIsInstance(anti_isomorphic_groups[i], torch.Tensor)
-            self.assertTrue(
-                torch.allclose(
-                    anti_isomorphic_groups[i], self.true_isomorphic_groups[i],
-                )
-            )
-        isomorphic_magmas = get_anti_isomorphic_magmas(
-            torch.tensor([[1, 1], [0, 0]])
-        )
-        self.assertIsInstance(isomorphic_magmas, torch.Tensor)
-        n = isomorphic_magmas.shape[0]
-        self.assertEqual(n, 1)
-        anti_isomorphic_magma = torch.tensor([[1, 0], [1, 0]])
-        self.assertIsInstance(isomorphic_magmas[0], torch.Tensor)
-        self.assertTrue(
-            torch.allclose(isomorphic_magmas[0], anti_isomorphic_magma)
-        )
-
     def test_get_equivalent_magmas(self):
-        equivalent_groups = get_equivalent_magmas(FOUR_GROUP)
+        equivalent_groups = get_equivalent_magmas(FOUR_GROUP.view(1, 4, 4))
         self.assertIsInstance(equivalent_groups, torch.Tensor)
         n = equivalent_groups.shape[0]
         self.assertEqual(n, 4)
@@ -180,7 +132,7 @@ class TestUtils(TestCase):
                 )
             )
         equivalent_magmas = get_equivalent_magmas(
-            torch.tensor([[1, 1], [0, 0]])
+            torch.tensor([[[1, 1], [0, 0]]])
         )
         true_equivalent_magmas = [[[1, 0], [1, 0]], [[1, 1], [0, 0]]]
         self.assertIsInstance(equivalent_magmas, torch.Tensor)

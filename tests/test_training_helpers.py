@@ -20,10 +20,17 @@ from unittest.mock import patch
 
 import torch
 
-from neural_semigroups.training_helpers import get_arguments, get_loaders
+from neural_semigroups.training_helpers import (
+    get_arguments,
+    get_loaders,
+    load_database_as_cubes,
+)
 
 
 class TestTrainingHelpers(TestCase):
+    def setUp(self):
+        torch.manual_seed(47)
+
     def test_get_arguments(self):
         args = "prog --cardinality 2 --train_size 1 --validation_size 1"
         with patch.object(sys, "argv", args.split(" ")):
@@ -81,3 +88,28 @@ class TestTrainingHelpers(TestCase):
         self.assertEqual(len(batch), 2)
         self.assertTrue(torch.allclose(batch[0], test))
         self.assertTrue(torch.allclose(batch[1], test))
+
+    def test_load_database_as_cubes(self):
+        true_result = (
+            torch.tensor(
+                [
+                    [[[1.0, 0.0], [1.0, 0.0]], [[0.0, 1.0], [0.0, 1.0]]],
+                    [[[1.0, 0.0], [0.0, 1.0]], [[1.0, 0.0], [0.0, 1.0]]],
+                ]
+            ),
+            torch.tensor(
+                [[[[1.0, 0.0], [1.0, 0.0]], [[1.0, 0.0], [1.0, 0.0]]]]
+            ),
+            torch.tensor(
+                [
+                    [[[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]],
+                    [[[1.0, 0.0], [1.0, 0.0]], [[1.0, 0.0], [0.0, 1.0]]],
+                ]
+            ),
+            torch.tensor([1]),
+            torch.tensor([1]),
+            torch.tensor([1, 1]),
+        )
+        result = load_database_as_cubes(2, 1, 1)
+        for i, tensor in enumerate(result):
+            self.assertTrue(tensor.allclose(true_result[i]))

@@ -63,12 +63,7 @@ class CayleyDatabase:
         for every Cayley table in a previously loaded database adds all of its
         equivalent tables to the database
         """
-        database: List[Tensor] = []
-        for table in tqdm(
-            self.database, desc="augmenting by equivalent tables"
-        ):
-            database += [get_equivalent_magmas(table)]
-        self.database = torch.unique(torch.cat(database, dim=0), dim=0)
+        self.database = get_equivalent_magmas(self.database)
 
     def _check_input(self, cayley_table: List[List[int]]) -> bool:
         """

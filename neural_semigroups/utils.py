@@ -169,70 +169,36 @@ def import_smallsemi_format(lines: List[bytes]) -> torch.Tensor:
     return tables.reshape(tables.shape[0], cardinality, cardinality)
 
 
-def get_isomorphic_magmas(cayley_table: torch.Tensor) -> torch.Tensor:
+def get_equivalent_magmas(cayley_tables: torch.Tensor) -> torch.Tensor:
     """
-    given a Cayley table of a magma generate Cayley tables of isomorphic magmas
-    by appying all possible permutations of the magma's elements
-
-    :param cayley_table: a Cayley table of a magma
-    :returns: a list of Cayley tables of isomorphic magmas
-    """
-    isomorphic_cayley_tables = list()
-    dim = cayley_table.shape[0]
-    for permutation in permutations(range(dim)):
-        permutation_tensor = torch.tensor(permutation, device=CURRENT_DEVICE)
-        isomorphic_cayley_table = torch.zeros(
-            cayley_table.shape, dtype=torch.long, device=CURRENT_DEVICE
-        )
-        for i in range(dim):
-            for j in range(dim):
-                isomorphic_cayley_table[
-                    permutation_tensor[i], permutation_tensor[j]
-                ] = permutation_tensor[cayley_table[i, j]]
-        isomorphic_cayley_tables.append(isomorphic_cayley_table)
-    return torch.unique(torch.stack(isomorphic_cayley_tables), dim=0)
-
-
-def get_anti_isomorphic_magmas(cayley_table: torch.Tensor) -> torch.Tensor:
-    """
-    given a Cayley table of a magma generate Cayley tables of anti-isomorphic
-    magmas by appying all possible permutations of the magma's elements
-
-    :param cayley_table: a Cayley table of a magma
-    :returns: a list of Cayley tables of anti-isomorphic magmas
-    """
-    anti_isomorphic_cayley_tables = list()
-    dim = cayley_table.shape[0]
-    for permutation in permutations(range(dim)):
-        anti_isomorphic_cayley_table = torch.zeros(
-            cayley_table.shape, dtype=torch.long, device=CURRENT_DEVICE
-        )
-        permutation_tensor = torch.tensor(permutation, device=CURRENT_DEVICE)
-        for i in range(dim):
-            for j in range(dim):
-                anti_isomorphic_cayley_table[
-                    permutation_tensor[i], permutation_tensor[j]
-                ] = permutation_tensor[cayley_table[j, i]]
-        anti_isomorphic_cayley_tables.append(anti_isomorphic_cayley_table)
-    return torch.unique(torch.stack(anti_isomorphic_cayley_tables), dim=0)
-
-
-def get_equivalent_magmas(cayley_table: torch.Tensor) -> torch.Tensor:
-    """
-    given a Cayley table of a magma generate Cayley tables of isomorphic and
+    given a Cayley tables batch generate Cayley tables of isomorphic and
     anti-isomorphic magmas
 
-    :param cayley_table: a Cayley table of a magma
-    :returns: a list of Cayley tables of isomorphic and anti-isomorphic magmas
+    :param cayley_tables: a batch of Cayley tables
+    :returns: a batch of Cayley tables of isomorphic and anti-isomorphic magmas
     """
-    equivalent_tables = torch.cat(
-        [
-            get_isomorphic_magmas(cayley_table),
-            get_anti_isomorphic_magmas(cayley_table),
-        ],
-        dim=0,
-    )
-    return torch.unique(equivalent_tables, dim=0)
+    equivalent_cayley_tables = list()
+    dim = cayley_tables.shape[1]
+    for permutation in permutations(range(dim)):
+        permutation_tensor = torch.tensor(permutation, device=CURRENT_DEVICE)
+        sample_index, one, two = get_two_indices_per_sample(
+            cayley_tables.shape[0], dim
+        )
+        isomorphic_cayley_tables = torch.zeros(
+            cayley_tables.shape, dtype=torch.long, device=CURRENT_DEVICE
+        )
+        isomorphic_cayley_tables[
+            sample_index, permutation_tensor[one], permutation_tensor[two]
+        ] = permutation_tensor[cayley_tables[sample_index, one, two]]
+        equivalent_cayley_tables.append(isomorphic_cayley_tables)
+        anti_isomorphic_cayley_tables = torch.zeros(
+            cayley_tables.shape, dtype=torch.long, device=CURRENT_DEVICE
+        )
+        anti_isomorphic_cayley_tables[
+            sample_index, permutation_tensor[one], permutation_tensor[two]
+        ] = permutation_tensor[cayley_tables[sample_index, two, one]]
+        equivalent_cayley_tables.append(anti_isomorphic_cayley_tables)
+    return torch.unique(torch.cat(equivalent_cayley_tables, dim=0), dim=0)
 
 
 def download_file_from_url(
@@ -346,6 +312,27 @@ def get_newest_file(dir_path: str) -> str:
     )
 
 
+def get_two_indices_per_sample(
+    batch_size: int, cardinality: int
+) -> Tuple[Tensor, Tensor, Tensor]:
+    """
+    generates all possible combination of two indices
+    for each sample in a batch
+
+    >>> get_two_indices_per_sample(1, 2)
+    (tensor([0, 0, 0, 0]), tensor([0, 0, 1, 1]), tensor([0, 1, 0, 1]))
+
+    :param batch_size: number of samples in a batch
+    :pamam cardinality: number of possible values of an index
+    """
+    a_range = torch.arange(cardinality)
+    return (
+        torch.arange(batch_size).repeat_interleave(cardinality * cardinality),
+        a_range.repeat_interleave(cardinality).repeat(batch_size),
+        a_range.repeat(cardinality).repeat(batch_size),
+    )
+
+
 def make_discrete(cayley_cubes: torch.Tensor) -> torch.Tensor:
     """
     transforms a batch of probabilistic Cayley cubes and in the following way:
@@ -380,11 +367,8 @@ def make_discrete(cayley_cubes: torch.Tensor) -> torch.Tensor:
         [batch_size, cardinality, cardinality, cardinality],
         dtype=torch.float32,
     )
-    a_range = torch.arange(cardinality)
-    one = a_range.repeat_interleave(cardinality).repeat(batch_size)
-    two = a_range.repeat(cardinality).repeat(batch_size)
-    sample_index = torch.arange(batch_size).repeat_interleave(
-        cardinality * cardinality
+    sample_index, one, two = get_two_indices_per_sample(
+        batch_size, cardinality
     )
     cube[sample_index, one, two, cayley_table[sample_index, one, two]] = 1.0
     return cube
