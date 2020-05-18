@@ -232,6 +232,33 @@ def download_file_from_url(
     response.close()
 
 
+def find_substring_by_pattern(
+    strings: List[str], starts_with: str, ends_before: str
+) -> str:
+    """
+    search for a first occurrence of a given pattern in a string list
+
+    >>> strings = ["one", "two", "three"]
+    >>> find_substring_by_pattern(strings, "t", "o")
+    'tw'
+    >>> find_substring_by_pattern(strings, "four", "five")
+    Traceback (most recent call last):
+       ...
+    ValueError: pattern four.*five not found
+
+    :param strings: a list of strings where the pattern is searched for
+    :param starts_with: the first letters of a pattern
+    :param ends_before: a substring which marks the beginning of something different
+    :returns: a pattern which starts with ``starts_with`` and ends before ``ends_before``
+    """
+    for package_name in strings:
+        starting_index = package_name.find(starts_with)
+        if starting_index >= 0:
+            ending_index = package_name.find(ends_before)
+            return package_name[starting_index:ending_index]
+    raise ValueError(f"pattern {starts_with}.*{ends_before} not found")
+
+
 def download_smallsemi_data(data_path: str) -> None:
     """
     downloads, unzips and moves ``smallsemi`` data
@@ -239,13 +266,12 @@ def download_smallsemi_data(data_path: str) -> None:
     :param data_path: data storage path
     :returns:
     """
-    package_names = requests.get(GAP_PACKAGES_URL).text
-    for package_name in package_names.split("\n"):
-        starting_index = package_name.find("smallsemi")
-        if starting_index >= 0:
-            ending_index = package_name.find(".tar.bz2")
-            smallsemi_with_version = package_name[starting_index:ending_index]
-    url = f"{GAP_PACKAGES_URL}{smallsemi_with_version}.tar.bz2"
+    full_name_with_version = find_substring_by_pattern(
+        strings=requests.get(GAP_PACKAGES_URL).text.split("\n"),
+        starts_with="smallsemi",
+        ends_before=".tar.bz2",
+    )
+    url = f"{GAP_PACKAGES_URL}{full_name_with_version}.tar.bz2"
     temp_path = path.join(data_path, "tmp")
     rmtree(temp_path, ignore_errors=True)
     makedirs(temp_path, exist_ok=True)
@@ -254,7 +280,7 @@ def download_smallsemi_data(data_path: str) -> None:
     with tarfile.open(archive_path) as archive:
         archive.extractall(temp_path)
     rename(
-        path.join(temp_path, smallsemi_with_version, "data", "data2to7"),
+        path.join(temp_path, full_name_with_version, "data", "data2to7"),
         path.join(data_path, "smallsemi_data"),
     )
 
