@@ -69,6 +69,8 @@ def load_database_as_cubes(
         train_size, validation_size
     )
     train.augment_by_equivalent_tables()
+    validation.augment_by_equivalent_tables()
+    test.augment_by_equivalent_tables()
     train_cubes = list()
     for cayley_table in tqdm(train.database, desc="generating train cubes"):
         train_cubes.append(Magma(cayley_table).probabilistic_cube)
