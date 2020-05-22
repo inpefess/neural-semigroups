@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "neural-semigroups"
-version = "0.3.5"
+version = "0.3.6"
 description = "Neural networks powered research of semigroups"
 authors = ["Boris Shminke <boris@shminke.ml>"]
 license = "Apache-2.0"
@@ -35,7 +35,7 @@ pytorch-ignite = "0.3.0"
 tensorboard = "2.2.1"
 pylint = "2.5.2"
 mypy = "0.770"
-rope = "0.16.0"
+rope = "0.17.0"
 flake8 = "3.8.1"
 autopep8 = "1.5.1"
 black = "19.10b0"

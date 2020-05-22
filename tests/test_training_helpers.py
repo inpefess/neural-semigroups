@@ -20,11 +20,14 @@ from unittest.mock import patch
 
 import torch
 
+from neural_semigroups.magma import Magma
 from neural_semigroups.training_helpers import (
+    associative_ratio,
     get_arguments,
     get_loaders,
     load_database_as_cubes,
 )
+from neural_semigroups.utils import FOUR_GROUP
 
 
 class TestTrainingHelpers(TestCase):
@@ -98,12 +101,17 @@ class TestTrainingHelpers(TestCase):
                 ]
             ),
             torch.tensor(
-                [[[[1.0, 0.0], [1.0, 0.0]], [[1.0, 0.0], [1.0, 0.0]]]]
+                [
+                    [[[1.0, 0.0], [1.0, 0.0]], [[1.0, 0.0], [1.0, 0.0]]],
+                    [[[0.0, 1.0], [0.0, 1.0]], [[0.0, 1.0], [0.0, 1.0]]],
+                ]
             ),
             torch.tensor(
                 [
-                    [[[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]],
                     [[[1.0, 0.0], [1.0, 0.0]], [[1.0, 0.0], [0.0, 1.0]]],
+                    [[[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]],
+                    [[[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [0.0, 1.0]]],
+                    [[[0.0, 1.0], [1.0, 0.0]], [[1.0, 0.0], [0.0, 1.0]]],
                 ]
             ),
             torch.tensor([1]),
@@ -113,3 +121,10 @@ class TestTrainingHelpers(TestCase):
         result = load_database_as_cubes(2, 1, 1)
         for i, tensor in enumerate(result):
             self.assertTrue(tensor.allclose(true_result[i]))
+
+    def test_associate_ratio(self):
+        ratio = associative_ratio(
+            Magma(FOUR_GROUP).probabilistic_cube.view(-1, 4, 4, 4),
+            torch.tensor(0.0),
+        )
+        self.assertTrue(torch.tensor(1.0).allclose(ratio))

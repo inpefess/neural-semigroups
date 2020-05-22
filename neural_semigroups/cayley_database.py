@@ -132,7 +132,6 @@ class CayleyDatabase:
             )
         # pylint: disable=not-callable
         table = torch.tensor(cayley_table)
-        inv_cardinality = 1 / self.cardinality
         cube = torch.zeros(
             [self.cardinality, self.cardinality, self.cardinality],
             dtype=torch.float32,
@@ -141,7 +140,7 @@ class CayleyDatabase:
         rows, cols = torch.where(table != -1)
         cube[rows, cols, table[rows, cols]] = 1.0
         rows, cols = torch.where(table == -1)
-        cube[rows, cols, :] = inv_cardinality
+        cube[rows, cols, :] = 1 / self.cardinality
         prediction = self.model(
             cube.reshape(
                 [-1, self.cardinality, self.cardinality, self.cardinality]
