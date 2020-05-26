@@ -190,18 +190,12 @@ class Magma:
         :returns: another magma
         """
         next_table = self.cayley_table.clone().detach()
-        row = self.cardinality - 1
-        column = self.cardinality - 1
+        row, column = self.cardinality - 1, self.cardinality - 1
         while next_table[row, column] >= self.cardinality - 1:
-            if column > 0:
-                next_table[row, column] = 0
-                column -= 1
-            else:
-                if row > 0:
-                    next_table[row, column] = 0
-                    row -= 1
-                    column = self.cardinality - 1
-                else:
-                    raise ValueError("there is no next magma!")
+            next_table[row, column] = 0
+            row = row + (column - 1) // self.cardinality
+            column = (column - 1) % self.cardinality
+            if row < 0:
+                raise ValueError("there is no next magma!")
         next_table[row, column] += 1
         return Magma(next_table)

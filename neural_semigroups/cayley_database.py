@@ -124,8 +124,7 @@ class CayleyDatabase:
         """
         if isinstance(self.model, MagmaDAE):
             self.model.apply_corruption = False
-        if isinstance(self.model, Module):
-            self.model.eval()
+        self.model.eval()
         if not self._check_input(cayley_table):
             raise ValueError(
                 f"invalid Cayley table of {self.cardinality} elements"
@@ -225,28 +224,25 @@ class CayleyDatabase:
         :returns: statistics of solved puzzles splitted by the levels of difficulty
                   (number of cells omitted)
         """
-        cardinality = self.cardinality
-        max_level = cardinality ** 2 if max_level == -1 else max_level
+        max_level = self.cardinality ** 2 if max_level == -1 else max_level
         totals = torch.zeros((2, max_level))
         database_size = len(self.database)
         test_indices = torch.randperm(database_size)[
             : min(database_size, 1000)
         ]
         for i in tqdm(test_indices, desc="generating and solving puzzles"):
-            cayley_table = self.database[i]
             for level in range(1, max_level + 1):
                 rows, cols = zip(
                     *[
-                        (point // cardinality, point % cardinality)
+                        (point // self.cardinality, point % self.cardinality)
                         for point in torch.randint(
-                            0, cardinality ** 2, [level]
+                            0, self.cardinality ** 2, [level]
                         )
                     ]
                 )
-                puzzle = cayley_table.clone().detach()
+                puzzle = self.database[i].clone().detach()
                 puzzle[rows, cols] = -1
                 solution, _ = self.fill_in_with_model(puzzle.tolist())
                 totals[0, level - 1] += 1
-                if Magma(solution).is_associative:
-                    totals[1, level - 1] += 1
+                totals[1, level - 1] += Magma(solution).is_associative
         return totals

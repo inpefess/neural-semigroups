@@ -18,6 +18,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 import torch
+from torch.nn import Module
 
 from neural_semigroups.cayley_database import CayleyDatabase
 
@@ -25,6 +26,8 @@ from neural_semigroups.cayley_database import CayleyDatabase
 class TestCayleyDatabase(TestCase):
     def setUp(self):
         torch.manual_seed(43)
+        self.identity_module = Module()
+        self.identity_module.forward = lambda x: x
         self.cayley_db = CayleyDatabase(2, data_path="./tests")
         self.cayley_db.database = torch.tensor(
             [
@@ -72,7 +75,7 @@ class TestCayleyDatabase(TestCase):
     def test_fill_in_with_model(self):
         self.cayley_db.cardinality = 2
         input = [[-1, 0], [0, 1]]
-        self.cayley_db.model = lambda x: x
+        self.cayley_db.model = self.identity_module
         table, cube = self.cayley_db.fill_in_with_model(input)
         self.assertIsInstance(table, torch.Tensor)
         self.assertIsInstance(cube, torch.Tensor)
@@ -138,7 +141,7 @@ class TestCayleyDatabase(TestCase):
             self.cayley_db.model
 
     def test_testing_report(self):
-        self.cayley_db.model = lambda x: x
+        self.cayley_db.model = self.identity_module
         torch.manual_seed(777)
         self.assertTrue(
             self.cayley_db.testing_report(2).equal(
