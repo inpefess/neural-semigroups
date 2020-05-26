@@ -19,13 +19,7 @@ Cayley Database
 .. autoclass:: neural_semigroups.CayleyDatabase
    :special-members: __init__
    :members:
-
-Magma Classifier
-----------------
-.. autoclass:: neural_semigroups.MagmaClassifier
-   :special-members: __init__
-   :members:
-
+      
 Denoising Autoencoder for Magmas
 --------------------------------
 .. autoclass:: neural_semigroups.MagmaDAE
