@@ -219,7 +219,7 @@ def add_early_stopping_and_checkpoint(
         "checkpoints", "", score_function=score, require_empty=False
     )
     evaluator.add_event_handler(
-        Events.EPOCH_COMPLETED, checkpoint, {checkpoint_filename: model}
+        Events.COMPLETED, checkpoint, {checkpoint_filename: model}
     )
 
 
