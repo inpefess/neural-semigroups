@@ -307,10 +307,10 @@ def print_report(totals: torch.Tensor) -> pd.DataFrame:
     levels = torch.arange(1, totals.shape[1] + 1)
     return pd.DataFrame(
         {
-            "level": levels,
-            "puzzles": totals[0],
-            "solved": totals[1],
-            "(%)": totals[1] * 100 // totals[0],
+            "level": levels.numpy(),
+            "puzzles": totals[0].numpy(),
+            "solved": totals[1].numpy(),
+            "(%)": totals[1].numpy() * 100 // totals[0].numpy(),
         }
     ).set_index("level")
 

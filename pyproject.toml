@@ -43,6 +43,7 @@ pre-commit = "*"
 jupyterlab = "*"
 ipywidgets = "*"
 black = "^19.10b0"
+data-science-types = "*"
 
 [tool.black]
 line-length=79
