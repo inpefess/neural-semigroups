@@ -19,9 +19,13 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import torch
+from ignite.engine import Engine, Events
+from ignite.handlers import EarlyStopping, ModelCheckpoint
+from torch.nn import Module
 
 from neural_semigroups.magma import Magma
 from neural_semigroups.training_helpers import (
+    add_early_stopping_and_checkpoint,
     associative_ratio,
     get_arguments,
     get_loaders,
@@ -128,3 +132,13 @@ class TestTrainingHelpers(TestCase):
             torch.tensor(0.0),
         )
         self.assertTrue(torch.tensor(1.0).allclose(ratio))
+
+    def test_add_early_stopping_and_checkpoint(self):
+        module = Module()
+        evaluator = Engine(lambda x, y: 0.0)
+        trainer = Engine(lambda x, y: 0.0)
+        add_early_stopping_and_checkpoint(evaluator, trainer, "test", module)
+        completed_handlers = evaluator._event_handlers[Events.COMPLETED]
+        self.assertEqual(len(completed_handlers), 2)
+        self.assertIsInstance(completed_handlers[0][0], EarlyStopping)
+        self.assertIsInstance(completed_handlers[1][0], ModelCheckpoint)
