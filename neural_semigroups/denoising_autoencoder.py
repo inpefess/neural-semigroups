@@ -14,7 +14,7 @@
    limitations under the License.
 """
 from collections import OrderedDict
-from typing import List, Tuple, no_type_check
+from typing import List, Tuple
 
 import torch
 from torch import Tensor
@@ -175,7 +175,6 @@ class MagmaDAE(Module):
         return sample
 
     # pylint: disable=arguments-differ
-    @no_type_check
     def forward(self, cayley_cube: Tensor) -> Tensor:
         """
         forward pass inhereted from Module

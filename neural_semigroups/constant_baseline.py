@@ -13,8 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from typing import no_type_check
-
 import torch
 from torch import Tensor
 from torch.nn import Module
@@ -56,7 +54,6 @@ class ConstantBaseline(Module):
         self.constant_distribution[fill_in_with] = 1.0
 
     # pylint: disable=arguments-differ,unused-argument
-    @no_type_check
     def forward(self, cayley_cube: Tensor) -> Tensor:
         """
         forward pass inhereted from Module
