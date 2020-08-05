@@ -22,6 +22,7 @@ from torch.nn import Module
 from neural_semigroups.constants import CURRENT_DEVICE
 
 
+# pylint: disable=abstract-method
 class ConstantBaseline(Module):
     """
     A model that always fills in the same number

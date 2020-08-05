@@ -65,6 +65,7 @@ def get_encoder_and_decoder_layers(
     )
 
 
+# pylint: disable=abstract-method
 class MagmaDAE(Module):
     """
     Denoising Autoencoder for probability Cayley cubes of magmas

@@ -160,7 +160,7 @@ def import_smallsemi_format(lines: List[bytes]) -> torch.Tensor:
     """
     raw_tables = torch.tensor(
         [list(map(int, list(line.decode("utf-8")[:-1]))) for line in lines[1:]]
-    ).T
+    ).transpose(0, 1)
     tables = torch.cat(
         [torch.zeros([raw_tables.shape[0], 1], dtype=torch.long), raw_tables],
         dim=-1,

@@ -174,6 +174,7 @@ class CayleyDatabase:
                 validation_size,
                 self.database.shape[0] - train_size - validation_size,
             ],
+            generator=torch.default_generator,
         )
         train = CayleyDatabase(self.cardinality)
         train.database, train.labels = [

@@ -28,4 +28,6 @@ class CyclicGroup(Magma):
         :param cardinality: number of elements in a cyclic group
         """
         identity_row = torch.arange(cardinality).reshape(cardinality, 1)
-        super().__init__((identity_row.T + identity_row) % cardinality)
+        super().__init__(
+            (identity_row.transpose(0, 1) + identity_row) % cardinality
+        )

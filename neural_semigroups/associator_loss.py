@@ -24,6 +24,7 @@ from torch.nn.functional import kl_div
 from neural_semigroups.utils import make_discrete
 
 
+# pylint: disable=abstract-method
 class AssociatorLoss(Module):
     """
     probabilistic associator loss
