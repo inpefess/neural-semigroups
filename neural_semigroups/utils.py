@@ -160,7 +160,7 @@ def import_smallsemi_format(lines: List[bytes]) -> torch.Tensor:
     """
     raw_tables = torch.tensor(
         [list(map(int, list(line.decode("utf-8")[:-1]))) for line in lines[1:]]
-    ).T
+    ).transpose(0, 1)
     tables = torch.cat(
         [torch.zeros([raw_tables.shape[0], 1], dtype=torch.long), raw_tables],
         dim=-1,
@@ -307,10 +307,10 @@ def print_report(totals: torch.Tensor) -> pd.DataFrame:
     levels = torch.arange(1, totals.shape[1] + 1)
     return pd.DataFrame(
         {
-            "level": levels,
-            "puzzles": totals[0],
-            "solved": totals[1],
-            "(%)": totals[1] * 100 // totals[0],
+            "level": levels.numpy(),
+            "puzzles": totals[0].numpy(),
+            "solved": totals[1].numpy(),
+            "(%)": totals[1].numpy() * 100 // totals[0].numpy(),
         }
     ).set_index("level")
 
@@ -440,3 +440,23 @@ def load_data_and_labels_from_smallsemi(
         len(database), dtype=torch.int64, device=CURRENT_DEVICE
     )
     return database, labels
+
+
+def count_different(one: Tensor, two: Tensor) -> Tensor:
+    """
+    given two batches of the same size, counts number of positions in these
+    batches, on which the tensor from the first batch differs from the second
+
+    :param one: one batch of tensors
+    :param two: another batch of tensors
+    :returns: the number of different tensors
+    """
+    batch_size = one.shape[0]
+    return (
+        torch.zeros(batch_size)
+        .where(
+            torch.abs(one - two).reshape(batch_size, -1).max(dim=1)[0] > 0,
+            torch.ones(batch_size),
+        )
+        .sum()
+    )

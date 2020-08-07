@@ -13,17 +13,16 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from typing import no_type_check
-
 import torch
 from torch import Tensor
 from torch.functional import einsum
 from torch.nn import Module
 from torch.nn.functional import kl_div
 
-from neural_semigroups.utils import make_discrete
+from neural_semigroups.utils import count_different, make_discrete
 
 
+# pylint: disable=abstract-method
 class AssociatorLoss(Module):
     """
     probabilistic associator loss
@@ -38,7 +37,6 @@ class AssociatorLoss(Module):
         self.discrete = discrete
 
     # pylint: disable=arguments-differ
-    @no_type_check
     def forward(self, cayley_cubes: Tensor) -> Tensor:
         """
         finds a probabilistic associator of a given probabilistic Cayley cube
@@ -71,18 +69,9 @@ class AssociatorLoss(Module):
             cubes = cayley_cubes
         one = einsum("biml,bjkm->bijkl", cubes, cubes)
         two = einsum("bmkl,bijm->bijkl", cubes, cubes)
+        batch_size = cayley_cubes.shape[0]
         if self.discrete:
-            associator = (
-                torch.zeros(one.shape[0])
-                .where(
-                    torch.abs(one - two)
-                    .reshape(one.shape[0], -1)
-                    .max(dim=1)[0]
-                    > 0,
-                    torch.ones(one.shape[0]),
-                )
-                .sum()
-            )
+            associator = count_different(one, two)
         else:
             associator = kl_div(torch.log(one), two, reduction="sum")
-        return associator / cayley_cubes.shape[0]
+        return associator / batch_size

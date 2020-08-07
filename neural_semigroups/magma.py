@@ -119,7 +119,9 @@ class Magma:
         :returns: whether the input table is commutative or not
 
         """
-        return torch.allclose(self.cayley_table, self.cayley_table.T)
+        return torch.allclose(
+            self.cayley_table, self.cayley_table.transpose(0, 1)
+        )
 
     @property
     def identity(self) -> int:
@@ -131,7 +133,9 @@ class Magma:
         a_range = torch.arange(self.cardinality)
         left_identity = (self.cayley_table == a_range).min(dim=1)[0].max(dim=0)
         right_identity = (
-            (self.cayley_table.T == a_range).min(dim=1)[0].max(dim=0)
+            (self.cayley_table.transpose(0, 1) == a_range)
+            .min(dim=1)[0]
+            .max(dim=0)
         )
         if bool(
             left_identity[0]
@@ -151,7 +155,9 @@ class Magma:
         a_range = torch.arange(self.cardinality)
         return bool(
             (self.cayley_table.sort()[0] == a_range).min(dim=1)[0].min()
-            and (self.cayley_table.T.sort()[0] == a_range).min(dim=1)[0].min()
+            and (self.cayley_table.transpose(0, 1).sort()[0] == a_range)
+            .min(dim=1)[0]
+            .min()
         )
 
     @property
@@ -190,18 +196,12 @@ class Magma:
         :returns: another magma
         """
         next_table = self.cayley_table.clone().detach()
-        row = self.cardinality - 1
-        column = self.cardinality - 1
+        row, column = self.cardinality - 1, self.cardinality - 1
         while next_table[row, column] >= self.cardinality - 1:
-            if column > 0:
-                next_table[row, column] = 0
-                column -= 1
-            else:
-                if row > 0:
-                    next_table[row, column] = 0
-                    row -= 1
-                    column = self.cardinality - 1
-                else:
-                    raise ValueError("there is no next magma!")
+            next_table[row, column] = 0
+            row = row + (column - 1) // self.cardinality
+            column = (column - 1) % self.cardinality
+            if row < 0:
+                raise ValueError("there is no next magma!")
         next_table[row, column] += 1
         return Magma(next_table)

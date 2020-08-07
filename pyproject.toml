@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "neural-semigroups"
-version = "0.3.6"
+version = "0.3.7"
 description = "Neural networks powered research of semigroups"
 authors = ["Boris Shminke <boris@shminke.ml>"]
 license = "Apache-2.0"
@@ -28,34 +28,25 @@ pytorch-ignite = "*"
 tensorboard = "*"
 
 [tool.poetry.dev-dependencies]
-torch = "1.5.0"
-tqdm = "4.46.0"
-pandas = "1.0.3"
-pytorch-ignite = "0.3.0"
-tensorboard = "2.2.1"
-pylint = "2.5.2"
-mypy = "0.770"
-rope = "0.17.0"
-flake8 = "3.8.1"
-autopep8 = "1.5.1"
-black = "19.10b0"
-virtualenv = "20.0.17"
-yapf = "0.29.0"
-matplotlib = "3.2.1"
-seaborn = "0.10.0"
-pytest = "5.4.1"
-sphinx = "2.4.4"
-sphinx_rtd_theme = "0.4.3"
-pytest-cov = "2.8.1"
-sphinx-autodoc-typehints = "1.10.3"
-scikit-learn = "0.22.2.post1"
-pre-commit = "2.3.0"
-jupyterlab = "2.1.2"
-ipywidgets = "7.5.1"
+pylint = "*"
+mypy = "*"
+rope = "*"
+flake8 = "*"
+virtualenv = "*"
+pytest = "*"
+sphinx = "*"
+sphinx_rtd_theme = "*"
+pytest-cov = "*"
+sphinx-autodoc-typehints = "*"
+scikit-learn = "*"
+pre-commit = "*"
+jupyterlab = "*"
+ipywidgets = "*"
+black = "^19.10b0"
+data-science-types = "*"
 
 [tool.black]
 line-length=79
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
-

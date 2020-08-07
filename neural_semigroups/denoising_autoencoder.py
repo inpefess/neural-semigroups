@@ -14,7 +14,7 @@
    limitations under the License.
 """
 from collections import OrderedDict
-from typing import List, Tuple, no_type_check
+from typing import List, Tuple
 
 import torch
 from torch import Tensor
@@ -60,11 +60,12 @@ def get_encoder_and_decoder_layers(
         decoder_layers.update({f"relu1{i}": ReLU()})
         decoder_layers.update({f"bn1{i}": BatchNorm1d(decoder_dims[i + 1])})
     return (
-        Sequential(encoder_layers),
-        Sequential(decoder_layers),
+        Sequential(encoder_layers).to(CURRENT_DEVICE),
+        Sequential(decoder_layers).to(CURRENT_DEVICE),
     )
 
 
+# pylint: disable=abstract-method
 class MagmaDAE(Module):
     """
     Denoising Autoencoder for probability Cayley cubes of magmas
@@ -174,7 +175,6 @@ class MagmaDAE(Module):
         return sample
 
     # pylint: disable=arguments-differ
-    @no_type_check
     def forward(self, cayley_cube: Tensor) -> Tensor:
         """
         forward pass inhereted from Module

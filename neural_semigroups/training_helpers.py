@@ -42,6 +42,7 @@ from neural_semigroups.associator_loss import AssociatorLoss
 from neural_semigroups.cayley_database import CayleyDatabase
 from neural_semigroups.constants import CURRENT_DEVICE
 from neural_semigroups.magma import Magma
+from neural_semigroups.precise_guess_loss import PreciseGuessLoss
 from neural_semigroups.utils import get_newest_file
 
 
@@ -157,6 +158,19 @@ def associative_ratio(
     return AssociatorLoss(True)(prediction)
 
 
+def guessed_ratio(
+    prediction: torch.Tensor, target: torch.Tensor
+) -> torch.Tensor:
+    """
+    a wrapper around a discrete case of ``PreciseGuessLoss``
+
+    :param prediction: a batch of generated Cayley cubes
+    :param target: a batch of Cayley cubes from validation
+    :returns: a percentage of correctly guessed tables
+    """
+    return PreciseGuessLoss()(prediction, target)
+
+
 def get_associator_evaluator(model: Module, loss: Module) -> Engine:
     """
     get an ``ignite`` evaluator for semigroups completion task
@@ -167,7 +181,11 @@ def get_associator_evaluator(model: Module, loss: Module) -> Engine:
     """
     return create_supervised_evaluator(
         model,
-        {"loss": Loss(loss), "associative_ratio": Loss(associative_ratio)},
+        {
+            "loss": Loss(loss),
+            "associative_ratio": Loss(associative_ratio),
+            "guessed_ratio": Loss(guessed_ratio),
+        },
         CURRENT_DEVICE,
     )
 
@@ -219,7 +237,7 @@ def add_early_stopping_and_checkpoint(
         "checkpoints", "", score_function=score, require_empty=False
     )
     evaluator.add_event_handler(
-        Events.EPOCH_COMPLETED, checkpoint, {checkpoint_filename: model}
+        Events.COMPLETED, checkpoint, {checkpoint_filename: model}
     )
 
 
@@ -243,13 +261,13 @@ def get_tensorboard_logger(
     tb_logger.attach(evaluators.train, training_loss, Events.COMPLETED)
     validation_loss = OutputHandler(
         "validation",
-        ["loss", "associative_ratio"],
+        ["loss", "associative_ratio", "guessed_ratio"],
         global_step_transform=global_step_from_engine(trainer),
     )
     tb_logger.attach(evaluators.validation, validation_loss, Events.COMPLETED)
     test_loss = OutputHandler(
         "test",
-        ["loss", "associative_ratio"],
+        ["loss", "associative_ratio", "guessed_ratio"],
         global_step_transform=global_step_from_engine(trainer),
     )
     tb_logger.attach(evaluators.test, test_loss, Events.COMPLETED)
