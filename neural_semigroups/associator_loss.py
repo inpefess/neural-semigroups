@@ -69,18 +69,17 @@ class AssociatorLoss(Module):
             cubes = cayley_cubes
         one = einsum("biml,bjkm->bijkl", cubes, cubes)
         two = einsum("bmkl,bijm->bijkl", cubes, cubes)
+        batch_size = cayley_cubes.shape[0]
         if self.discrete:
             associator = (
-                torch.zeros(one.shape[0])
+                torch.zeros(batch_size)
                 .where(
-                    torch.abs(one - two)
-                    .reshape(one.shape[0], -1)
-                    .max(dim=1)[0]
+                    torch.abs(one - two).reshape(batch_size, -1).max(dim=1)[0]
                     > 0,
-                    torch.ones(one.shape[0]),
+                    torch.ones(batch_size),
                 )
                 .sum()
             )
         else:
             associator = kl_div(torch.log(one), two, reduction="sum")
-        return associator / cayley_cubes.shape[0]
+        return associator / batch_size
