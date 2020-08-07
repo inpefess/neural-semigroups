@@ -440,3 +440,23 @@ def load_data_and_labels_from_smallsemi(
         len(database), dtype=torch.int64, device=CURRENT_DEVICE
     )
     return database, labels
+
+
+def count_different(one: Tensor, two: Tensor) -> Tensor:
+    """
+    given two batches of the same size, counts number of positions in these
+    batches, on which the tensor from the first batch differs from the second
+
+    :param one: one batch of tensors
+    :param two: another batch of tensors
+    :returns: the number of different tensors
+    """
+    batch_size = one.shape[0]
+    return (
+        torch.zeros(batch_size)
+        .where(
+            torch.abs(one - two).reshape(batch_size, -1).max(dim=1)[0] > 0,
+            torch.ones(batch_size),
+        )
+        .sum()
+    )

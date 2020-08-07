@@ -19,7 +19,7 @@ from torch.functional import einsum
 from torch.nn import Module
 from torch.nn.functional import kl_div
 
-from neural_semigroups.utils import make_discrete
+from neural_semigroups.utils import count_different, make_discrete
 
 
 # pylint: disable=abstract-method
@@ -71,15 +71,7 @@ class AssociatorLoss(Module):
         two = einsum("bmkl,bijm->bijkl", cubes, cubes)
         batch_size = cayley_cubes.shape[0]
         if self.discrete:
-            associator = (
-                torch.zeros(batch_size)
-                .where(
-                    torch.abs(one - two).reshape(batch_size, -1).max(dim=1)[0]
-                    > 0,
-                    torch.ones(batch_size),
-                )
-                .sum()
-            )
+            associator = count_different(one, two)
         else:
             associator = kl_div(torch.log(one), two, reduction="sum")
         return associator / batch_size
