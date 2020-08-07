@@ -60,8 +60,8 @@ def get_encoder_and_decoder_layers(
         decoder_layers.update({f"relu1{i}": ReLU()})
         decoder_layers.update({f"bn1{i}": BatchNorm1d(decoder_dims[i + 1])})
     return (
-        Sequential(encoder_layers),
-        Sequential(decoder_layers),
+        Sequential(encoder_layers).to(CURRENT_DEVICE),
+        Sequential(decoder_layers).to(CURRENT_DEVICE),
     )
 
 
