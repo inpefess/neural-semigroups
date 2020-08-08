@@ -73,7 +73,7 @@ class TestMagmaDAE(TestCase):
                 self.magma_dae.corrupt_input(cayley_cube), true_value
             )
         )
-        self.magma_dae.apply_corruption = False
+        self.magma_dae.eval()
         self.assertTrue(
             torch.allclose(
                 self.magma_dae.corrupt_input(cayley_cube), cayley_cube,

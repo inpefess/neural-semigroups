@@ -71,8 +71,6 @@ class MagmaDAE(Module):
     Denoising Autoencoder for probability Cayley cubes of magmas
     """
 
-    apply_corruption: bool = True
-
     def __init__(
         self,
         cardinality: int,
@@ -122,9 +120,7 @@ class MagmaDAE(Module):
         :param cayley_cube: representation of a Cayley table probability distribution
         :returns: distorted Cayley cube
         """
-        dropout_norm = (
-            1 - self.corruption_rate if self.apply_corruption else 1.0
-        )
+        dropout_norm = 1 - self.corruption_rate if self.training else 1.0
         return (
             dropout_norm
             * dropout2d(
@@ -136,7 +132,7 @@ class MagmaDAE(Module):
                 )
                 - 1 / self.cardinality,
                 self.corruption_rate,
-                self.apply_corruption,
+                self.training,
             )
             + 1 / self.cardinality
         ).view(-1, self.cardinality, self.cardinality, self.cardinality)
