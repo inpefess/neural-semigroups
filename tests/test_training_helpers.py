@@ -60,7 +60,7 @@ class TestTrainingHelpers(TestCase):
             test_labels,
         )
         train_loader, validation_loader, test_loader = get_loaders(
-            "filename", 1, 1, 1, True
+            "filename", 1, 1, 1
         )
         batch = [i for i in train_loader][0]
         self.assertIsInstance(batch, list)
@@ -77,24 +77,6 @@ class TestTrainingHelpers(TestCase):
         self.assertEqual(len(batch), 2)
         self.assertTrue(torch.allclose(batch[0], test))
         self.assertTrue(torch.allclose(batch[1], test_labels))
-        train_loader, validation_loader, test_loader = get_loaders(
-            "filename", 1, 1, 1, False
-        )
-        batch = [i for i in train_loader][0]
-        self.assertIsInstance(batch, list)
-        self.assertEqual(len(batch), 2)
-        self.assertTrue(torch.allclose(batch[0], train))
-        self.assertTrue(torch.allclose(batch[1], train))
-        batch = [i for i in validation_loader][0]
-        self.assertIsInstance(batch, list)
-        self.assertEqual(len(batch), 2)
-        self.assertTrue(torch.allclose(batch[0], validation))
-        self.assertTrue(torch.allclose(batch[1], validation))
-        batch = [i for i in test_loader][0]
-        self.assertIsInstance(batch, list)
-        self.assertEqual(len(batch), 2)
-        self.assertTrue(torch.allclose(batch[0], test))
-        self.assertTrue(torch.allclose(batch[1], test))
 
     def test_load_database_as_cubes(self):
         true_result = (

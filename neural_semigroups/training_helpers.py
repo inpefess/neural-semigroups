@@ -325,11 +325,7 @@ def learning_pipeline(
 
 
 def get_loaders(
-    cardinality: int,
-    batch_size: int,
-    train_size: int,
-    validation_size: int,
-    use_labels: bool = False,
+    cardinality: int, batch_size: int, train_size: int, validation_size: int,
 ) -> Tuple[DataLoader, DataLoader, DataLoader]:
     """
     get train and validation data loaders
@@ -338,8 +334,6 @@ def get_loaders(
     :param batch_size: batch size (common for train and validation)
     :param train_size: number of tables for training
     :param validation_size: number of tables for validation
-    :param use_labels: whether to set a target as labels from database (for
-    classifier) or to use X's as labels (for autoencoder)
     :returns: a triple of train, validation, and test data loaders
     """
     (
@@ -350,14 +344,9 @@ def get_loaders(
         validation_labels,
         test_labels,
     ) = load_database_as_cubes(cardinality, train_size, validation_size)
-    if use_labels:
-        train_data = TensorDataset(train_tensor, train_labels)
-        val_data = TensorDataset(val_tensor, validation_labels)
-        test_data = TensorDataset(test_tensor, test_labels)
-    else:
-        train_data = TensorDataset(train_tensor, train_tensor)
-        val_data = TensorDataset(val_tensor, val_tensor)
-        test_data = TensorDataset(test_tensor, test_tensor)
+    train_data = TensorDataset(train_tensor, train_labels)
+    val_data = TensorDataset(val_tensor, validation_labels)
+    test_data = TensorDataset(test_tensor, test_labels)
     return (
         DataLoader(train_data, batch_size=batch_size, shuffle=True),
         DataLoader(val_data, batch_size=batch_size, shuffle=True),
