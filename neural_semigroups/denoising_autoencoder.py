@@ -19,9 +19,9 @@ from typing import List, Tuple
 import torch
 from torch import Tensor
 from torch.nn import BatchNorm1d, Linear, Module, ReLU, Sequential, Softmax2d
-from torch.nn.functional import dropout2d
 
 from neural_semigroups.constants import CURRENT_DEVICE
+from neural_semigroups.utils import corrupt_input
 
 
 def get_encoder_and_decoder_layers(
@@ -75,18 +75,18 @@ class MagmaDAE(Module):
         self,
         cardinality: int,
         hidden_dims: List[int],
-        corruption_rate: float,
+        dropout_rate: float,
         do_reparametrization: bool = False,
     ):
         """
         :param cardinality: the number of elements in a magma
         :param hidden_dims: a list of sizes of hidden layers of the encoder and the decoder
-        :param corruption_rate: what percentage of cells from the Cayley table to substitute with uniform random variables
+        :param dropout_rate: what percentage of cells from the Cayley table to substitute with uniform random variables
         :param do_reparametrization: if ``True``, adds a reparameterization trick
         """
         super().__init__()
         self.cardinality = cardinality
-        self.corruption_rate = corruption_rate
+        self.dropout_rate = dropout_rate
         self.do_reparametrization = do_reparametrization
         (
             self.encoder_layers,
@@ -111,31 +111,6 @@ class MagmaDAE(Module):
         return self.encoder_layers(
             corrupted_input.view(corrupted_input.shape[0], -1)
         )
-
-    def corrupt_input(self, cayley_cube: Tensor) -> Tensor:
-        """
-        changes several cells in a Cayley table with uniformly distributed
-        random variables
-
-        :param cayley_cube: representation of a Cayley table probability distribution
-        :returns: distorted Cayley cube
-        """
-        dropout_norm = 1 - self.corruption_rate if self.training else 1.0
-        return (
-            dropout_norm
-            * dropout2d(
-                cayley_cube.view(
-                    -1,
-                    self.cardinality * self.cardinality,
-                    self.cardinality,
-                    1,
-                )
-                - 1 / self.cardinality,
-                self.corruption_rate,
-                self.training,
-            )
-            + 1 / self.cardinality
-        ).view(-1, self.cardinality, self.cardinality, self.cardinality)
 
     def decode(self, encoded_input: Tensor) -> Tensor:
         """
@@ -171,14 +146,16 @@ class MagmaDAE(Module):
         return sample
 
     # pylint: disable=arguments-differ
-    def forward(self, cayley_cube: Tensor) -> Tensor:
+    def forward(self, cayley_cubes: Tensor) -> Tensor:
         """
         forward pass inhereted from Module
 
-        :param cayley_cube: probabilistic representation of a magma
-        :returns: autoencoded probabilistic representation of a magma
+        :param cayley_cubes: a batch of probabilistic representations of magmas
+        :returns: autoencoded probabilistic representations of magmas
         """
-        corrupted_input = self.corrupt_input(cayley_cube)
+        corrupted_input = corrupt_input(
+            cayley_cubes, self.dropout_rate if self.training else 0.0
+        )
         encoded_input = self.encode(corrupted_input)
         reparameterized_input = self.reparameterize(encoded_input)
         decoded_input = self.decode(reparameterized_input)
