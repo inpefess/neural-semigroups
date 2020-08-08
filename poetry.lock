@@ -28,7 +28,7 @@ version = "1.4.4"
 [[package]]
 category = "dev"
 description = "Disable App Nap on OS X 10.9"
-marker = "sys_platform == \"darwin\" or platform_system == \"Darwin\" or python_version >= \"3.3\" and sys_platform == \"darwin\""
+marker = "python_version >= \"3.3\" and sys_platform == \"darwin\" or platform_system == \"Darwin\""
 name = "appnope"
 optional = false
 python-versions = "*"
@@ -105,6 +105,7 @@ pytz = ">=2015.7"
 [[package]]
 category = "dev"
 description = "Specifications for callback functions passed in to an API"
+marker = "python_version >= \"3.3\""
 name = "backcall"
 optional = false
 python-versions = "*"
@@ -304,7 +305,7 @@ description = "Google Authentication Library"
 name = "google-auth"
 optional = false
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
-version = "1.20.0"
+version = "1.20.1"
 
 [package.dependencies]
 cachetools = ">=2.0.0,<5.0"
@@ -509,6 +510,7 @@ xdg_home = ["appdirs (>=1.4.0)"]
 [[package]]
 category = "dev"
 description = "An autocompletion tool for Python that can be used for text editors."
+marker = "python_version >= \"3.3\""
 name = "jedi"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
@@ -612,7 +614,7 @@ description = "The JupyterLab notebook server extension."
 name = "jupyterlab"
 optional = false
 python-versions = ">=3.5"
-version = "2.2.2"
+version = "2.2.4"
 
 [package.dependencies]
 jinja2 = ">=2.10"
@@ -883,7 +885,7 @@ version = "0.8.0"
 [[package]]
 category = "dev"
 description = "Pexpect allows easy control of interactive console applications."
-marker = "python_version >= \"3.3\" and sys_platform != \"win32\" or sys_platform != \"win32\""
+marker = "python_version >= \"3.3\" and sys_platform != \"win32\""
 name = "pexpect"
 optional = false
 python-versions = "*"
@@ -895,6 +897,7 @@ ptyprocess = ">=0.5"
 [[package]]
 category = "dev"
 description = "Tiny 'shelve'-like database with concurrency support"
+marker = "python_version >= \"3.3\""
 name = "pickleshare"
 optional = false
 python-versions = "*"
@@ -954,6 +957,7 @@ twisted = ["twisted"]
 [[package]]
 category = "dev"
 description = "Library for building powerful interactive command lines in Python"
+marker = "python_version >= \"3.3\""
 name = "prompt-toolkit"
 optional = false
 python-versions = ">=3.6.1"
@@ -1304,7 +1308,7 @@ description = "Python documentation generator"
 name = "sphinx"
 optional = false
 python-versions = ">=3.5"
-version = "3.1.2"
+version = "3.2.0"
 
 [package.dependencies]
 Jinja2 = ">=2.3"
@@ -1681,6 +1685,7 @@ testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
 content-hash = "767b581355779d031ea1f50653f601a900631a344fcf562568372e3f215aa0a7"
+lock-version = "1.0"
 python-versions = "^3.6.1"
 
 [metadata.files]
@@ -1871,8 +1876,8 @@ future = [
     {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},
 ]
 google-auth = [
-    {file = "google-auth-1.20.0.tar.gz", hash = "sha256:c6e9735a2ee829a75b546702e460489db5cc35567a27fabd70b7c459f11efd58"},
-    {file = "google_auth-1.20.0-py2.py3-none-any.whl", hash = "sha256:25c97cec5d4f6821f3ab67eb25b264fb00fda8fb9e2f05869bfa93dfcb8b50ee"},
+    {file = "google-auth-1.20.1.tar.gz", hash = "sha256:2f34dd810090d0d4c9d5787c4ad7b4413d1fbfb941e13682c7a2298d3b6cdcc8"},
+    {file = "google_auth-1.20.1-py2.py3-none-any.whl", hash = "sha256:ce1fb80b5c6d3dd038babcc43e221edeafefc72d983b3dc28b67b996f76f00b9"},
 ]
 google-auth-oauthlib = [
     {file = "google-auth-oauthlib-0.4.1.tar.gz", hash = "sha256:88d2cd115e3391eb85e1243ac6902e76e77c5fe438b7276b297fbe68015458dd"},
@@ -1991,8 +1996,8 @@ jupyter-core = [
     {file = "jupyter_core-4.6.3.tar.gz", hash = "sha256:394fd5dd787e7c8861741880bdf8a00ce39f95de5d18e579c74b882522219e7e"},
 ]
 jupyterlab = [
-    {file = "jupyterlab-2.2.2-py3-none-any.whl", hash = "sha256:d0d743ea75b8eee20a18b96ccef24f76ee009bafb2617f3f330698fe3a00026e"},
-    {file = "jupyterlab-2.2.2.tar.gz", hash = "sha256:8aa9bc4b5020e7b9ec6e006d516d48bddf7d2528680af65840464ee722d59db3"},
+    {file = "jupyterlab-2.2.4-py3-none-any.whl", hash = "sha256:8f4cfebf81727f6bbfc59faa7ade38493a52015736f077f815488881315a6c92"},
+    {file = "jupyterlab-2.2.4.tar.gz", hash = "sha256:e9d26c4c1cf4f7760dfa9ccd3fd5ea5027ae2767f22c7766dbb2fbb5e5dfcd4b"},
 ]
 jupyterlab-server = [
     {file = "jupyterlab_server-1.2.0-py3-none-any.whl", hash = "sha256:55d256077bf13e5bc9e8fbd5aac51bef82f6315111cec6b712b9a5ededbba924"},
@@ -2459,8 +2464,8 @@ snowballstemmer = [
     {file = "snowballstemmer-2.0.0.tar.gz", hash = "sha256:df3bac3df4c2c01363f3dd2cfa78cce2840a79b9f1c2d2de9ce8d31683992f52"},
 ]
 sphinx = [
-    {file = "Sphinx-3.1.2-py3-none-any.whl", hash = "sha256:97dbf2e31fc5684bb805104b8ad34434ed70e6c588f6896991b2fdfd2bef8c00"},
-    {file = "Sphinx-3.1.2.tar.gz", hash = "sha256:b9daeb9b39aa1ffefc2809b43604109825300300b987a24f45976c001ba1a8fd"},
+    {file = "Sphinx-3.2.0-py3-none-any.whl", hash = "sha256:f7db5b76c42c8b5ef31853c2de7178ef378b985d7793829ec071e120dac1d0ca"},
+    {file = "Sphinx-3.2.0.tar.gz", hash = "sha256:cf2d5bc3c6c930ab0a1fbef3ad8a82994b1bf4ae923f8098a05c7e5516f07177"},
 ]
 sphinx-autodoc-typehints = [
     {file = "sphinx-autodoc-typehints-1.11.0.tar.gz", hash = "sha256:bbf0b203f1019b0f9843ee8eef0cff856dc04b341f6dbe1113e37f2ebf243e11"},
