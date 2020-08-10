@@ -60,7 +60,7 @@ class TestTrainingHelpers(TestCase):
             test_labels,
         )
         train_loader, validation_loader, test_loader = get_loaders(
-            "filename", 1, 1, 1
+            "filename", 1, 1, 1, 0.0
         )
         batch = [i for i in train_loader][0]
         self.assertIsInstance(batch, list)
@@ -79,7 +79,7 @@ class TestTrainingHelpers(TestCase):
         self.assertTrue(torch.allclose(batch[1], test_labels))
 
     def test_load_database_as_cubes(self):
-        true_result = (
+        half_result = [
             torch.tensor(
                 [
                     [[[1.0, 0.0], [1.0, 0.0]], [[0.0, 1.0], [0.0, 1.0]]],
@@ -100,11 +100,9 @@ class TestTrainingHelpers(TestCase):
                     [[[0.0, 1.0], [1.0, 0.0]], [[1.0, 0.0], [0.0, 1.0]]],
                 ]
             ),
-            torch.tensor([1]),
-            torch.tensor([1]),
-            torch.tensor([1, 1]),
-        )
-        result = load_database_as_cubes(2, 1, 1)
+        ]
+        true_result = half_result + half_result
+        result = load_database_as_cubes(2, 1, 1, 0.0)
         for i, tensor in enumerate(result):
             self.assertTrue(tensor.allclose(true_result[i]))
 

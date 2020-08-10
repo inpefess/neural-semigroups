@@ -43,11 +43,32 @@ from neural_semigroups.cayley_database import CayleyDatabase
 from neural_semigroups.constants import CURRENT_DEVICE
 from neural_semigroups.magma import Magma
 from neural_semigroups.precise_guess_loss import PreciseGuessLoss
-from neural_semigroups.utils import get_newest_file
+from neural_semigroups.utils import corrupt_input, get_newest_file
+
+
+def generate_features_and_labels(
+    cayley_cubes: torch.Tensor, dropout_rate: float
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    a function-helper to generate labels as features to which we apply dropout
+
+    :param cayley_cubes: tensors to create features and labels for training
+    :param dropout_rate: dropout rate to apply for generating labels
+    :returns: a pair of (features, labels) for training
+    """
+    features_list = list()
+    for cayley_table in tqdm(cayley_cubes):
+        cube = Magma(cayley_table).probabilistic_cube
+        features_list.append(cube)
+    features = torch.stack(features_list)
+    return corrupt_input(features, dropout_rate), features
 
 
 def load_database_as_cubes(
-    cardinality: int, train_size: int, validation_size: int
+    cardinality: int,
+    train_size: int,
+    validation_size: int,
+    dropout_rate: float,
 ) -> Tuple[
     torch.Tensor,
     torch.Tensor,
@@ -62,6 +83,7 @@ def load_database_as_cubes(
     :param cardinality: cardinality of Cayley database (from ``smallsemi``)
     :param train_size: number of tables for training
     :param validation_size: number of tables for validation
+    :param dropout_rate: droupout is applied only to validation and test sets
     :returns: three arrays of probability Cayley cubes (train, validation, test
     ) and three arrays of labels for them
     """
@@ -75,21 +97,20 @@ def load_database_as_cubes(
     train_cubes = list()
     for cayley_table in tqdm(train.database, desc="generating train cubes"):
         train_cubes.append(Magma(cayley_table).probabilistic_cube)
-    validation_cubes = list()
-    for cayley_table in tqdm(
-        validation.database, desc="generating validation cubes"
-    ):
-        validation_cubes.append(Magma(cayley_table).probabilistic_cube)
-    test_cubes = list()
-    for cayley_table in tqdm(test.database, desc="generating test cubes"):
-        test_cubes.append(Magma(cayley_table).probabilistic_cube)
+    validation_cubes, validation_labels = generate_features_and_labels(
+        validation.database, dropout_rate
+    )
+    test_cubes, test_labels = generate_features_and_labels(
+        test.database, dropout_rate
+    )
+    train_labels = torch.stack(train_cubes)
     return (
-        torch.stack(train_cubes),
-        torch.stack(validation_cubes),
-        torch.stack(test_cubes),
-        train.labels,
-        validation.labels,
-        test.labels,
+        train_labels,
+        validation_cubes,
+        test_cubes,
+        train_labels,
+        validation_labels,
+        test_labels,
     )
 
 
@@ -325,7 +346,11 @@ def learning_pipeline(
 
 
 def get_loaders(
-    cardinality: int, batch_size: int, train_size: int, validation_size: int,
+    cardinality: int,
+    batch_size: int,
+    train_size: int,
+    validation_size: int,
+    dropout_rate: float,
 ) -> Tuple[DataLoader, DataLoader, DataLoader]:
     """
     get train and validation data loaders
@@ -334,6 +359,7 @@ def get_loaders(
     :param batch_size: batch size (common for train and validation)
     :param train_size: number of tables for training
     :param validation_size: number of tables for validation
+    :param dropout_rate: a dropout rate for validation and test set 'labels'
     :returns: a triple of train, validation, and test data loaders
     """
     (
@@ -343,7 +369,9 @@ def get_loaders(
         train_labels,
         validation_labels,
         test_labels,
-    ) = load_database_as_cubes(cardinality, train_size, validation_size)
+    ) = load_database_as_cubes(
+        cardinality, train_size, validation_size, dropout_rate
+    )
     train_data = TensorDataset(train_tensor, train_labels)
     val_data = TensorDataset(val_tensor, validation_labels)
     test_data = TensorDataset(test_tensor, test_labels)
