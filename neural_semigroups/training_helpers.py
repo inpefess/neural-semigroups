@@ -32,6 +32,7 @@ from ignite.engine import (
     create_supervised_trainer,
 )
 from ignite.handlers import EarlyStopping, ModelCheckpoint
+from ignite.metrics import RunningAverage
 from ignite.metrics.loss import Loss
 from torch.nn import Module
 from torch.optim import Adam
@@ -276,10 +277,10 @@ def get_tensorboard_logger(
     )
     training_loss = OutputHandler(
         "training",
-        ["loss"],
+        ["running_loss"],
         global_step_transform=global_step_from_engine(trainer),
     )
-    tb_logger.attach(evaluators.train, training_loss, Events.COMPLETED)
+    tb_logger.attach(trainer, training_loss, Events.EPOCH_COMPLETED)
     validation_loss = OutputHandler(
         "validation",
         ["loss", "associative_ratio", "guessed_ratio"],
@@ -316,6 +317,9 @@ def learning_pipeline(
         Adam(model.parameters(), lr=params["learning_rate"]),
         loss,
         CURRENT_DEVICE,
+    )
+    RunningAverage(output_transform=lambda x: x).attach(
+        trainer, "running_loss"
     )
     evaluators = get_three_evaluators(model, loss)
 
