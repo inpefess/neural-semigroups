@@ -19,9 +19,11 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import torch
+from ignite.contrib.handlers.tqdm_logger import ProgressBar
 from ignite.engine import Engine, Events
 from ignite.handlers import EarlyStopping, ModelCheckpoint
-from torch.nn import Module
+from ignite.metrics import Loss, RunningAverage
+from torch.nn import Linear, Module, Sequential
 
 from neural_semigroups.magma import Magma
 from neural_semigroups.training_helpers import (
@@ -29,6 +31,7 @@ from neural_semigroups.training_helpers import (
     associative_ratio,
     get_arguments,
     get_loaders,
+    get_trainer,
     load_database_as_cubes,
 )
 from neural_semigroups.utils import FOUR_GROUP
@@ -122,3 +125,19 @@ class TestTrainingHelpers(TestCase):
         self.assertEqual(len(completed_handlers), 2)
         self.assertIsInstance(completed_handlers[0][0], EarlyStopping)
         self.assertIsInstance(completed_handlers[1][0], ModelCheckpoint)
+
+    def test_get_trainer(self):
+        trainer = get_trainer(Sequential(Linear(1, 1)), 1.0, Loss(lambda x: x))
+        print(trainer._event_handlers[Events.ITERATION_COMPLETED])
+        self.assertIsInstance(
+            trainer._event_handlers[Events.ITERATION_COMPLETED][1][0].__self__,
+            RunningAverage,
+        )
+        self.assertEqual(
+            trainer._event_handlers[Events.ITERATION_COMPLETED][1][1][1],
+            "running_loss",
+        )
+        self.assertIsInstance(
+            trainer._event_handlers[Events.EPOCH_COMPLETED][0][1][1],
+            ProgressBar,
+        )
