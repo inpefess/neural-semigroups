@@ -24,6 +24,31 @@ from neural_semigroups.constants import CURRENT_DEVICE
 from neural_semigroups.utils import corrupt_input
 
 
+def get_linear_bn_relu_sequence(
+    dims: List[int], layer_name_postfix: str
+) -> Module:
+    """
+    constructs a sequential model of triples of
+    linear, relu, and batchnorm layers of given dimensions
+
+    :param dims: dimensions for layers in a sequence
+    :param layer_name_postfix:
+    :returns: a sequential module
+    """
+    layers: "OrderedDict[str, Module]" = OrderedDict()
+    for i in range(len(dims) - 1):
+        layers.update(
+            {
+                f"linear{layer_name_postfix}{i}": Linear(
+                    dims[i], dims[i + 1], bias=True
+                )
+            }
+        )
+        layers.update({f"relu{layer_name_postfix}{i}": ReLU()})
+        layers.update({f"bn{layer_name_postfix}{i}": BatchNorm1d(dims[i + 1])})
+    return Sequential(layers).to(CURRENT_DEVICE)
+
+
 def get_encoder_and_decoder_layers(
     dims: List[int], split_last: bool
 ) -> Tuple[Module, Module]:
@@ -34,35 +59,13 @@ def get_encoder_and_decoder_layers(
     :param split_last: if ``True``, makes their last encoder dimensions twice larger than the first decoder dimension (for a reparameterization trick)
     :returns: a pair of two sequential models, representing encoder and decoder layers
     """
-    encoder_layers: "OrderedDict[str, Module]" = OrderedDict()
-    decoder_layers: "OrderedDict[str, Module]" = OrderedDict()
     encoder_dims = dims.copy()
     decoder_dims = list(reversed(dims))
     if split_last:
         encoder_dims[-1] *= 2
-    for i in range(len(dims) - 1):
-        encoder_layers.update(
-            {
-                f"linear0{i}": Linear(
-                    encoder_dims[i], encoder_dims[i + 1], bias=True
-                )
-            }
-        )
-        encoder_layers.update({f"relu0{i}": ReLU()})
-        encoder_layers.update({f"bn0{i}": BatchNorm1d(encoder_dims[i + 1])})
-        decoder_layers.update(
-            {
-                f"linear1{i}": Linear(
-                    decoder_dims[i], decoder_dims[i + 1], bias=True
-                )
-            }
-        )
-        decoder_layers.update({f"relu1{i}": ReLU()})
-        decoder_layers.update({f"bn1{i}": BatchNorm1d(decoder_dims[i + 1])})
-    return (
-        Sequential(encoder_layers).to(CURRENT_DEVICE),
-        Sequential(decoder_layers).to(CURRENT_DEVICE),
-    )
+    encoder_layers = get_linear_bn_relu_sequence(encoder_dims, "0")
+    decoder_layers = get_linear_bn_relu_sequence(decoder_dims, "1")
+    return encoder_layers, decoder_layers
 
 
 # pylint: disable=abstract-method

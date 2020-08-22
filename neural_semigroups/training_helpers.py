@@ -296,6 +296,33 @@ def get_tensorboard_logger(
     return tb_logger
 
 
+def get_trainer(model: Module, learning_rate: float, loss: Loss) -> Engine:
+    """
+    construct a trainer ``ignite`` engine with pre-attached progress bar and loss running average
+
+    :param model: a network to train
+    :param learning_rate: the learning rate for training
+    :param loss: a loss to minimise during training
+    :returns: an ``ignite`` trainer
+    """
+    trainer = create_supervised_trainer(
+        model,
+        Adam(model.parameters(), lr=learning_rate),
+        loss,
+        CURRENT_DEVICE,
+    )
+    RunningAverage(output_transform=lambda x: x).attach(
+        trainer, "running_loss"
+    )
+    ProgressBar().attach(
+        trainer,
+        output_transform=lambda x: x,
+        event_name=Events.EPOCH_COMPLETED,
+        closing_event_name=Events.COMPLETED,
+    )
+    return trainer
+
+
 def learning_pipeline(
     params: Dict[str, Union[int, float]],
     cardinality: int,
@@ -312,15 +339,7 @@ def learning_pipeline(
     :param loss: the criterion to optimize
     :param data_loaders: train, validation, and test data loaders
     """
-    trainer = create_supervised_trainer(
-        model,
-        Adam(model.parameters(), lr=params["learning_rate"]),
-        loss,
-        CURRENT_DEVICE,
-    )
-    RunningAverage(output_transform=lambda x: x).attach(
-        trainer, "running_loss"
-    )
+    trainer = get_trainer(model, params["learning_rate"], loss)
     evaluators = get_three_evaluators(model, loss)
 
     @trainer.on(Events.EPOCH_COMPLETED)
@@ -337,12 +356,6 @@ def learning_pipeline(
 
     add_early_stopping_and_checkpoint(
         evaluators.validation, trainer, f"semigroup{cardinality}", model
-    )
-    ProgressBar().attach(
-        trainer,
-        output_transform=lambda x: x,
-        event_name=Events.EPOCH_COMPLETED,
-        closing_event_name=Events.COMPLETED,
     )
     tb_logger = get_tensorboard_logger(trainer, evaluators)
     trainer.run(data_loaders[0], max_epochs=params["epochs"])
