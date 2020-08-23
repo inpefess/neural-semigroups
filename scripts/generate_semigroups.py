@@ -74,10 +74,7 @@ def main() -> None:
     argument_parser.add_argument("--dim", type=int, help="magma cardinality")
     args = argument_parser.parse_args()
     cpu_count = os.cpu_count()
-    if cpu_count:
-        batch_count = cpu_count - 1
-    else:
-        batch_count = 1
+    batch_count = cpu_count - 1 if cpu_count is not None else 1
     starting_magmas, batch_sizes = get_starting_magmas(batch_count, args.dim)
     with Pool(batch_count) as pool:
         semigroups_lists = pool.map(

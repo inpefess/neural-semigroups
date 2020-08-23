@@ -19,9 +19,11 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import torch
+from ignite.contrib.handlers.tqdm_logger import ProgressBar
 from ignite.engine import Engine, Events
 from ignite.handlers import EarlyStopping, ModelCheckpoint
-from torch.nn import Module
+from ignite.metrics import Loss, RunningAverage
+from torch.nn import Linear, Module, Sequential
 
 from neural_semigroups.magma import Magma
 from neural_semigroups.training_helpers import (
@@ -29,6 +31,7 @@ from neural_semigroups.training_helpers import (
     associative_ratio,
     get_arguments,
     get_loaders,
+    get_trainer,
     load_database_as_cubes,
 )
 from neural_semigroups.utils import FOUR_GROUP
@@ -60,7 +63,7 @@ class TestTrainingHelpers(TestCase):
             test_labels,
         )
         train_loader, validation_loader, test_loader = get_loaders(
-            "filename", 1, 1, 1, True
+            "filename", 1, 1, 1, 0.0
         )
         batch = [i for i in train_loader][0]
         self.assertIsInstance(batch, list)
@@ -77,27 +80,9 @@ class TestTrainingHelpers(TestCase):
         self.assertEqual(len(batch), 2)
         self.assertTrue(torch.allclose(batch[0], test))
         self.assertTrue(torch.allclose(batch[1], test_labels))
-        train_loader, validation_loader, test_loader = get_loaders(
-            "filename", 1, 1, 1, False
-        )
-        batch = [i for i in train_loader][0]
-        self.assertIsInstance(batch, list)
-        self.assertEqual(len(batch), 2)
-        self.assertTrue(torch.allclose(batch[0], train))
-        self.assertTrue(torch.allclose(batch[1], train))
-        batch = [i for i in validation_loader][0]
-        self.assertIsInstance(batch, list)
-        self.assertEqual(len(batch), 2)
-        self.assertTrue(torch.allclose(batch[0], validation))
-        self.assertTrue(torch.allclose(batch[1], validation))
-        batch = [i for i in test_loader][0]
-        self.assertIsInstance(batch, list)
-        self.assertEqual(len(batch), 2)
-        self.assertTrue(torch.allclose(batch[0], test))
-        self.assertTrue(torch.allclose(batch[1], test))
 
     def test_load_database_as_cubes(self):
-        true_result = (
+        half_result = [
             torch.tensor(
                 [
                     [[[1.0, 0.0], [1.0, 0.0]], [[0.0, 1.0], [0.0, 1.0]]],
@@ -118,11 +103,9 @@ class TestTrainingHelpers(TestCase):
                     [[[0.0, 1.0], [1.0, 0.0]], [[1.0, 0.0], [0.0, 1.0]]],
                 ]
             ),
-            torch.tensor([1]),
-            torch.tensor([1]),
-            torch.tensor([1, 1]),
-        )
-        result = load_database_as_cubes(2, 1, 1)
+        ]
+        true_result = half_result + half_result
+        result = load_database_as_cubes(2, 1, 1, 0.0)
         for i, tensor in enumerate(result):
             self.assertTrue(tensor.allclose(true_result[i]))
 
@@ -142,3 +125,19 @@ class TestTrainingHelpers(TestCase):
         self.assertEqual(len(completed_handlers), 2)
         self.assertIsInstance(completed_handlers[0][0], EarlyStopping)
         self.assertIsInstance(completed_handlers[1][0], ModelCheckpoint)
+
+    def test_get_trainer(self):
+        trainer = get_trainer(Sequential(Linear(1, 1)), 1.0, Loss(lambda x: x))
+        print(trainer._event_handlers[Events.ITERATION_COMPLETED])
+        self.assertIsInstance(
+            trainer._event_handlers[Events.ITERATION_COMPLETED][1][0].__self__,
+            RunningAverage,
+        )
+        self.assertEqual(
+            trainer._event_handlers[Events.ITERATION_COMPLETED][1][1][1],
+            "running_loss",
+        )
+        self.assertIsInstance(
+            trainer._event_handlers[Events.EPOCH_COMPLETED][0][1][1],
+            ProgressBar,
+        )

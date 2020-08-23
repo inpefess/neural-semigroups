@@ -19,9 +19,34 @@ from typing import List, Tuple
 import torch
 from torch import Tensor
 from torch.nn import BatchNorm1d, Linear, Module, ReLU, Sequential, Softmax2d
-from torch.nn.functional import dropout2d
 
 from neural_semigroups.constants import CURRENT_DEVICE
+from neural_semigroups.utils import corrupt_input
+
+
+def get_linear_bn_relu_sequence(
+    dims: List[int], layer_name_postfix: str
+) -> Module:
+    """
+    constructs a sequential model of triples of
+    linear, relu, and batchnorm layers of given dimensions
+
+    :param dims: dimensions for layers in a sequence
+    :param layer_name_postfix:
+    :returns: a sequential module
+    """
+    layers: "OrderedDict[str, Module]" = OrderedDict()
+    for i in range(len(dims) - 1):
+        layers.update(
+            {
+                f"linear{layer_name_postfix}{i}": Linear(
+                    dims[i], dims[i + 1], bias=True
+                )
+            }
+        )
+        layers.update({f"relu{layer_name_postfix}{i}": ReLU()})
+        layers.update({f"bn{layer_name_postfix}{i}": BatchNorm1d(dims[i + 1])})
+    return Sequential(layers).to(CURRENT_DEVICE)
 
 
 def get_encoder_and_decoder_layers(
@@ -34,35 +59,13 @@ def get_encoder_and_decoder_layers(
     :param split_last: if ``True``, makes their last encoder dimensions twice larger than the first decoder dimension (for a reparameterization trick)
     :returns: a pair of two sequential models, representing encoder and decoder layers
     """
-    encoder_layers: "OrderedDict[str, Module]" = OrderedDict()
-    decoder_layers: "OrderedDict[str, Module]" = OrderedDict()
     encoder_dims = dims.copy()
     decoder_dims = list(reversed(dims))
     if split_last:
         encoder_dims[-1] *= 2
-    for i in range(len(dims) - 1):
-        encoder_layers.update(
-            {
-                f"linear0{i}": Linear(
-                    encoder_dims[i], encoder_dims[i + 1], bias=True
-                )
-            }
-        )
-        encoder_layers.update({f"relu0{i}": ReLU()})
-        encoder_layers.update({f"bn0{i}": BatchNorm1d(encoder_dims[i + 1])})
-        decoder_layers.update(
-            {
-                f"linear1{i}": Linear(
-                    decoder_dims[i], decoder_dims[i + 1], bias=True
-                )
-            }
-        )
-        decoder_layers.update({f"relu1{i}": ReLU()})
-        decoder_layers.update({f"bn1{i}": BatchNorm1d(decoder_dims[i + 1])})
-    return (
-        Sequential(encoder_layers).to(CURRENT_DEVICE),
-        Sequential(decoder_layers).to(CURRENT_DEVICE),
-    )
+    encoder_layers = get_linear_bn_relu_sequence(encoder_dims, "0")
+    decoder_layers = get_linear_bn_relu_sequence(decoder_dims, "1")
+    return encoder_layers, decoder_layers
 
 
 # pylint: disable=abstract-method
@@ -71,24 +74,22 @@ class MagmaDAE(Module):
     Denoising Autoencoder for probability Cayley cubes of magmas
     """
 
-    apply_corruption: bool = True
-
     def __init__(
         self,
         cardinality: int,
         hidden_dims: List[int],
-        corruption_rate: float,
+        dropout_rate: float,
         do_reparametrization: bool = False,
     ):
         """
         :param cardinality: the number of elements in a magma
         :param hidden_dims: a list of sizes of hidden layers of the encoder and the decoder
-        :param corruption_rate: what percentage of cells from the Cayley table to substitute with uniform random variables
+        :param dropout_rate: what percentage of cells from the Cayley table to substitute with uniform random variables
         :param do_reparametrization: if ``True``, adds a reparameterization trick
         """
         super().__init__()
         self.cardinality = cardinality
-        self.corruption_rate = corruption_rate
+        self.dropout_rate = dropout_rate
         self.do_reparametrization = do_reparametrization
         (
             self.encoder_layers,
@@ -113,33 +114,6 @@ class MagmaDAE(Module):
         return self.encoder_layers(
             corrupted_input.view(corrupted_input.shape[0], -1)
         )
-
-    def corrupt_input(self, cayley_cube: Tensor) -> Tensor:
-        """
-        changes several cells in a Cayley table with uniformly distributed
-        random variables
-
-        :param cayley_cube: representation of a Cayley table probability distribution
-        :returns: distorted Cayley cube
-        """
-        dropout_norm = (
-            1 - self.corruption_rate if self.apply_corruption else 1.0
-        )
-        return (
-            dropout_norm
-            * dropout2d(
-                cayley_cube.view(
-                    -1,
-                    self.cardinality * self.cardinality,
-                    self.cardinality,
-                    1,
-                )
-                - 1 / self.cardinality,
-                self.corruption_rate,
-                self.apply_corruption,
-            )
-            + 1 / self.cardinality
-        ).view(-1, self.cardinality, self.cardinality, self.cardinality)
 
     def decode(self, encoded_input: Tensor) -> Tensor:
         """
@@ -175,14 +149,16 @@ class MagmaDAE(Module):
         return sample
 
     # pylint: disable=arguments-differ
-    def forward(self, cayley_cube: Tensor) -> Tensor:
+    def forward(self, cayley_cubes: Tensor) -> Tensor:
         """
         forward pass inhereted from Module
 
-        :param cayley_cube: probabilistic representation of a magma
-        :returns: autoencoded probabilistic representation of a magma
+        :param cayley_cubes: a batch of probabilistic representations of magmas
+        :returns: autoencoded probabilistic representations of magmas
         """
-        corrupted_input = self.corrupt_input(cayley_cube)
+        corrupted_input = corrupt_input(
+            cayley_cubes, self.dropout_rate if self.training else 0.0
+        )
         encoded_input = self.encode(corrupted_input)
         reparameterized_input = self.reparameterize(encoded_input)
         decoded_input = self.decode(reparameterized_input)

@@ -29,56 +29,8 @@ class TestMagmaDAE(TestCase):
         torch.manual_seed(0)
         self.cardinality = 4
         self.magma_dae = MagmaDAE(
-            cardinality=self.cardinality, hidden_dims=[4], corruption_rate=0.6
+            cardinality=self.cardinality, hidden_dims=[4], dropout_rate=0.6
         ).to(CURRENT_DEVICE)
-
-    def test_corruption(self):
-        # first dimension is a batch size
-        # for all x and y: x * y = 0
-        cayley_cube = torch.zeros([1, 4, 4, 4])
-        cayley_cube[:, :, :, 0] = 1.0
-        self.magma_dae.train()
-        true_value = torch.tensor(
-            [
-                [
-                    [
-                        [0.25, 0.25, 0.25, 0.25],
-                        [0.25, 0.25, 0.25, 0.25],
-                        [0.25, 0.25, 0.25, 0.25],
-                        [1.0, 0.0, 0.0, 0.0],
-                    ],
-                    [
-                        [1.0, 0.0, 0.0, 0.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                        [0.25, 0.25, 0.25, 0.25],
-                        [0.25, 0.25, 0.25, 0.25],
-                    ],
-                    [
-                        [0.25, 0.25, 0.25, 0.25],
-                        [1.0, 0.0, 0.0, 0.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                    ],
-                    [
-                        [0.25, 0.25, 0.25, 0.25],
-                        [1.0, 0.0, 0.0, 0.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                        [0.25, 0.25, 0.25, 0.25],
-                    ],
-                ]
-            ]
-        )
-        self.assertTrue(
-            torch.allclose(
-                self.magma_dae.corrupt_input(cayley_cube), true_value
-            )
-        )
-        self.magma_dae.apply_corruption = False
-        self.assertTrue(
-            torch.allclose(
-                self.magma_dae.corrupt_input(cayley_cube), cayley_cube,
-            )
-        )
 
     def test_forward(self):
         cayley_cube = torch.stack(

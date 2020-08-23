@@ -25,6 +25,7 @@ import pandas as pd
 import requests
 import torch
 from torch import Tensor
+from torch.nn.functional import dropout2d
 from tqdm import tqdm
 
 from neural_semigroups.constants import CURRENT_DEVICE, GAP_PACKAGES_URL
@@ -460,3 +461,26 @@ def count_different(one: Tensor, two: Tensor) -> Tensor:
         )
         .sum()
     )
+
+
+def corrupt_input(cayley_cubes: Tensor, dropout_rate: float) -> Tensor:
+    """
+    changes several cells in a Cayley table with uniformly distributed
+    random variables
+
+    :param cayley_cubes: a batch of representations of Cayley tables
+                         as probability distributions
+    :param dropout_rate: a percentage of cells to distort
+    :returns: a batch of distorted Cayley cubes
+    """
+    cardinality = cayley_cubes.shape[1]
+    return (
+        (1 - dropout_rate)
+        * dropout2d(
+            cayley_cubes.view(-1, cardinality * cardinality, cardinality, 1,)
+            - 1 / cardinality,
+            dropout_rate,
+            dropout_rate > 0,
+        )
+        + 1 / cardinality
+    ).view(-1, cardinality, cardinality, cardinality)

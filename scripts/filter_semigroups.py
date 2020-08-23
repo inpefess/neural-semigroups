@@ -14,12 +14,20 @@
    limitations under the License.
 """
 from argparse import ArgumentParser, Namespace
+from enum import Enum
 from typing import List
 
 import torch
 from tqdm import tqdm
 
 from neural_semigroups.magma import Magma
+
+
+class Choices(Enum):
+    """ alternatives for a menu """
+
+    IDENTITY = "identity"
+    INVERSES = "inverses"
 
 
 def get_arguments(choices: List[str]) -> Namespace:
@@ -39,19 +47,24 @@ def get_arguments(choices: List[str]) -> Namespace:
 
 def main():
     """ do all """
-    choices = ["identity", "inverses"]
-    args = get_arguments(choices)
-    input_file = "semigroup" if args.filter == choices[0] else "monoid"
+    args = get_arguments([Choices.IDENTITY, Choices.INVERSES])
+    input_file = "semigroup" if args.filter == Choices.IDENTITY else "monoid"
     with torch.load(
         f"./databases/{input_file}.{args.dim}.zip"
     ) as torch_zip_file:
         cayley_tables = torch_zip_file["database"]
-    output_file = "monoid" if args.filter == choices[0] else "group"
+    output_file = "monoid" if args.filter == Choices.IDENTITY else "group"
     filtered = list()
     for cayley_table in tqdm(cayley_tables):
-        if args.filter == choices[0] and Magma(cayley_table).identity >= 0:
+        if (
+            args.filter == Choices.IDENTITY
+            and Magma(cayley_table).identity >= 0
+        ):
             filtered.append(cayley_table)
-        elif args.filter == choices[1] and Magma(cayley_table).has_inverses:
+        elif (
+            args.filter == Choices.INVERSES
+            and Magma(cayley_table).has_inverses
+        ):
             filtered.append(cayley_table)
 
     torch.save(

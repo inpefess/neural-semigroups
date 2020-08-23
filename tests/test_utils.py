@@ -22,6 +22,7 @@ from neural_semigroups.utils import (
     FOUR_GROUP,
     check_filename,
     check_smallsemi_filename,
+    corrupt_input,
     get_equivalent_magmas,
     get_magma_by_index,
     import_smallsemi_format,
@@ -146,3 +147,45 @@ class TestUtils(TestCase):
                     torch.tensor(true_equivalent_magmas[i]),
                 )
             )
+
+    def test_dropout(self):
+        # first dimension is a batch size
+        # for all x and y: x * y = 0
+        cayley_cube = torch.zeros([1, 4, 4, 4])
+        cayley_cube[:, :, :, 0] = 1.0
+        true_value = torch.tensor(
+            [
+                [
+                    [
+                        [1.0, 0.0, 0.0, 0.0],
+                        [0.25, 0.25, 0.25, 0.25],
+                        [0.25, 0.25, 0.25, 0.25],
+                        [1.0, 0.0, 0.0, 0.0],
+                    ],
+                    [
+                        [1.0, 0.0, 0.0, 0.0],
+                        [0.25, 0.25, 0.25, 0.25],
+                        [0.25, 0.25, 0.25, 0.25],
+                        [1.0, 0.0, 0.0, 0.0],
+                    ],
+                    [
+                        [1.0, 0.0, 0.0, 0.0],
+                        [1.0, 0.0, 0.0, 0.0],
+                        [1.0, 0.0, 0.0, 0.0],
+                        [0.25, 0.25, 0.25, 0.25],
+                    ],
+                    [
+                        [0.25, 0.25, 0.25, 0.25],
+                        [1.0, 0.0, 0.0, 0.0],
+                        [1.0, 0.0, 0.0, 0.0],
+                        [1.0, 0.0, 0.0, 0.0],
+                    ],
+                ]
+            ]
+        )
+        self.assertTrue(
+            torch.allclose(corrupt_input(cayley_cube, 0.5), true_value)
+        )
+        self.assertTrue(
+            torch.allclose(corrupt_input(cayley_cube, 0.0), cayley_cube,)
+        )
