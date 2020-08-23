@@ -45,15 +45,42 @@ def get_arguments(choices: List[str]) -> Namespace:
     return parser.parse_args()
 
 
+def load_database(choice: Choices, dim: int) -> torch.Tensor:
+    """
+    load Cayley tables from file
+
+    :param choice: what type of magmas to filter
+    :param dim: the dimension of magma
+    :returns: the database of Cayley tables
+    """
+    input_file = "semigroup" if choice == Choices.IDENTITY else "monoid"
+    with torch.load(f"./databases/{input_file}.{dim}.zip") as torch_zip_file:
+        cayley_tables = torch_zip_file["database"]
+    return cayley_tables
+
+
+def write_database(
+    database: List[torch.Tensor], choice: Choices, dim: int
+) -> None:
+    """
+    write Cayley tables to file
+
+    :param database: the database of Cayley tables
+    :param choice: what type of magmas to filter
+    :param dim: the dimension of magma
+    """
+    output_file = "monoid" if choice == Choices.IDENTITY else "group"
+    torch.save(
+        {"database": torch.stack(database)},
+        f"./databases/{output_file}.{dim}.zip",
+        _use_new_zipfile_serialization=True,
+    )
+
+
 def main():
     """ do all """
     args = get_arguments([Choices.IDENTITY, Choices.INVERSES])
-    input_file = "semigroup" if args.filter == Choices.IDENTITY else "monoid"
-    with torch.load(
-        f"./databases/{input_file}.{args.dim}.zip"
-    ) as torch_zip_file:
-        cayley_tables = torch_zip_file["database"]
-    output_file = "monoid" if args.filter == Choices.IDENTITY else "group"
+    cayley_tables = load_database(args.filter, args.dim)
     filtered = list()
     for cayley_table in tqdm(cayley_tables):
         if (
@@ -66,12 +93,7 @@ def main():
             and Magma(cayley_table).has_inverses
         ):
             filtered.append(cayley_table)
-
-    torch.save(
-        {"database": torch.stack(filtered)},
-        f"./databases/{output_file}.{args.dim}.zip",
-        _use_new_zipfile_serialization=True,
-    )
+    write_database(filtered, args.filter, args.dim)
 
 
 if __name__ == "__main__":

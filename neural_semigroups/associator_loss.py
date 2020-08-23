@@ -63,15 +63,13 @@ class AssociatorLoss(Module):
         .. _Kullback-Leibler divergence: https://en.wikipedia.org/wiki/Kullback-Leibler_divergence
 
         """
-        if self.discrete:
-            cubes = make_discrete(cayley_cubes)
-        else:
-            cubes = cayley_cubes
+        cubes = make_discrete(cayley_cubes) if self.discrete else cayley_cubes
         one = einsum("biml,bjkm->bijkl", cubes, cubes)
         two = einsum("bmkl,bijm->bijkl", cubes, cubes)
         batch_size = cayley_cubes.shape[0]
-        if self.discrete:
-            associator = count_different(one, two)
-        else:
-            associator = kl_div(torch.log(one), two, reduction="sum")
+        associator = (
+            count_different(one, two)
+            if self.discrete
+            else kl_div(torch.log(one), two, reduction="sum")
+        )
         return associator / batch_size

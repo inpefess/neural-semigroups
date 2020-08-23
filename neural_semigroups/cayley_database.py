@@ -71,16 +71,15 @@ class CayleyDatabase:
         :param cayley_table: a partially filled Cayley table (unknow entries are filled by ``-1``)
         :returns: whether the input is correct
         """
-        correct = True
         if isinstance(cayley_table, list):
             # pylint: disable=not-callable
             table = torch.tensor(cayley_table)
-            if table.shape != torch.Size([self.cardinality, self.cardinality]):
-                correct = False
-            elif table.dtype != torch.long:
-                correct = False
-            elif table.max() >= self.cardinality or table.min() < -1:
-                correct = False
+            correct = (
+                table.shape == torch.Size([self.cardinality, self.cardinality])
+                and table.dtype == torch.long
+                and table.max() < self.cardinality
+                and table.min() >= -1
+            )
         else:
             correct = False
         return correct
