@@ -23,18 +23,19 @@ from ignite.contrib.handlers.tqdm_logger import ProgressBar
 from ignite.engine import Engine, Events
 from ignite.handlers import EarlyStopping, ModelCheckpoint
 from ignite.metrics import Loss, RunningAverage
-from torch.nn import Linear, Module, Sequential
-
 from neural_semigroups.magma import Magma
 from neural_semigroups.training_helpers import (
+    ThreeEvaluators,
     add_early_stopping_and_checkpoint,
     associative_ratio,
     get_arguments,
     get_loaders,
+    get_tensorboard_logger,
     get_trainer,
     load_database_as_cubes,
 )
 from neural_semigroups.utils import FOUR_GROUP
+from torch.nn import Linear, Module, Sequential
 
 
 class TestTrainingHelpers(TestCase):
@@ -141,3 +142,24 @@ class TestTrainingHelpers(TestCase):
             trainer._event_handlers[Events.EPOCH_COMPLETED][0][1][1],
             ProgressBar,
         )
+
+    def test_get_tensorboard_logger(self):
+        trainer = Engine(lambda x, y: 0.0)
+        three_evaluators = ThreeEvaluators(
+            Engine(lambda x, y: 0.0),
+            Engine(lambda x, y: 0.0),
+            Engine(lambda x, y: 0.0),
+        )
+        tensorboard_logger = get_tensorboard_logger(trainer, three_evaluators)
+        self.assertEqual(
+            trainer._event_handlers[Events.EPOCH_COMPLETED][0][1][1],
+            tensorboard_logger,
+        )
+        for engine in [
+            three_evaluators.validation,
+            three_evaluators.test,
+        ]:
+            self.assertEqual(
+                engine._event_handlers[Events.COMPLETED][0][1][1],
+                tensorboard_logger,
+            )
