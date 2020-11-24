@@ -47,6 +47,10 @@ data-science-types = "*"
 
 [tool.black]
 line-length=79
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
+
+[tool.isort]
+src_paths = ["neural_semigroups"]
