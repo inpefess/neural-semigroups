@@ -18,9 +18,9 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 import torch
-from torch.nn import Module
-
 from neural_semigroups.cayley_database import CayleyDatabase
+from neural_semigroups.constants import CURRENT_DEVICE
+from torch.nn import Module
 
 
 class TestCayleyDatabase(TestCase):
@@ -81,13 +81,17 @@ class TestCayleyDatabase(TestCase):
         self.assertIsInstance(cube, torch.Tensor)
         self.assertEqual(table.dtype, torch.int64)
         self.assertEqual(cube.dtype, torch.float)
-        self.assertTrue(torch.allclose(table, torch.tensor([[1, 0], [0, 1]])))
+        self.assertTrue(
+            torch.allclose(
+                table, torch.tensor([[0, 0], [0, 1]]).to(CURRENT_DEVICE)
+            )
+        )
         self.assertTrue(
             torch.allclose(
                 cube,
                 torch.tensor(
                     [[[0.5, 0.5], [1.0, 0.0]], [[1.0, 0.0], [0.0, 1.0]]]
-                ),
+                ).to(CURRENT_DEVICE),
             )
         )
         with self.assertRaises(ValueError):
@@ -113,7 +117,7 @@ class TestCayleyDatabase(TestCase):
                 [[1, 0], [1, 1]],
                 [[1, 1], [0, 1]],
             ]
-        )
+        ).to(CURRENT_DEVICE)
         self.cayley_db.database = database
         self.cayley_db.augment_by_equivalent_tables()
         self.assertTrue(torch.allclose(true_database, self.cayley_db.database))
@@ -145,6 +149,6 @@ class TestCayleyDatabase(TestCase):
         torch.manual_seed(777)
         self.assertTrue(
             self.cayley_db.testing_report(2).equal(
-                torch.tensor([[4, 4], [2, 3]], dtype=torch.float)
+                torch.tensor([[4, 4], [2, 0]], dtype=torch.float)
             )
         )

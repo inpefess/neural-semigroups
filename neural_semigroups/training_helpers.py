@@ -88,8 +88,7 @@ def load_database_as_cubes(
     :returns: three arrays of probability Cayley cubes (train, validation, test
     ) and three arrays of labels for them
     """
-    cayley_db = CayleyDatabase(cardinality)
-    train, validation, test = cayley_db.train_test_split(
+    train, validation, test = CayleyDatabase(cardinality).train_test_split(
         train_size, validation_size
     )
     train.augment_by_equivalent_tables()
