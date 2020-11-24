@@ -21,12 +21,13 @@ from torch.nn import Module
 from torch.utils.data import TensorDataset, random_split
 from tqdm import tqdm
 
-from neural_semigroups.constants import CAYLEY_DATABASE_PATH, CURRENT_DEVICE
+from neural_semigroups.constants import CAYLEY_DATABASE_PATH
 from neural_semigroups.magma import Magma
 from neural_semigroups.utils import (
     get_equivalent_magmas,
     load_data_and_labels_from_file,
     load_data_and_labels_from_smallsemi,
+    partial_table_to_cube,
 )
 
 
@@ -126,21 +127,8 @@ class CayleyDatabase:
                 f"invalid Cayley table of {self.cardinality} elements"
             )
         # pylint: disable=not-callable
-        table = torch.tensor(cayley_table)
-        cube = torch.zeros(
-            [self.cardinality, self.cardinality, self.cardinality],
-            dtype=torch.float32,
-            device=CURRENT_DEVICE,
-        )
-        rows, cols = torch.where(table != -1)
-        cube[rows, cols, table[rows, cols]] = 1.0
-        rows, cols = torch.where(table == -1)
-        cube[rows, cols, :] = 1 / self.cardinality
-        prediction = self.model(
-            cube.reshape(
-                [-1, self.cardinality, self.cardinality, self.cardinality]
-            )
-        ).detach()[0]
+        cube = partial_table_to_cube(torch.tensor(cayley_table))
+        prediction = self.model(cube).detach()[0]
         return (prediction.argmax(axis=-1), prediction)
 
     def load_model(self, filename: str) -> None:

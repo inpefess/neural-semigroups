@@ -98,6 +98,22 @@ def parse_args() -> Namespace:
     return args
 
 
+def create_if_not_exist(cursor: sqlite3.Cursor) -> None:
+    """
+    create a table ``mace_output`` if it does not exist
+
+    :param cursor: an SQLite cursor
+    :returns:
+    """
+    cursor.execute(
+        "SELECT COUNT(*) FROM sqlite_master WHERE name = 'mace_output'"
+    )
+    if cursor.fetchone()[0] == 0:
+        cursor.execute(
+            "CREATE TABLE mace_output(output STRING, errors STRING)"
+        )
+
+
 def main():
     """ do all """
     args = parse_args()
@@ -105,13 +121,7 @@ def main():
         args.database_name
     ) as connection:
         cursor = connection.cursor()
-        cursor.execute(
-            "SELECT COUNT(*) FROM sqlite_master WHERE name = 'mace_output'"
-        )
-        if cursor.fetchone()[0] == 0:
-            cursor.execute(
-                "CREATE TABLE mace_output(output STRING, errors STRING)"
-            )
+        create_if_not_exist(cursor)
         with tqdm(total=args.number_of_tasks) as progress_bar:
             for output, errors in pool.imap_unordered(
                 partial(table_completion, args.dim),
