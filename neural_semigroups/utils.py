@@ -485,3 +485,15 @@ def corrupt_input(cayley_cubes: Tensor, dropout_rate: float) -> Tensor:
         )
         + 1 / cardinality
     ).view(-1, cardinality, cardinality, cardinality)
+
+
+def read_whole_file(filename: str) -> str:
+    """
+    reads the whole file into a string
+
+    :param filename: a name of the file to read
+    :returns: whole contents of the file
+    """
+    with open(filename, "r") as input_file:
+        text = input_file.read()
+    return text
