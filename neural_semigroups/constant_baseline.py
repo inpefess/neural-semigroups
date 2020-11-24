@@ -34,7 +34,7 @@ class ConstantBaseline(Module):
         Traceback (most recent call last):
             ...
         ValueError: `fill_in_with` should be non-negative and less than `cardinality`, got 3 >= 2
-        >>> ConstantBaseline(2, 1).constant_distribution
+        >>> ConstantBaseline(2, 1).constant_distribution.cpu()
         tensor([0., 1.])
 
         :param cardinality: the number of elements in a magma
@@ -61,7 +61,7 @@ class ConstantBaseline(Module):
         >>> ConstantBaseline(2, 1)(torch.tensor([
         ...     [[[0., 1.], [0.5, 0.5]], [[1., 0.], [0., 1.]]],
         ...     [[[0., 1.], [1.0, 0.0]], [[0.5, 0.5], [0., 1.]]]
-        ... ]))
+        ... ]).to(CURRENT_DEVICE)).cpu()
         tensor([[[[0., 1.],
           [0., 1.]],
         <BLANKLINE>

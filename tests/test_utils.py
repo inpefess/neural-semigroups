@@ -17,7 +17,7 @@
 from unittest import TestCase
 
 import torch
-
+from neural_semigroups.constants import CURRENT_DEVICE
 from neural_semigroups.utils import (
     FOUR_GROUP,
     check_filename,
@@ -40,7 +40,7 @@ class TestUtils(TestCase):
                 [[2, 3, 0, 1], [3, 2, 1, 0], [0, 1, 2, 3], [1, 0, 3, 2]],
                 [[3, 2, 1, 0], [2, 3, 0, 1], [1, 0, 3, 2], [0, 1, 2, 3]],
             ]
-        )
+        ).to(CURRENT_DEVICE)
 
     def test_random_semigroup(self):
         success, cayley_table = random_semigroup(2, 1)
@@ -144,7 +144,7 @@ class TestUtils(TestCase):
             self.assertTrue(
                 torch.allclose(
                     equivalent_magmas[i],
-                    torch.tensor(true_equivalent_magmas[i]),
+                    torch.tensor(true_equivalent_magmas[i]).to(CURRENT_DEVICE),
                 )
             )
 
