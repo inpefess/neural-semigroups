@@ -179,11 +179,10 @@ def get_equivalent_magmas(cayley_tables: torch.Tensor) -> torch.Tensor:
     :returns: a batch of Cayley tables of isomorphic and anti-isomorphic magmas
     """
     equivalent_cayley_tables = list()
-    dim = cayley_tables.shape[1]
-    for permutation in permutations(range(dim)):
+    for permutation in permutations(range(cayley_tables.shape[1])):
         permutation_tensor = torch.tensor(permutation, device=CURRENT_DEVICE)
         sample_index, one, two = get_two_indices_per_sample(
-            cayley_tables.shape[0], dim
+            cayley_tables.shape[0], cayley_tables.shape[1]
         )
         isomorphic_cayley_tables = torch.zeros(
             cayley_tables.shape, dtype=torch.long, device=CURRENT_DEVICE
@@ -272,12 +271,14 @@ def download_smallsemi_data(data_path: str) -> None:
         starts_with="smallsemi",
         ends_before=".tar.bz2",
     )
-    url = f"{GAP_PACKAGES_URL}{full_name_with_version}.tar.bz2"
     temp_path = path.join(data_path, "tmp")
     rmtree(temp_path, ignore_errors=True)
     makedirs(temp_path, exist_ok=True)
-    archive_path = path.join(temp_path, path.basename(url))
-    download_file_from_url(url=url, filename=archive_path)
+    archive_path = path.join(temp_path, f"{full_name_with_version}.tar.bz2")
+    download_file_from_url(
+        url=f"{GAP_PACKAGES_URL}{full_name_with_version}.tar.bz2",
+        filename=archive_path,
+    )
     with tarfile.open(archive_path) as archive:
         archive.extractall(temp_path)
     rename(

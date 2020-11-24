@@ -46,11 +46,7 @@ class Magma:
         Traceback (most recent call last):
             ...
         ValueError: at least one argument must be given
-        >>> Magma([[0, 1]])
-        Traceback (most recent call last):
-            ...
-        ValueError: cayley_table must be a `torch.Tensor` of shape (cardinality, cardinality)
-        >>> Magma([[0]], cardinality=2)
+        >>> Magma(torch. tensor([[0]]), cardinality=2)
         Traceback (most recent call last):
             ...
         ValueError: cayley_table must be a `torch.Tensor` of shape (cardinality, cardinality)
@@ -69,18 +65,15 @@ class Magma:
                 dtype=torch.long,
             )
         else:
-            if isinstance(cayley_table, torch.Tensor):
-                if len(cayley_table.shape) == 2:
-                    if cayley_table.shape[0] == cayley_table.shape[1] and (
-                        cardinality is None
-                        or cayley_table.shape[0] == cardinality
-                    ):
-                        self.cayley_table = cayley_table
-                        return
-            raise ValueError(
-                "cayley_table must be a `torch.Tensor` of shape "
-                "(cardinality, cardinality)"
-            )
+            if cayley_table.shape[0] == cayley_table.shape[1] and (
+                cardinality is None or cayley_table.shape[0] == cardinality
+            ):
+                self.cayley_table = cayley_table
+            else:
+                raise ValueError(
+                    "cayley_table must be a `torch.Tensor` of shape "
+                    "(cardinality, cardinality)"
+                )
 
     def __repr__(self) -> str:
         return str(self.cayley_table)
