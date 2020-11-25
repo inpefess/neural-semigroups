@@ -98,40 +98,52 @@ def parse_args() -> Namespace:
     return args
 
 
-def create_if_not_exist(cursor: sqlite3.Cursor) -> None:
+def create_if_not_exist(database_name: str) -> None:
     """
     create a table ``mace_output`` if it does not exist
 
-    :param cursor: an SQLite cursor
+    :param database_name: where to create a table
     :returns:
     """
-    cursor.execute(
-        "SELECT COUNT(*) FROM sqlite_master WHERE name = 'mace_output'"
-    )
-    if cursor.fetchone()[0] == 0:
+    with sqlite3.connect(database_name) as connection:
+        cursor = connection.cursor()
         cursor.execute(
-            "CREATE TABLE mace_output(output STRING, errors STRING)"
+            "SELECT COUNT(*) FROM sqlite_master WHERE name = 'mace_output'"
         )
+        if cursor.fetchone()[0] == 0:
+            cursor.execute(
+                "CREATE TABLE mace_output(output STRING, errors STRING)"
+            )
+            cursor.connection.commit()
+        cursor.close()
+
+
+def write_mace_output(database_name: str, values: Tuple[str, str]) -> None:
+    """
+    inserts values into a table ``mace_output``
+
+    :param database_name: where to create a table
+    :param values: what to insert
+    :returns:
+    """
+    with sqlite3.connect(database_name) as connection:
+        cursor = connection.cursor()
+        cursor.execute("INSERT INTO mace_output VALUES(?, ?)", values)
+        cursor.close()
 
 
 def main():
     """ do all """
     args = parse_args()
-    with Pool(processes=args.number_of_processes) as pool, sqlite3.connect(
-        args.database_name
-    ) as connection:
-        cursor = connection.cursor()
-        create_if_not_exist(cursor)
+    with Pool(processes=args.number_of_processes) as pool:
+        create_if_not_exist(args.database_name)
         with tqdm(total=args.number_of_tasks) as progress_bar:
             for output, errors in pool.imap_unordered(
                 partial(table_completion, args.dim),
                 range(args.number_of_tasks),
             ):
-                cursor.execute(
-                    "INSERT INTO mace_output VALUES(?, ?)", (output, errors)
-                )
+                write_mace_output(args.database_name, (output, errors))
                 progress_bar.update()
-        cursor.close()
 
 
 if __name__ == "__main__":
