@@ -13,8 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+import os
 import sqlite3
-import subprocess
 from argparse import ArgumentParser, Namespace
 from functools import partial
 from multiprocessing.pool import Pool
@@ -71,15 +71,12 @@ def table_completion(dim: int, task_id: int) -> Tuple[str, str]:
         ).tolist()
     ]
     write_mace_input(indices, dim, f"{task_id}.in")
-    subprocess.call(
-        [f"mace4 -n {dim} < {task_id}.in > {task_id}.out 2> {task_id}.err"],
-        shell=True,
+    os.system(
+        f"mace4 -n {dim} < {task_id}.in > {task_id}.out 2> {task_id}.err"
     )
     output = read_whole_file(f"{task_id}.out")
     errors = read_whole_file(f"{task_id}.err")
-    subprocess.call(
-        [f"rm {task_id}.in {task_id}.out {task_id}.err"], shell=True
-    )
+    os.system(f"rm {task_id}.in {task_id}.out {task_id}.err")
     return (output, errors)
 
 
@@ -105,16 +102,16 @@ def create_if_not_exist(database_name: str) -> None:
     :param database_name: where to create a table
     :returns:
     """
-    with sqlite3.connect(database_name) as connection:
+    with sqlite3.connect(database_name, isolation_level=None) as connection:
+        connection.execute("PRAGMA journal_mode=WAL;")
         cursor = connection.cursor()
         cursor.execute(
             "SELECT COUNT(*) FROM sqlite_master WHERE name = 'mace_output'"
         )
         if cursor.fetchone()[0] == 0:
-            cursor.execute(
+            connection.execute(
                 "CREATE TABLE mace_output(output STRING, errors STRING)"
             )
-            cursor.connection.commit()
         cursor.close()
 
 
@@ -126,7 +123,8 @@ def write_mace_output(database_name: str, values: Tuple[str, str]) -> None:
     :param values: what to insert
     :returns:
     """
-    with sqlite3.connect(database_name) as connection:
+    with sqlite3.connect(database_name, isolation_level=None) as connection:
+        connection.execute("PRAGMA journal_mode=WAL;")
         cursor = connection.cursor()
         cursor.execute("INSERT INTO mace_output VALUES(?, ?)", values)
         cursor.close()
