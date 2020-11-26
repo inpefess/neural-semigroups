@@ -22,10 +22,9 @@ from neural_semigroups.magma import Magma
 def generate_data():
     """ main function """
     cardinality = 3
-    total = 1000000
     positive = dict()
     negative = dict()
-    for _ in tqdm(range(total)):
+    for _ in tqdm(range(1000000)):
         magma = Magma(cardinality=cardinality)
         if magma.is_associative:
             positive[magma] = magma.cayley_table

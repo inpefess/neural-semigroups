@@ -23,6 +23,8 @@ from ignite.contrib.handlers.tqdm_logger import ProgressBar
 from ignite.engine import Engine, Events
 from ignite.handlers import EarlyStopping, ModelCheckpoint
 from ignite.metrics import Loss, RunningAverage
+from torch.nn import Linear, Module, Sequential
+
 from neural_semigroups.magma import Magma
 from neural_semigroups.training_helpers import (
     ThreeEvaluators,
@@ -32,10 +34,10 @@ from neural_semigroups.training_helpers import (
     get_loaders,
     get_tensorboard_logger,
     get_trainer,
+    guessed_ratio,
     load_database_as_cubes,
 )
 from neural_semigroups.utils import FOUR_GROUP
-from torch.nn import Linear, Module, Sequential
 
 
 class TestTrainingHelpers(TestCase):
@@ -114,6 +116,13 @@ class TestTrainingHelpers(TestCase):
         ratio = associative_ratio(
             Magma(FOUR_GROUP).probabilistic_cube.view(-1, 4, 4, 4),
             torch.tensor(0.0),
+        )
+        self.assertTrue(torch.tensor(1.0).allclose(ratio))
+
+    def test_guessed_ratio(self):
+        ratio = guessed_ratio(
+            Magma(FOUR_GROUP).probabilistic_cube.view(-1, 4, 4, 4),
+            Magma(FOUR_GROUP).probabilistic_cube.view(-1, 4, 4, 4),
         )
         self.assertTrue(torch.tensor(1.0).allclose(ratio))
 

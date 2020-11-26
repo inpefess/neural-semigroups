@@ -497,3 +497,24 @@ def read_whole_file(filename: str) -> str:
     with open(filename, "r") as input_file:
         text = input_file.read()
     return text
+
+
+def partial_table_to_cube(table: Tensor) -> Tensor:
+    """
+    create a probabilistic cube from a partially filled Cayley table
+    ``-1`` is translated to :math:`\frac1n` where :math:`n` is table's cardinality
+
+    :param table: a Ceyley table, partially filled by ``-1``'s
+    :returns: a probabilistic cube
+    """
+    cardinality = table.shape[0]
+    cube = torch.zeros(
+        [cardinality, cardinality, cardinality],
+        dtype=torch.float32,
+        device=CURRENT_DEVICE,
+    )
+    rows, cols = torch.where(table != -1)
+    cube[rows, cols, table[rows, cols]] = 1.0
+    rows, cols = torch.where(table == -1)
+    cube[rows, cols, :] = 1 / cardinality
+    return cube.reshape([-1, cardinality, cardinality, cardinality])
