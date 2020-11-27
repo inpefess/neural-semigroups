@@ -330,7 +330,7 @@ def learning_pipeline(
     data_loaders: Tuple[DataLoader, DataLoader, DataLoader],
 ) -> None:
     """
-    run a comon learning pipeline
+    run a common learning pipeline
 
     :param params: parameters of learning: epochs, learning_rate.
     :param cardinality: a semigroup cardinality
