@@ -14,7 +14,6 @@
    limitations under the License.
 """
 from argparse import ArgumentParser, Namespace
-from collections import namedtuple
 from datetime import datetime
 from typing import Dict, Tuple, Union
 
@@ -211,27 +210,20 @@ def get_associator_evaluator(model: Module, loss: Module) -> Engine:
     )
 
 
-ThreeEvaluators = namedtuple(
-    "ThreeEvaluators", ["train", "validation", "test"]
-)
+# pylint: disable=too-few-public-methods
+class ThreeEvaluators:
+    """ a triple of three ``ignite`` evaluators: train, validation, test"""
 
+    def __init__(self, model: Module, loss: Module):
+        """
 
-def get_three_evaluators(model: Module, loss: Module) -> ThreeEvaluators:
-    """
-    a factory of named tuples ``ThreeEvaluators``
-
-    >>> isinstance(get_three_evaluators(Module(), Module()), ThreeEvaluators)
-    True
-
-    :param model: a network to train
-    :param loss: a loss to minimise during training
-    :returns: a triple of train, validation, and test ``ignite`` evaluators
-    """
-    return ThreeEvaluators(
-        train=get_associator_evaluator(model, loss),
-        validation=get_associator_evaluator(model, loss),
-        test=get_associator_evaluator(model, loss),
-    )
+        :param model: a network to train
+        :param loss: a loss to minimise during training
+        :returns:
+        """
+        self.train = get_associator_evaluator(model, loss)
+        self.validation = get_associator_evaluator(model, loss)
+        self.test = get_associator_evaluator(model, loss)
 
 
 def add_early_stopping_and_checkpoint(
@@ -339,7 +331,7 @@ def learning_pipeline(
     :param data_loaders: train, validation, and test data loaders
     """
     trainer = get_trainer(model, params["learning_rate"], loss)
-    evaluators = get_three_evaluators(model, loss)
+    evaluators = ThreeEvaluators(model, loss)
 
     @trainer.on(Events.EPOCH_COMPLETED)
     # pylint: disable=unused-argument,unused-variable
