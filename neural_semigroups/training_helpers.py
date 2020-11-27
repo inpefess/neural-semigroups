@@ -356,9 +356,8 @@ def learning_pipeline(
     add_early_stopping_and_checkpoint(
         evaluators.validation, trainer, f"semigroup{cardinality}", model
     )
-    tb_logger = get_tensorboard_logger(trainer, evaluators)
-    trainer.run(data_loaders[0], max_epochs=params["epochs"])
-    tb_logger.close()
+    with get_tensorboard_logger(trainer, evaluators):
+        trainer.run(data_loaders[0], max_epochs=params["epochs"])
 
 
 def get_loaders(
