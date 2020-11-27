@@ -191,26 +191,6 @@ def guessed_ratio(
     return PreciseGuessLoss()(prediction, target)
 
 
-def get_associator_evaluator(model: Module, loss: Module) -> Engine:
-    """
-    get an ``ignite`` evaluator for semigroups completion task
-
-    :param model: a network to train
-    :param loss: a loss to minimise (usually based on an ``AssociatorLoss``)
-    :returns: an ``ignite`` evaluator
-    """
-    return create_supervised_evaluator(
-        model,
-        {
-            "loss": Loss(loss),
-            "associative_ratio": Loss(associative_ratio),
-            "guessed_ratio": Loss(guessed_ratio),
-        },
-        CURRENT_DEVICE,
-    )
-
-
-# pylint: disable=too-few-public-methods
 class ThreeEvaluators:
     """ a triple of three ``ignite`` evaluators: train, validation, test"""
 
@@ -221,9 +201,35 @@ class ThreeEvaluators:
         :param loss: a loss to minimise during training
         :returns:
         """
-        self.train = get_associator_evaluator(model, loss)
-        self.validation = get_associator_evaluator(model, loss)
-        self.test = get_associator_evaluator(model, loss)
+        metrics = {
+            "loss": Loss(loss),
+            "associative_ratio": Loss(associative_ratio),
+            "guessed_ratio": Loss(guessed_ratio),
+        }
+        self._train = create_supervised_evaluator(
+            model, metrics, CURRENT_DEVICE
+        )
+        self._validation = create_supervised_evaluator(
+            model, metrics, CURRENT_DEVICE
+        )
+        self._test = create_supervised_evaluator(
+            model, metrics, CURRENT_DEVICE
+        )
+
+    @property
+    def train(self):
+        """ train evaluator """
+        return self._train
+
+    @property
+    def validation(self):
+        """ validation evaluator """
+        return self._validation
+
+    @property
+    def test(self):
+        """ test evaluator """
+        return self._test
 
 
 def add_early_stopping_and_checkpoint(
