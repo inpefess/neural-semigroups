@@ -126,7 +126,7 @@ def main():
     features, labels = get_features_and_labels(cursor)
     final_steps(
         cursor,
-        {"features": torch.stack(features), "label": labels},
+        {"features": torch.stack(features), "labels": labels},
         args.dataset_name,
     )
 
