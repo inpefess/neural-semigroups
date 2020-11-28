@@ -15,7 +15,7 @@
 """
 from argparse import ArgumentParser, Namespace
 from datetime import datetime
-from typing import Dict, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import torch
 from ignite.contrib.handlers.tensorboard_logger import (
@@ -32,7 +32,7 @@ from ignite.engine import (
 )
 from ignite.handlers import EarlyStopping, ModelCheckpoint
 from ignite.metrics import RunningAverage
-from ignite.metrics.loss import Loss
+from ignite.metrics.loss import Loss, Metric
 from torch.nn import Module
 from torch.optim import Adam
 from torch.utils.data import DataLoader, TensorDataset
@@ -194,18 +194,13 @@ def guessed_ratio(
 class ThreeEvaluators:
     """ a triple of three ``ignite`` evaluators: train, validation, test"""
 
-    def __init__(self, model: Module, loss: Module):
+    def __init__(self, model: Module, metrics: Dict[str, Metric]):
         """
 
         :param model: a network to train
-        :param loss: a loss to minimise during training
+        :param metrics: a dictionary of metrics to evaluate
         :returns:
         """
-        metrics = {
-            "loss": Loss(loss),
-            "associative_ratio": Loss(associative_ratio),
-            "guessed_ratio": Loss(guessed_ratio),
-        }
         self._train = create_supervised_evaluator(
             model, metrics, CURRENT_DEVICE
         )
@@ -261,13 +256,14 @@ def add_early_stopping_and_checkpoint(
 
 
 def get_tensorboard_logger(
-    trainer: Engine, evaluators: ThreeEvaluators
+    trainer: Engine, evaluators: ThreeEvaluators, metric_names: List[str]
 ) -> TensorboardLogger:
     """
     creates a ``tensorboard`` logger which read metrics from given evaluators and attaches it to a given trainer
 
     :param trainer: an ``ignite`` trainer to attach to
     :param ThreeEvaluators: a triple of train, validation, and test evaluators to get metrics from
+    :param metric_names: a list of metrics to log during validation and testing
     """
     tb_logger = TensorboardLogger(
         log_dir=f"runs/{datetime.now()}", flush_secs=1
@@ -280,13 +276,13 @@ def get_tensorboard_logger(
     tb_logger.attach(trainer, training_loss, Events.EPOCH_COMPLETED)
     validation_loss = OutputHandler(
         "validation",
-        ["loss", "associative_ratio", "guessed_ratio"],
+        metric_names,
         global_step_transform=global_step_from_engine(trainer),
     )
     tb_logger.attach(evaluators.validation, validation_loss, Events.COMPLETED)
     test_loss = OutputHandler(
         "test",
-        ["loss", "associative_ratio", "guessed_ratio"],
+        metric_names,
         global_step_transform=global_step_from_engine(trainer),
     )
     tb_logger.attach(evaluators.test, test_loss, Events.COMPLETED)
@@ -322,9 +318,9 @@ def get_trainer(model: Module, learning_rate: float, loss: Loss) -> Engine:
 
 def learning_pipeline(
     params: Dict[str, Union[int, float]],
-    cardinality: int,
     model: Module,
     loss: Loss,
+    metrics: Dict[str, Metric],
     data_loaders: Tuple[DataLoader, DataLoader, DataLoader],
 ) -> None:
     """
@@ -334,10 +330,11 @@ def learning_pipeline(
     :param cardinality: a semigroup cardinality
     :param model: a network architecture
     :param loss: the criterion to optimize
+    :param metrics: a dictionary of additional metrics to evaluate
     :param data_loaders: train, validation, and test data loaders
     """
     trainer = get_trainer(model, params["learning_rate"], loss)
-    evaluators = ThreeEvaluators(model, loss)
+    evaluators = ThreeEvaluators(model, metrics)
 
     @trainer.on(Events.EPOCH_COMPLETED)
     # pylint: disable=unused-argument,unused-variable
@@ -352,9 +349,9 @@ def learning_pipeline(
         evaluators.test.run(data_loaders[2])
 
     add_early_stopping_and_checkpoint(
-        evaluators.validation, trainer, f"semigroup{cardinality}", model
+        evaluators.validation, trainer, "semigroup", model
     )
-    with get_tensorboard_logger(trainer, evaluators):
+    with get_tensorboard_logger(trainer, evaluators, list(metrics.keys())):
         trainer.run(data_loaders[0], max_epochs=params["epochs"])
 
 
