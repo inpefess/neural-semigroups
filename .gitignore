@@ -19,4 +19,5 @@ htmlcov/
 doc/build/
 test-results/
 dist/
-*.sqlite
+*.db
+*.pt
