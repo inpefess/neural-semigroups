@@ -14,9 +14,8 @@
    limitations under the License.
 """
 from argparse import ArgumentParser, Namespace
-from collections import namedtuple
 from datetime import datetime
-from typing import Dict, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import torch
 from ignite.contrib.handlers.tensorboard_logger import (
@@ -33,7 +32,7 @@ from ignite.engine import (
 )
 from ignite.handlers import EarlyStopping, ModelCheckpoint
 from ignite.metrics import RunningAverage
-from ignite.metrics.loss import Loss
+from ignite.metrics.loss import Loss, Metric
 from torch.nn import Module
 from torch.optim import Adam
 from torch.utils.data import DataLoader, TensorDataset
@@ -192,46 +191,40 @@ def guessed_ratio(
     return PreciseGuessLoss()(prediction, target)
 
 
-def get_associator_evaluator(model: Module, loss: Module) -> Engine:
-    """
-    get an ``ignite`` evaluator for semigroups completion task
+class ThreeEvaluators:
+    """ a triple of three ``ignite`` evaluators: train, validation, test"""
 
-    :param model: a network to train
-    :param loss: a loss to minimise (usually based on an ``AssociatorLoss``)
-    :returns: an ``ignite`` evaluator
-    """
-    return create_supervised_evaluator(
-        model,
-        {
-            "loss": Loss(loss),
-            "associative_ratio": Loss(associative_ratio),
-            "guessed_ratio": Loss(guessed_ratio),
-        },
-        CURRENT_DEVICE,
-    )
+    def __init__(self, model: Module, metrics: Dict[str, Metric]):
+        """
 
+        :param model: a network to train
+        :param metrics: a dictionary of metrics to evaluate
+        :returns:
+        """
+        self._train = create_supervised_evaluator(
+            model, metrics, CURRENT_DEVICE
+        )
+        self._validation = create_supervised_evaluator(
+            model, metrics, CURRENT_DEVICE
+        )
+        self._test = create_supervised_evaluator(
+            model, metrics, CURRENT_DEVICE
+        )
 
-ThreeEvaluators = namedtuple(
-    "ThreeEvaluators", ["train", "validation", "test"]
-)
+    @property
+    def train(self):
+        """ train evaluator """
+        return self._train
 
+    @property
+    def validation(self):
+        """ validation evaluator """
+        return self._validation
 
-def get_three_evaluators(model: Module, loss: Module) -> ThreeEvaluators:
-    """
-    a factory of named tuples ``ThreeEvaluators``
-
-    >>> isinstance(get_three_evaluators(Module(), Module()), ThreeEvaluators)
-    True
-
-    :param model: a network to train
-    :param loss: a loss to minimise during training
-    :returns: a triple of train, validation, and test ``ignite`` evaluators
-    """
-    return ThreeEvaluators(
-        train=get_associator_evaluator(model, loss),
-        validation=get_associator_evaluator(model, loss),
-        test=get_associator_evaluator(model, loss),
-    )
+    @property
+    def test(self):
+        """ test evaluator """
+        return self._test
 
 
 def add_early_stopping_and_checkpoint(
@@ -263,13 +256,14 @@ def add_early_stopping_and_checkpoint(
 
 
 def get_tensorboard_logger(
-    trainer: Engine, evaluators: ThreeEvaluators
+    trainer: Engine, evaluators: ThreeEvaluators, metric_names: List[str]
 ) -> TensorboardLogger:
     """
     creates a ``tensorboard`` logger which read metrics from given evaluators and attaches it to a given trainer
 
     :param trainer: an ``ignite`` trainer to attach to
     :param ThreeEvaluators: a triple of train, validation, and test evaluators to get metrics from
+    :param metric_names: a list of metrics to log during validation and testing
     """
     tb_logger = TensorboardLogger(
         log_dir=f"runs/{datetime.now()}", flush_secs=1
@@ -282,13 +276,13 @@ def get_tensorboard_logger(
     tb_logger.attach(trainer, training_loss, Events.EPOCH_COMPLETED)
     validation_loss = OutputHandler(
         "validation",
-        ["loss", "associative_ratio", "guessed_ratio"],
+        metric_names,
         global_step_transform=global_step_from_engine(trainer),
     )
     tb_logger.attach(evaluators.validation, validation_loss, Events.COMPLETED)
     test_loss = OutputHandler(
         "test",
-        ["loss", "associative_ratio", "guessed_ratio"],
+        metric_names,
         global_step_transform=global_step_from_engine(trainer),
     )
     tb_logger.attach(evaluators.test, test_loss, Events.COMPLETED)
@@ -324,22 +318,23 @@ def get_trainer(model: Module, learning_rate: float, loss: Loss) -> Engine:
 
 def learning_pipeline(
     params: Dict[str, Union[int, float]],
-    cardinality: int,
     model: Module,
     loss: Loss,
+    metrics: Dict[str, Metric],
     data_loaders: Tuple[DataLoader, DataLoader, DataLoader],
 ) -> None:
     """
-    run a comon learning pipeline
+    run a common learning pipeline
 
     :param params: parameters of learning: epochs, learning_rate.
     :param cardinality: a semigroup cardinality
     :param model: a network architecture
     :param loss: the criterion to optimize
+    :param metrics: a dictionary of additional metrics to evaluate
     :param data_loaders: train, validation, and test data loaders
     """
     trainer = get_trainer(model, params["learning_rate"], loss)
-    evaluators = get_three_evaluators(model, loss)
+    evaluators = ThreeEvaluators(model, metrics)
 
     @trainer.on(Events.EPOCH_COMPLETED)
     # pylint: disable=unused-argument,unused-variable
@@ -354,11 +349,10 @@ def learning_pipeline(
         evaluators.test.run(data_loaders[2])
 
     add_early_stopping_and_checkpoint(
-        evaluators.validation, trainer, f"semigroup{cardinality}", model
+        evaluators.validation, trainer, "semigroup", model
     )
-    tb_logger = get_tensorboard_logger(trainer, evaluators)
-    trainer.run(data_loaders[0], max_epochs=params["epochs"])
-    tb_logger.close()
+    with get_tensorboard_logger(trainer, evaluators, list(metrics.keys())):
+        trainer.run(data_loaders[0], max_epochs=params["epochs"])
 
 
 def get_loaders(

@@ -1,4 +1,4 @@
-"""
+""""
    Copyright 2019-2020 Boris Shminke
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,8 +23,13 @@ from ignite.contrib.handlers.tqdm_logger import ProgressBar
 from ignite.engine import Engine, Events
 from ignite.handlers import EarlyStopping, ModelCheckpoint
 from ignite.metrics import Loss, RunningAverage
+from ignite.metrics.loss import Loss
+from torch import Tensor
 from torch.nn import Linear, Module, Sequential
+from torch.nn.functional import kl_div
+from torch.utils.data import DataLoader, TensorDataset
 
+from neural_semigroups.constant_baseline import CURRENT_DEVICE
 from neural_semigroups.magma import Magma
 from neural_semigroups.training_helpers import (
     ThreeEvaluators,
@@ -35,6 +40,7 @@ from neural_semigroups.training_helpers import (
     get_tensorboard_logger,
     get_trainer,
     guessed_ratio,
+    learning_pipeline,
     load_database_as_cubes,
 )
 from neural_semigroups.utils import FOUR_GROUP
@@ -154,12 +160,10 @@ class TestTrainingHelpers(TestCase):
 
     def test_get_tensorboard_logger(self):
         trainer = Engine(lambda x, y: 0.0)
-        three_evaluators = ThreeEvaluators(
-            Engine(lambda x, y: 0.0),
-            Engine(lambda x, y: 0.0),
-            Engine(lambda x, y: 0.0),
+        three_evaluators = ThreeEvaluators(Engine(lambda x, y: 0.0), dict())
+        tensorboard_logger = get_tensorboard_logger(
+            trainer, three_evaluators, []
         )
-        tensorboard_logger = get_tensorboard_logger(trainer, three_evaluators)
         self.assertEqual(
             trainer._event_handlers[Events.EPOCH_COMPLETED][0][1][1],
             tensorboard_logger,
@@ -172,3 +176,38 @@ class TestTrainingHelpers(TestCase):
                 engine._event_handlers[Events.COMPLETED][0][1][1],
                 tensorboard_logger,
             )
+
+    def test_learning_pipeline(self):
+        data_loaders = 3 * [
+            DataLoader(
+                TensorDataset(
+                    torch.ones([1, 2, 2, 2]).to(CURRENT_DEVICE),
+                    torch.ones([1, 2, 2, 2]).to(CURRENT_DEVICE),
+                )
+            )
+        ]
+
+        class NewModel(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.layers = torch.nn.Sequential(torch.nn.Linear(2, 2)).to(
+                    CURRENT_DEVICE
+                )
+
+            def forward(self, x):
+                return self.layers(x)
+
+        def loss(prediction: Tensor, target: Tensor) -> Tensor:
+            return kl_div(torch.log(prediction), target, reduction="batchmean")
+
+        model = NewModel()
+        before = next(model.parameters()).detach()
+        learning_pipeline(
+            params={"learning_rate": 1.0, "epochs": 1},
+            model=model,
+            loss=loss,
+            metrics={"loss": Loss(loss)},
+            data_loaders=data_loaders,
+        )
+        after = next(model.parameters()).detach()
+        self.assertTrue(torch.allclose(before, after))

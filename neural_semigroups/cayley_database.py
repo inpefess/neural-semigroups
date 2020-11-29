@@ -211,9 +211,8 @@ class CayleyDatabase:
         """
         max_level = self.cardinality ** 2 if max_level == -1 else max_level
         totals = torch.zeros((2, max_level))
-        database_size = len(self.database)
-        test_indices = torch.randperm(database_size)[
-            : min(database_size, 1000)
+        test_indices = torch.randperm(len(self.database))[
+            : min(len(self.database), 1000)
         ]
         for i in tqdm(test_indices, desc="generating and solving puzzles"):
             for level in range(1, max_level + 1):

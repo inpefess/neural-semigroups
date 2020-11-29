@@ -110,7 +110,7 @@ def get_features_and_labels(
     row_count, dim = get_additional_info(cursor)
     cursor.execute("SELECT output FROM mace_output")
     features = list()
-    labels = torch.zeros([row_count])
+    labels = torch.zeros([row_count], dtype=torch.long)
     for row_index in tqdm(range(row_count)):
         output = cursor.fetchone()[0]
         features.append(get_cube_from_output(output, dim))
@@ -126,7 +126,7 @@ def main():
     features, labels = get_features_and_labels(cursor)
     final_steps(
         cursor,
-        {"features": torch.stack(features), "label": labels},
+        {"features": torch.stack(features), "labels": labels},
         args.dataset_name,
     )
 
