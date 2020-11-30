@@ -41,7 +41,6 @@ autodoc_mock_imports = [
     "tqdm",
     "pytorch-ignite",
     "tensorboard",
-    "pandas",
 ]
 
 # Add any paths that contain templates here, relative to this directory.

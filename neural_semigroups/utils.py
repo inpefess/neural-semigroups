@@ -21,7 +21,6 @@ from os.path import basename, getmtime, join
 from shutil import rmtree
 from typing import List, Tuple
 
-import pandas as pd
 import requests
 import torch
 from torch import Tensor
@@ -285,36 +284,6 @@ def download_smallsemi_data(data_path: str) -> None:
         path.join(temp_path, full_name_with_version, "data", "data2to7"),
         path.join(data_path, "smallsemi_data"),
     )
-
-
-def print_report(totals: torch.Tensor) -> pd.DataFrame:
-    """
-    print report in a pretty format
-
-    >>> totals = torch.tensor([[4, 4], [0, 1]])
-    >>> print_report(totals)
-           puzzles  solved  (%)
-    level
-    1      4             0    0
-    2      4             1   25
-
-    :param totals: a table with three columns:
-
-    * a column with total number of puzzles per level
-    * a column with numbers of correctly solved puzzles
-
-    :returns: the report in a form of ``pandas.DataFrame``
-
-    """
-    levels = torch.arange(1, totals.shape[1] + 1)
-    return pd.DataFrame(
-        {
-            "level": levels.numpy(),
-            "puzzles": totals[0].numpy(),
-            "solved": totals[1].numpy(),
-            "(%)": totals[1].numpy() * 100 // totals[0].numpy(),
-        }
-    ).set_index("level")
 
 
 def get_newest_file(dir_path: str) -> str:

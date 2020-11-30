@@ -23,7 +23,6 @@ classifiers=[
 python = "^3.6.1"
 torch = "*"
 tqdm = "*"
-pandas = "*"
 pytorch-ignite = "*"
 tensorboard = "*"
 
