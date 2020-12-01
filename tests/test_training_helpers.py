@@ -22,8 +22,7 @@ import torch
 from ignite.contrib.handlers.tqdm_logger import ProgressBar
 from ignite.engine import Engine, Events
 from ignite.handlers import EarlyStopping, ModelCheckpoint
-from ignite.metrics import Loss, RunningAverage
-from ignite.metrics.loss import Loss
+from ignite.metrics import RunningAverage, Loss
 from torch import Tensor
 from torch.nn import Linear, Module, Sequential
 from torch.nn.functional import kl_div

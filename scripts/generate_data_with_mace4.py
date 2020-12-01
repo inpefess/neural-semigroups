@@ -77,7 +77,7 @@ def table_completion(dim: int, task_id: int) -> Tuple[str, str]:
     output = read_whole_file(f"{task_id}.out")
     errors = read_whole_file(f"{task_id}.err")
     os.system(f"rm {task_id}.in {task_id}.out {task_id}.err")
-    return (output, errors)
+    return output, errors
 
 
 def parse_args() -> Namespace:

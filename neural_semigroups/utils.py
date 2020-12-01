@@ -57,6 +57,7 @@ def random_semigroup(
     """
     associative = False
     try_count = 0
+    mult = Magma(cardinality=dim)
     while not associative and try_count <= maximal_tries:
         mult = Magma(cardinality=dim)
         associative = mult.is_associative
@@ -237,10 +238,10 @@ def find_substring_by_pattern(
     """
     search for a first occurrence of a given pattern in a string list
 
-    >>> strings = ["one", "two", "three"]
-    >>> find_substring_by_pattern(strings, "t", "o")
+    >>> some_strings = ["one", "two", "three"]
+    >>> find_substring_by_pattern(some_strings, "t", "o")
     'tw'
-    >>> find_substring_by_pattern(strings, "four", "five")
+    >>> find_substring_by_pattern(some_strings, "four", "five")
     Traceback (most recent call last):
        ...
     ValueError: pattern four.*five not found
@@ -300,7 +301,7 @@ def get_newest_file(dir_path: str) -> str:
     >>> get_newest_file("/tmp/tmp/")
     '/tmp/tmp/two'
 
-    :param path: a diretory path
+    :param dir_path: a directory path
     :returns: the last modified file's name
     """
     return max(
@@ -320,7 +321,8 @@ def get_two_indices_per_sample(
     (tensor([0, 0, 0, 0]), tensor([0, 0, 1, 1]), tensor([0, 1, 0, 1]))
 
     :param batch_size: number of samples in a batch
-    :pamam cardinality: number of possible values of an index
+    :param cardinality: number of possible values of an index
+    :returns: triples (index, index, index)
     """
     a_range = torch.arange(cardinality)
     return (

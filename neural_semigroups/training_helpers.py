@@ -262,7 +262,7 @@ def get_tensorboard_logger(
     creates a ``tensorboard`` logger which read metrics from given evaluators and attaches it to a given trainer
 
     :param trainer: an ``ignite`` trainer to attach to
-    :param ThreeEvaluators: a triple of train, validation, and test evaluators to get metrics from
+    :param evaluators: a triple of train, validation, and test evaluators to get metrics from
     :param metric_names: a list of metrics to log during validation and testing
     """
     tb_logger = TensorboardLogger(
@@ -327,7 +327,6 @@ def learning_pipeline(
     run a common learning pipeline
 
     :param params: parameters of learning: epochs, learning_rate.
-    :param cardinality: a semigroup cardinality
     :param model: a network architecture
     :param loss: the criterion to optimize
     :param metrics: a dictionary of additional metrics to evaluate

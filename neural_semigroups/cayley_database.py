@@ -129,7 +129,7 @@ class CayleyDatabase:
         # pylint: disable=not-callable
         cube = partial_table_to_cube(torch.tensor(cayley_table))
         prediction = self.model(cube).detach()[0]
-        return (prediction.argmax(axis=-1), prediction)
+        return prediction.argmax(axis=-1), prediction
 
     def load_model(self, filename: str) -> None:
         """
@@ -146,7 +146,6 @@ class CayleyDatabase:
         """
         split a database of Cayley table in three: train, validation, and test
 
-        :param cayley_db: a database of Cayley tables
         :param train_size: number of tables in a train set
         :param validation_size: number of tables in a validation set
         :returns: a triple of distinct Cayley tables databases: ``(train, validation, test)``
