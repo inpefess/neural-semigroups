@@ -18,7 +18,8 @@ from typing import List, Optional, Tuple
 import torch
 from torch import Tensor
 from torch.nn import Module
-from torch.utils.data import TensorDataset, random_split
+from torch.utils.data import TensorDataset
+from torch.utils.data.dataset import random_split
 from tqdm import tqdm
 
 from neural_semigroups.constants import CAYLEY_DATABASE_PATH

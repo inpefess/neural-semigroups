@@ -26,7 +26,8 @@ from ignite.metrics import RunningAverage, Loss
 from torch import Tensor
 from torch.nn import Linear, Module, Sequential
 from torch.nn.functional import kl_div
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import TensorDataset
+from torch.utils.data.dataloader import DataLoader
 
 from neural_semigroups.constant_baseline import CURRENT_DEVICE
 from neural_semigroups.magma import Magma

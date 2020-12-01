@@ -32,10 +32,12 @@ from ignite.engine import (
 )
 from ignite.handlers import EarlyStopping, ModelCheckpoint
 from ignite.metrics import RunningAverage
-from ignite.metrics.loss import Loss, Metric
+from ignite.metrics.loss import Loss
+from ignite.metrics import Metric
 from torch.nn import Module
 from torch.optim import Adam
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import TensorDataset
+from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 
 from neural_semigroups.associator_loss import AssociatorLoss
