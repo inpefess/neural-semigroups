@@ -90,7 +90,7 @@ class Magma:
         """
         check associativity of a Cayley table
 
-        :returns: whether the input table is assosiative or not
+        :returns: whether the input table is associative or not
 
         """
         a_range = torch.arange(self.cardinality)

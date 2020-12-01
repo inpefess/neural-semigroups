@@ -51,7 +51,7 @@ class TestTrainingHelpers(TestCase):
         torch.manual_seed(47)
 
     def test_get_arguments(self):
-        args = "prog --cardinality 2 --train_size 1 --validation_size 1"
+        args = "program --cardinality 2 --train_size 1 --validation_size 1"
         with patch.object(sys, "argv", args.split(" ")):
             get_arguments()
 

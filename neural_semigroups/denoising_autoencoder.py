@@ -151,7 +151,7 @@ class MagmaDAE(Module):
     # pylint: disable=arguments-differ
     def forward(self, cayley_cubes: Tensor) -> Tensor:
         """
-        forward pass inhereted from Module
+        forward pass inherited from Module
 
         :param cayley_cubes: a batch of probabilistic representations of magmas
         :returns: autoencoded probabilistic representations of magmas

@@ -74,9 +74,9 @@ class TestCayleyDatabase(TestCase):
 
     def test_fill_in_with_model(self):
         self.cayley_db.cardinality = 2
-        input = [[-1, 0], [0, 1]]
+        some_input = [[-1, 0], [0, 1]]
         self.cayley_db.model = self.identity_module
-        table, cube = self.cayley_db.fill_in_with_model(input)
+        table, cube = self.cayley_db.fill_in_with_model(some_input)
         self.assertIsInstance(table, torch.Tensor)
         self.assertIsInstance(cube, torch.Tensor)
         self.assertEqual(table.dtype, torch.int64)

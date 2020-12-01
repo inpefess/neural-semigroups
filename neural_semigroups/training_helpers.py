@@ -85,7 +85,7 @@ def load_database_as_cubes(
     :param cardinality: cardinality of Cayley database (from ``smallsemi``)
     :param train_size: number of tables for training
     :param validation_size: number of tables for validation
-    :param dropout_rate: droupout is applied only to validation and test sets
+    :param dropout_rate: dropout is applied only to validation and test sets
     :returns: three arrays of probability Cayley cubes (train, validation, test
     ) and three arrays of labels for them
     """

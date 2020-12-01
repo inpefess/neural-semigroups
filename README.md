@@ -30,6 +30,6 @@ associativity with a naked eye;
 2) sudoku puzzles are solved by humans for fun and thus catalogued.
 When solving a sudoku one knows for sure that there is a unique
 solution. On the contrary, nobody guesses values in a partially
-filled Cayley table of a semigroup as a form of amuzement. As a
+filled Cayley table of a semigroup as a form of amusement. As a
 result, one can create a puzzle from a full Cayley table of a
 semigroup but there may be many distinct solutions.

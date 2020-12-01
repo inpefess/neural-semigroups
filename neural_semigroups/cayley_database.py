@@ -70,7 +70,7 @@ class CayleyDatabase:
         """
         checks the input to be a correct Cayley table
 
-        :param cayley_table: a partially filled Cayley table (unknow entries are filled by ``-1``)
+        :param cayley_table: a partially filled Cayley table (unknown entries are filled by ``-1``)
         :returns: whether the input is correct
         """
         if isinstance(cayley_table, list):
@@ -91,7 +91,7 @@ class CayleyDatabase:
         get a list of possible completions of a partially filled Cayley table
         (unknown entries are filled by ``-1``)
 
-        :param cayley_table: a partially filled Cayley table (unknow entries are filled by ``-1``)
+        :param cayley_table: a partially filled Cayley table (unknown entries are filled by ``-1``)
         :returns: a list of Cayley tables
         """
         if not self._check_input(cayley_table):
@@ -117,9 +117,9 @@ class CayleyDatabase:
     ) -> Tuple[Tensor, Tensor]:
         """
         get a list of possible completions of a partially filled Cayley table
-        (unknow entries are filled by ``-1``) using a machine learning model
+        (unknown entries are filled by ``-1``) using a machine learning model
 
-        :param cayley_table: a partially filled Cayley table (unknow entries are filled by ``-1``)
+        :param cayley_table: a partially filled Cayley table (unknown entries are filled by ``-1``)
         :returns: a tuple: (most probable completion, probabilistic cube)
         """
         self.model.eval()
@@ -202,11 +202,11 @@ class CayleyDatabase:
         * each puzzle is given to a pre-trained model of that database
         * if the model returns an associative table
           (not necessary the original one)
-          it is considered to be a sucessfull solution
+          it is considered to be a successful solution
 
         :param max_level: up to how many cells to omit when creating a puzzle;
             when not provided or explicitly set to ``-1`` it defaults to the total number of cells in a table
-        :returns: statistics of solved puzzles splitted by the levels of difficulty
+        :returns: statistics of solved puzzles split by the levels of difficulty
                   (number of cells omitted)
         """
         max_level = self.cardinality ** 2 if max_level == -1 else max_level

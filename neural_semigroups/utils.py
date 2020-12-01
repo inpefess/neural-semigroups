@@ -47,7 +47,7 @@ def random_semigroup(
     dim: int, maximal_tries: int
 ) -> Tuple[bool, torch.Tensor]:
     """
-    randomly serch for a semigroup Cayley table.
+    randomly search for a semigroup Cayley table.
     Not recommended to use with dim > 4
 
     :param dim: number of elements in a semigroup
@@ -57,12 +57,12 @@ def random_semigroup(
     """
     associative = False
     try_count = 0
-    mult = Magma(cardinality=dim)
+    magma = Magma(cardinality=dim)
     while not associative and try_count <= maximal_tries:
-        mult = Magma(cardinality=dim)
-        associative = mult.is_associative
+        magma = Magma(cardinality=dim)
+        associative = magma.is_associative
         try_count += 1
-    return associative, mult.cayley_table
+    return associative, magma.cayley_table
 
 
 def check_filename(filename: str) -> int:
@@ -398,7 +398,7 @@ def load_data_and_labels_from_smallsemi(
     Loads data from ``smallsemi`` package
 
     :param cardinality: which ``smallsemi`` file to use
-    :param data_path: where to seach for ``smallsemi`` data
+    :param data_path: where to search for ``smallsemi`` data
     :returns: (a tensor with Cayley tables, a tensor of their labels)
     """
     filename = path.join(
@@ -475,7 +475,7 @@ def partial_table_to_cube(table: Tensor) -> Tensor:
     create a probabilistic cube from a partially filled Cayley table
     ``-1`` is translated to :math:`\frac1n` where :math:`n` is table's cardinality
 
-    :param table: a Ceyley table, partially filled by ``-1``'s
+    :param table: a Cayley table, partially filled by ``-1``'s
     :returns: a probabilistic cube
     """
     cardinality = table.shape[0]
