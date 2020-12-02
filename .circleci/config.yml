@@ -31,7 +31,7 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            pytest --cov neural_semigroups --cov-report xml --cov-fail-under=98\
+            pytest --cov neural_semigroups --cov-report xml --cov-fail-under=99\
                    --junit-xml test-results/neural-semigroups.xml\
                    --doctest-modules neural_semigroups tests
       - run:
