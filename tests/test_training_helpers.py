@@ -204,7 +204,7 @@ class TestTrainingHelpers(TestCase):
         learning_pipeline(
             params={"learning_rate": 1.0, "epochs": 1},
             model=model,
-            loss=Loss(loss),
+            loss=loss,
             metrics={"loss": Loss(loss)},
             data_loaders=data_loaders,
         )

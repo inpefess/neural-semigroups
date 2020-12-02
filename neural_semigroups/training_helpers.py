@@ -15,7 +15,7 @@
 """
 from argparse import ArgumentParser, Namespace
 from datetime import datetime
-from typing import Dict, List, Tuple, Union
+from typing import Callable, Dict, List, Tuple, Union
 
 import torch
 from ignite.contrib.handlers.tensorboard_logger import (
@@ -31,9 +31,7 @@ from ignite.engine import (
     create_supervised_trainer,
 )
 from ignite.handlers import EarlyStopping, ModelCheckpoint
-from ignite.metrics import RunningAverage
-from ignite.metrics.loss import Loss
-from ignite.metrics import Metric
+from ignite.metrics import Metric, RunningAverage
 from torch.nn import Module
 from torch.optim import Adam
 from torch.utils.data import TensorDataset
@@ -291,7 +289,7 @@ def get_tensorboard_logger(
     return tb_logger
 
 
-def get_trainer(model: Module, learning_rate: float, loss: Loss) -> Engine:
+def get_trainer(model: Module, learning_rate: float, loss: Callable) -> Engine:
     """
     construct a trainer ``ignite`` engine with pre-attached progress bar and loss running average
 
@@ -321,7 +319,7 @@ def get_trainer(model: Module, learning_rate: float, loss: Loss) -> Engine:
 def learning_pipeline(
     params: Dict[str, Union[int, float]],
     model: Module,
-    loss: Loss,
+    loss: Callable,
     metrics: Dict[str, Metric],
     data_loaders: Tuple[DataLoader, DataLoader, DataLoader],
 ) -> None:
