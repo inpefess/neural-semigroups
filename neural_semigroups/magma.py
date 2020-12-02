@@ -124,9 +124,11 @@ class Magma:
         :returns: the index of the identity element or -1 if there is no identity
         """
         a_range = torch.arange(self.cardinality)
-        left_identity = (self.cayley_table == a_range).min(dim=1)[0].max(dim=0)
+        left_identity = (
+            torch.eq(self.cayley_table, a_range).min(dim=1)[0].max(dim=0)
+        )
         right_identity = (
-            (self.cayley_table.transpose(0, 1) == a_range)
+            torch.eq(self.cayley_table.transpose(0, 1), a_range)
             .min(dim=1)[0]
             .max(dim=0)
         )
@@ -147,8 +149,8 @@ class Magma:
         """
         a_range = torch.arange(self.cardinality)
         return bool(
-            (self.cayley_table.sort()[0] == a_range).min(dim=1)[0].min()
-            and (self.cayley_table.transpose(0, 1).sort()[0] == a_range)
+            torch.eq(self.cayley_table.sort()[0], a_range).min(dim=1)[0].min()
+            and torch.eq(self.cayley_table.transpose(0, 1).sort()[0], a_range)
             .min(dim=1)[0]
             .min()
         )

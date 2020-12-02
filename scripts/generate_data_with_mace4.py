@@ -32,7 +32,7 @@ def generate_partial_table(cardinality: int, known_cells_num: int) -> Tensor:
     """
     generate a Cayley table in which some cells are set to :math:`-1` (unknown)
 
-    >>> (generate_partial_table(2, 3) == -1).sum().item()
+    >>> torch.eq(generate_partial_table(2, 3), -1).sum().item()
     1
 
     :param cardinality: magma cardinality

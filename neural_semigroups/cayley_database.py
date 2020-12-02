@@ -102,7 +102,7 @@ class CayleyDatabase:
         if self.database is not None:
             # pylint: disable=not-callable
             partial_table = torch.tensor(cayley_table)
-            rows, cols = torch.where(partial_table != -1)
+            rows, cols = torch.where(torch.ne(partial_table, -1))
             for table in tqdm(
                 self.database, desc="full scan over Cayley database"
             ):

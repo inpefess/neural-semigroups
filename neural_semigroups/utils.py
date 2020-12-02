@@ -484,8 +484,8 @@ def partial_table_to_cube(table: Tensor) -> Tensor:
         dtype=torch.float32,
         device=CURRENT_DEVICE,
     )
-    rows, cols = torch.where(table != -1)
+    rows, cols = torch.where(torch.ne(table, -1))
     cube[rows, cols, table[rows, cols]] = 1.0
-    rows, cols = torch.where(table == -1)
+    rows, cols = torch.where(torch.eq(table, -1))
     cube[rows, cols, :] = 1 / cardinality
     return cube.reshape([-1, cardinality, cardinality, cardinality])
