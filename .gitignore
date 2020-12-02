@@ -21,3 +21,4 @@ test-results/
 dist/
 *.db
 *.pt
+.idea/
