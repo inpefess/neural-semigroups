@@ -46,7 +46,6 @@ A collection of different functions used by other modules.
 .. autofunction:: get_equivalent_magmas
 .. autofunction:: download_file_from_url
 .. autofunction:: download_smallsemi_data
-.. autofunction:: print_report
 .. autofunction:: get_newest_file
 .. autofunction:: get_two_indices_per_sample
 .. autofunction:: make_discrete

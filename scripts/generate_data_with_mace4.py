@@ -18,38 +18,51 @@ import sqlite3
 from argparse import ArgumentParser, Namespace
 from functools import partial
 from multiprocessing.pool import Pool
-from typing import List, Tuple
+from typing import Tuple
 
 import numpy as np
+import torch
+from torch import Tensor
 from tqdm import tqdm
 
 from neural_semigroups.utils import read_whole_file
 
 
-def write_mace_input(
-    indices: List[Tuple[int, int]], dim: int, filename: str
-) -> None:
+def generate_partial_table(cardinality: int, known_cells_num: int) -> Tensor:
+    """
+    generate a Cayley table in which some cells are set to :math:`-1` (unknown)
+
+    >>> (generate_partial_table(2, 3) == -1).sum().item()
+    1
+
+    :param cardinality: magma cardinality
+    :param known_cells_num: the number of cells to fill with numbers from :math:`0` to :math:`n-1`
+    :returns: a square table with numbers from :math:`-1` to :math:`n-1`
+    """
+    table = -torch.ones((cardinality, cardinality))
+    for pair in torch.randperm(cardinality * cardinality)[:known_cells_num]:
+        row, col = divmod(pair.item(), cardinality)
+        table[row, col] = torch.randint(cardinality, (1,)).item()
+    return table
+
+
+def write_mace_input(partial_table: Tensor, dim: int, filename: str) -> None:
     """
     write a randomised file in a Mace4 format
 
-    :param indices: a list of the known cells, as pairs (row, column)
+    :param partial_table: a Cayley table partially filled with :math:`-1`'s
     :param dim: total number of items in a magma
     :param filename: where to save the file
     :returns:
     """
     with open(filename, "w") as in_file:
-        print(
-            f"""
-list(distinct).
-[{", ".join(map(str, range(dim)))}].
-end_of_list.
-formulas(assumptions).
-(x * y) * z = x * (y * z).
-        """,
-            file=in_file,
-        )
-        for i, j in indices:
-            print(f"{i} * {j} = {np.random.randint(0, dim)}.", file=in_file)
+        print("formulas(assumptions).", file=in_file)
+        print("(x * y) * z = x * (y * z).", file=in_file)
+        for i in range(dim):
+            for j in range(dim):
+                cell = int(partial_table[i, j].item())
+                if cell != -1:
+                    print(f"{i} * {j} = {cell}.", file=in_file)
         print("end_of_list.", file=in_file)
 
 
@@ -62,22 +75,17 @@ def table_completion(dim: int, task_id: int) -> Tuple[str, str]:
     :returns:
     """
     np.random.seed(task_id)
-    dim_square = dim * dim
-    known_cells_num = np.random.randint(1, dim_square)
-    indices = [
-        divmod(pair, dim)
-        for pair in np.random.choice(
-            range(dim_square), known_cells_num
-        ).tolist()
-    ]
-    write_mace_input(indices, dim, f"{task_id}.in")
+    partial_table = generate_partial_table(
+        dim, int(torch.randint(1, dim * dim, (1,)).item())
+    )
+    write_mace_input(partial_table, dim, f"{task_id}.in")
     os.system(
         f"mace4 -n {dim} < {task_id}.in > {task_id}.out 2> {task_id}.err"
     )
     output = read_whole_file(f"{task_id}.out")
     errors = read_whole_file(f"{task_id}.err")
     os.system(f"rm {task_id}.in {task_id}.out {task_id}.err")
-    return (output, errors)
+    return output, errors
 
 
 def parse_args() -> Namespace:

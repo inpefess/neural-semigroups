@@ -15,7 +15,7 @@
 """
 from argparse import ArgumentParser, Namespace
 from datetime import datetime
-from typing import Dict, List, Tuple, Union
+from typing import Callable, Dict, List, Tuple, Union
 
 import torch
 from ignite.contrib.handlers.tensorboard_logger import (
@@ -31,11 +31,11 @@ from ignite.engine import (
     create_supervised_trainer,
 )
 from ignite.handlers import EarlyStopping, ModelCheckpoint
-from ignite.metrics import RunningAverage
-from ignite.metrics.loss import Loss, Metric
+from ignite.metrics import Metric, RunningAverage
 from torch.nn import Module
 from torch.optim import Adam
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import TensorDataset
+from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 
 from neural_semigroups.associator_loss import AssociatorLoss
@@ -83,7 +83,7 @@ def load_database_as_cubes(
     :param cardinality: cardinality of Cayley database (from ``smallsemi``)
     :param train_size: number of tables for training
     :param validation_size: number of tables for validation
-    :param dropout_rate: droupout is applied only to validation and test sets
+    :param dropout_rate: dropout is applied only to validation and test sets
     :returns: three arrays of probability Cayley cubes (train, validation, test
     ) and three arrays of labels for them
     """
@@ -262,7 +262,7 @@ def get_tensorboard_logger(
     creates a ``tensorboard`` logger which read metrics from given evaluators and attaches it to a given trainer
 
     :param trainer: an ``ignite`` trainer to attach to
-    :param ThreeEvaluators: a triple of train, validation, and test evaluators to get metrics from
+    :param evaluators: a triple of train, validation, and test evaluators to get metrics from
     :param metric_names: a list of metrics to log during validation and testing
     """
     tb_logger = TensorboardLogger(
@@ -289,7 +289,7 @@ def get_tensorboard_logger(
     return tb_logger
 
 
-def get_trainer(model: Module, learning_rate: float, loss: Loss) -> Engine:
+def get_trainer(model: Module, learning_rate: float, loss: Callable) -> Engine:
     """
     construct a trainer ``ignite`` engine with pre-attached progress bar and loss running average
 
@@ -319,7 +319,7 @@ def get_trainer(model: Module, learning_rate: float, loss: Loss) -> Engine:
 def learning_pipeline(
     params: Dict[str, Union[int, float]],
     model: Module,
-    loss: Loss,
+    loss: Callable,
     metrics: Dict[str, Metric],
     data_loaders: Tuple[DataLoader, DataLoader, DataLoader],
 ) -> None:
@@ -327,7 +327,6 @@ def learning_pipeline(
     run a common learning pipeline
 
     :param params: parameters of learning: epochs, learning_rate.
-    :param cardinality: a semigroup cardinality
     :param model: a network architecture
     :param loss: the criterion to optimize
     :param metrics: a dictionary of additional metrics to evaluate

@@ -13,14 +13,17 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+from shutil import rmtree
+
 # pylint: disable-all
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 import torch
+from torch.nn import Module
+
 from neural_semigroups.cayley_database import CayleyDatabase
 from neural_semigroups.constants import CURRENT_DEVICE
-from torch.nn import Module
 
 
 class TestCayleyDatabase(TestCase):
@@ -28,7 +31,9 @@ class TestCayleyDatabase(TestCase):
         torch.manual_seed(43)
         self.identity_module = Module()
         self.identity_module.forward = lambda x: x
-        self.cayley_db = CayleyDatabase(2, data_path="./tests")
+        temp_data_path = "./test_temp_data"
+        rmtree(temp_data_path, ignore_errors=True)
+        self.cayley_db = CayleyDatabase(2, data_path=temp_data_path)
         self.cayley_db.database = torch.tensor(
             [
                 [[0, 1], [1, 0]],
@@ -74,9 +79,9 @@ class TestCayleyDatabase(TestCase):
 
     def test_fill_in_with_model(self):
         self.cayley_db.cardinality = 2
-        input = [[-1, 0], [0, 1]]
+        some_input = [[-1, 0], [0, 1]]
         self.cayley_db.model = self.identity_module
-        table, cube = self.cayley_db.fill_in_with_model(input)
+        table, cube = self.cayley_db.fill_in_with_model(some_input)
         self.assertIsInstance(table, torch.Tensor)
         self.assertIsInstance(cube, torch.Tensor)
         self.assertEqual(table.dtype, torch.int64)

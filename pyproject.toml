@@ -23,7 +23,6 @@ classifiers=[
 python = "^3.6.1"
 torch = "*"
 tqdm = "*"
-pandas = "*"
 pytorch-ignite = "*"
 tensorboard = "*"
 
@@ -45,6 +44,7 @@ jupyterlab = "*"
 ipywidgets = "*"
 black = "^19.10b0"
 data-science-types = "*"
+vulture = "*"
 
 [tool.black]
 line-length=79

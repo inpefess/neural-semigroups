@@ -18,7 +18,8 @@ from typing import List, Optional, Tuple
 import torch
 from torch import Tensor
 from torch.nn import Module
-from torch.utils.data import TensorDataset, random_split
+from torch.utils.data import TensorDataset
+from torch.utils.data.dataset import random_split
 from tqdm import tqdm
 
 from neural_semigroups.constants import CAYLEY_DATABASE_PATH
@@ -69,7 +70,7 @@ class CayleyDatabase:
         """
         checks the input to be a correct Cayley table
 
-        :param cayley_table: a partially filled Cayley table (unknow entries are filled by ``-1``)
+        :param cayley_table: a partially filled Cayley table (unknown entries are filled by ``-1``)
         :returns: whether the input is correct
         """
         if isinstance(cayley_table, list):
@@ -90,7 +91,7 @@ class CayleyDatabase:
         get a list of possible completions of a partially filled Cayley table
         (unknown entries are filled by ``-1``)
 
-        :param cayley_table: a partially filled Cayley table (unknow entries are filled by ``-1``)
+        :param cayley_table: a partially filled Cayley table (unknown entries are filled by ``-1``)
         :returns: a list of Cayley tables
         """
         if not self._check_input(cayley_table):
@@ -116,9 +117,9 @@ class CayleyDatabase:
     ) -> Tuple[Tensor, Tensor]:
         """
         get a list of possible completions of a partially filled Cayley table
-        (unknow entries are filled by ``-1``) using a machine learning model
+        (unknown entries are filled by ``-1``) using a machine learning model
 
-        :param cayley_table: a partially filled Cayley table (unknow entries are filled by ``-1``)
+        :param cayley_table: a partially filled Cayley table (unknown entries are filled by ``-1``)
         :returns: a tuple: (most probable completion, probabilistic cube)
         """
         self.model.eval()
@@ -129,7 +130,7 @@ class CayleyDatabase:
         # pylint: disable=not-callable
         cube = partial_table_to_cube(torch.tensor(cayley_table))
         prediction = self.model(cube).detach()[0]
-        return (prediction.argmax(axis=-1), prediction)
+        return prediction.argmax(axis=-1), prediction
 
     def load_model(self, filename: str) -> None:
         """
@@ -146,7 +147,6 @@ class CayleyDatabase:
         """
         split a database of Cayley table in three: train, validation, and test
 
-        :param cayley_db: a database of Cayley tables
         :param train_size: number of tables in a train set
         :param validation_size: number of tables in a validation set
         :returns: a triple of distinct Cayley tables databases: ``(train, validation, test)``
@@ -202,11 +202,11 @@ class CayleyDatabase:
         * each puzzle is given to a pre-trained model of that database
         * if the model returns an associative table
           (not necessary the original one)
-          it is considered to be a sucessfull solution
+          it is considered to be a successful solution
 
         :param max_level: up to how many cells to omit when creating a puzzle;
             when not provided or explicitly set to ``-1`` it defaults to the total number of cells in a table
-        :returns: statistics of solved puzzles splitted by the levels of difficulty
+        :returns: statistics of solved puzzles split by the levels of difficulty
                   (number of cells omitted)
         """
         max_level = self.cardinality ** 2 if max_level == -1 else max_level

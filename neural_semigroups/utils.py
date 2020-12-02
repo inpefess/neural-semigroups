@@ -21,7 +21,6 @@ from os.path import basename, getmtime, join
 from shutil import rmtree
 from typing import List, Tuple
 
-import pandas as pd
 import requests
 import torch
 from torch import Tensor
@@ -48,7 +47,7 @@ def random_semigroup(
     dim: int, maximal_tries: int
 ) -> Tuple[bool, torch.Tensor]:
     """
-    randomly serch for a semigroup Cayley table.
+    randomly search for a semigroup Cayley table.
     Not recommended to use with dim > 4
 
     :param dim: number of elements in a semigroup
@@ -58,11 +57,12 @@ def random_semigroup(
     """
     associative = False
     try_count = 0
+    magma = Magma(cardinality=dim)
     while not associative and try_count <= maximal_tries:
-        mult = Magma(cardinality=dim)
-        associative = mult.is_associative
+        magma = Magma(cardinality=dim)
+        associative = magma.is_associative
         try_count += 1
-    return associative, mult.cayley_table
+    return associative, magma.cayley_table
 
 
 def check_filename(filename: str) -> int:
@@ -238,10 +238,10 @@ def find_substring_by_pattern(
     """
     search for a first occurrence of a given pattern in a string list
 
-    >>> strings = ["one", "two", "three"]
-    >>> find_substring_by_pattern(strings, "t", "o")
+    >>> some_strings = ["one", "two", "three"]
+    >>> find_substring_by_pattern(some_strings, "t", "o")
     'tw'
-    >>> find_substring_by_pattern(strings, "four", "five")
+    >>> find_substring_by_pattern(some_strings, "four", "five")
     Traceback (most recent call last):
        ...
     ValueError: pattern four.*five not found
@@ -287,36 +287,6 @@ def download_smallsemi_data(data_path: str) -> None:
     )
 
 
-def print_report(totals: torch.Tensor) -> pd.DataFrame:
-    """
-    print report in a pretty format
-
-    >>> totals = torch.tensor([[4, 4], [0, 1]])
-    >>> print_report(totals)
-           puzzles  solved  (%)
-    level
-    1      4             0    0
-    2      4             1   25
-
-    :param totals: a table with three columns:
-
-    * a column with total number of puzzles per level
-    * a column with numbers of correctly solved puzzles
-
-    :returns: the report in a form of ``pandas.DataFrame``
-
-    """
-    levels = torch.arange(1, totals.shape[1] + 1)
-    return pd.DataFrame(
-        {
-            "level": levels.numpy(),
-            "puzzles": totals[0].numpy(),
-            "solved": totals[1].numpy(),
-            "(%)": totals[1].numpy() * 100 // totals[0].numpy(),
-        }
-    ).set_index("level")
-
-
 def get_newest_file(dir_path: str) -> str:
     """
     get the last modified file from a diretory
@@ -331,7 +301,7 @@ def get_newest_file(dir_path: str) -> str:
     >>> get_newest_file("/tmp/tmp/")
     '/tmp/tmp/two'
 
-    :param path: a diretory path
+    :param dir_path: a directory path
     :returns: the last modified file's name
     """
     return max(
@@ -351,7 +321,8 @@ def get_two_indices_per_sample(
     (tensor([0, 0, 0, 0]), tensor([0, 0, 1, 1]), tensor([0, 1, 0, 1]))
 
     :param batch_size: number of samples in a batch
-    :pamam cardinality: number of possible values of an index
+    :param cardinality: number of possible values of an index
+    :returns: triples (index, index, index)
     """
     a_range = torch.arange(cardinality)
     return (
@@ -427,7 +398,7 @@ def load_data_and_labels_from_smallsemi(
     Loads data from ``smallsemi`` package
 
     :param cardinality: which ``smallsemi`` file to use
-    :param data_path: where to seach for ``smallsemi`` data
+    :param data_path: where to search for ``smallsemi`` data
     :returns: (a tensor with Cayley tables, a tensor of their labels)
     """
     filename = path.join(
@@ -504,7 +475,7 @@ def partial_table_to_cube(table: Tensor) -> Tensor:
     create a probabilistic cube from a partially filled Cayley table
     ``-1`` is translated to :math:`\frac1n` where :math:`n` is table's cardinality
 
-    :param table: a Ceyley table, partially filled by ``-1``'s
+    :param table: a Cayley table, partially filled by ``-1``'s
     :returns: a probabilistic cube
     """
     cardinality = table.shape[0]

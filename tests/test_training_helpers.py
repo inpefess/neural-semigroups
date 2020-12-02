@@ -23,11 +23,11 @@ from ignite.contrib.handlers.tqdm_logger import ProgressBar
 from ignite.engine import Engine, Events
 from ignite.handlers import EarlyStopping, ModelCheckpoint
 from ignite.metrics import Loss, RunningAverage
-from ignite.metrics.loss import Loss
 from torch import Tensor
 from torch.nn import Linear, Module, Sequential
 from torch.nn.functional import kl_div
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import TensorDataset
+from torch.utils.data.dataloader import DataLoader
 
 from neural_semigroups.constant_baseline import CURRENT_DEVICE
 from neural_semigroups.magma import Magma
@@ -51,7 +51,7 @@ class TestTrainingHelpers(TestCase):
         torch.manual_seed(47)
 
     def test_get_arguments(self):
-        args = "prog --cardinality 2 --train_size 1 --validation_size 1"
+        args = "program --cardinality 2 --train_size 1 --validation_size 1"
         with patch.object(sys, "argv", args.split(" ")):
             get_arguments()
 
@@ -160,7 +160,7 @@ class TestTrainingHelpers(TestCase):
 
     def test_get_tensorboard_logger(self):
         trainer = Engine(lambda x, y: 0.0)
-        three_evaluators = ThreeEvaluators(Engine(lambda x, y: 0.0), dict())
+        three_evaluators = ThreeEvaluators(Module(), dict())
         tensorboard_logger = get_tensorboard_logger(
             trainer, three_evaluators, []
         )
@@ -178,14 +178,13 @@ class TestTrainingHelpers(TestCase):
             )
 
     def test_learning_pipeline(self):
-        data_loaders = 3 * [
-            DataLoader(
-                TensorDataset(
-                    torch.ones([1, 2, 2, 2]).to(CURRENT_DEVICE),
-                    torch.ones([1, 2, 2, 2]).to(CURRENT_DEVICE),
-                )
+        data_loader = DataLoader(
+            TensorDataset(
+                torch.ones([1, 2, 2, 2]).to(CURRENT_DEVICE),
+                torch.ones([1, 2, 2, 2]).to(CURRENT_DEVICE),
             )
-        ]
+        )
+        data_loaders = (data_loader, data_loader, data_loader)
 
         class NewModel(torch.nn.Module):
             def __init__(self):

@@ -79,7 +79,7 @@ def write_database(
 
 def main():
     """ do all """
-    args = get_arguments([Choices.IDENTITY, Choices.INVERSES])
+    args = get_arguments([Choices.IDENTITY.value, Choices.INVERSES.value])
     cayley_tables = load_database(args.filter, args.dim)
     filtered = list()
     for cayley_table in tqdm(cayley_tables):

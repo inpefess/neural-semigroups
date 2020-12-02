@@ -41,7 +41,7 @@ class AssociatorLoss(Module):
         """
         finds a probabilistic associator of a given probabilistic Cayley cube
 
-        First, we build two 4-index tensors representating probability distributions of products :math:`a\\left(bc\\right)`
+        First, we build two 4-index tensors representing probability distributions of products :math:`a\\left(bc\\right)`
         and :math:`\\left(ab\\right)c`, respectively:
 
         :math:`T_{ijkl}=P\\left\\{e_i\\left(e_je_k\\right)=e_l\\right\\}=
