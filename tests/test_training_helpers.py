@@ -22,7 +22,7 @@ import torch
 from ignite.contrib.handlers.tqdm_logger import ProgressBar
 from ignite.engine import Engine, Events
 from ignite.handlers import EarlyStopping, ModelCheckpoint
-from ignite.metrics import RunningAverage, Loss
+from ignite.metrics import Loss, RunningAverage
 from torch import Tensor
 from torch.nn import Linear, Module, Sequential
 from torch.nn.functional import kl_div
@@ -160,7 +160,7 @@ class TestTrainingHelpers(TestCase):
 
     def test_get_tensorboard_logger(self):
         trainer = Engine(lambda x, y: 0.0)
-        three_evaluators = ThreeEvaluators(Engine(lambda x, y: 0.0), dict())
+        three_evaluators = ThreeEvaluators(Module(), dict())
         tensorboard_logger = get_tensorboard_logger(
             trainer, three_evaluators, []
         )
@@ -178,14 +178,13 @@ class TestTrainingHelpers(TestCase):
             )
 
     def test_learning_pipeline(self):
-        data_loaders = 3 * [
-            DataLoader(
-                TensorDataset(
-                    torch.ones([1, 2, 2, 2]).to(CURRENT_DEVICE),
-                    torch.ones([1, 2, 2, 2]).to(CURRENT_DEVICE),
-                )
+        data_loader = DataLoader(
+            TensorDataset(
+                torch.ones([1, 2, 2, 2]).to(CURRENT_DEVICE),
+                torch.ones([1, 2, 2, 2]).to(CURRENT_DEVICE),
             )
-        ]
+        )
+        data_loaders = (data_loader, data_loader, data_loader)
 
         class NewModel(torch.nn.Module):
             def __init__(self):
@@ -205,7 +204,7 @@ class TestTrainingHelpers(TestCase):
         learning_pipeline(
             params={"learning_rate": 1.0, "epochs": 1},
             model=model,
-            loss=loss,
+            loss=Loss(loss),
             metrics={"loss": Loss(loss)},
             data_loaders=data_loaders,
         )

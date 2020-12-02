@@ -29,7 +29,7 @@ def get_linear_bn_relu_sequence(
 ) -> Module:
     """
     constructs a sequential model of triples of
-    linear, relu, and batchnorm layers of given dimensions
+    linear, relu, and batch norm layers of given dimensions
 
     :param dims: dimensions for layers in a sequence
     :param layer_name_postfix:
@@ -56,7 +56,7 @@ def get_encoder_and_decoder_layers(
     construct symmetrical encoder and decoder modules
 
     :param dims: the dimensions of layers in an encoder part (the same dimensions are used for a decoder)
-    :param split_last: if ``True``, makes their last encoder dimensions twice larger than the first decoder dimension (for a reparameterization trick)
+    :param split_last: if ``True``, makes their last encoder dimensions twice larger than the first decoder dimension (for a reparametrization trick)
     :returns: a pair of two sequential models, representing encoder and decoder layers
     """
     encoder_dims = dims.copy()
@@ -85,7 +85,7 @@ class MagmaDAE(Module):
         :param cardinality: the number of elements in a magma
         :param hidden_dims: a list of sizes of hidden layers of the encoder and the decoder
         :param dropout_rate: what percentage of cells from the Cayley table to substitute with uniform random variables
-        :param do_reparametrization: if ``True``, adds a reparameterization trick
+        :param do_reparametrization: if ``True``, adds a reparametrization trick
         """
         super().__init__()
         self.cardinality = cardinality
@@ -134,7 +134,7 @@ class MagmaDAE(Module):
             .transpose(1, 3)
         )
 
-    def reparameterize(self, mu_and_sigma: Tensor) -> Tensor:
+    def reparametrize(self, mu_and_sigma: Tensor) -> Tensor:
         """
         do a reparametrization trick
 
@@ -154,14 +154,14 @@ class MagmaDAE(Module):
         forward pass inherited from Module
 
         :param cayley_cubes: a batch of probabilistic representations of magmas
-        :returns: autoencoded probabilistic representations of magmas
+        :returns: auto-encoded probabilistic representations of magmas
         """
         corrupted_input = corrupt_input(
             cayley_cubes, self.dropout_rate if self.training else 0.0
         )
         encoded_input = self.encode(corrupted_input)
-        reparameterized_input = self.reparameterize(encoded_input)
-        decoded_input = self.decode(reparameterized_input)
+        reparametrized_input = self.reparametrize(encoded_input)
+        decoded_input = self.decode(reparametrized_input)
         return torch.where(
             corrupted_input == 1.0,
             self._nearly_one,
