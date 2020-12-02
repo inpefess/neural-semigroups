@@ -22,3 +22,4 @@ dist/
 *.db
 *.pt
 .idea/
+test_temp_data/
