@@ -66,11 +66,14 @@ def write_mace_input(partial_table: Tensor, dim: int, filename: str) -> None:
         print("end_of_list.", file=in_file)
 
 
-def table_completion(dim: int, task_id: int) -> Tuple[str, str]:
+def table_completion(
+    dim: int, mace_timeout: int, task_id: int
+) -> Tuple[str, str]:
     """
     generate a random incomplete Cayley table and complete it
 
     :param dim: total number of items in a magma
+    :param mace_timeout: number of seconds for ``mace4`` to search for a model or :math:``-1`` if it can search forever
     :param task_id: needed for using with multiprocessing
     :returns:
     """
@@ -79,9 +82,8 @@ def table_completion(dim: int, task_id: int) -> Tuple[str, str]:
         dim, int(torch.randint(1, dim * dim, (1,)).item())
     )
     write_mace_input(partial_table, dim, f"{task_id}.in")
-    os.system(
-        f"mace4 -n {dim} < {task_id}.in > {task_id}.out 2> {task_id}.err"
-    )
+    io_redirections = f"< {task_id}.in > {task_id}.out 2> {task_id}.err"
+    os.system(f"mace4 -n {dim} -t {mace_timeout} {io_redirections}")
     output = read_whole_file(f"{task_id}.out")
     errors = read_whole_file(f"{task_id}.err")
     os.system(f"rm {task_id}.in {task_id}.out {task_id}.err")
@@ -97,6 +99,9 @@ def parse_args() -> Namespace:
     argument_parser.add_argument("--number_of_tasks", type=int, required=True)
     argument_parser.add_argument(
         "--number_of_processes", type=int, required=True
+    )
+    argument_parser.add_argument(
+        "--mace_timeout", type=int, required=False, default=-1
     )
     argument_parser.add_argument("--database_name", type=str, required=True)
     args = argument_parser.parse_args()
@@ -145,7 +150,7 @@ def main():
         create_if_not_exist(args.database_name)
         with tqdm(total=args.number_of_tasks) as progress_bar:
             for output, errors in pool.imap_unordered(
-                partial(table_completion, args.dim),
+                partial(table_completion, args.dim, args.mace_timeout),
                 range(args.number_of_tasks),
             ):
                 write_mace_output(args.database_name, (output, errors))
