@@ -45,6 +45,7 @@ ipywidgets = "*"
 black = "^19.10b0"
 data-science-types = "*"
 vulture = "*"
+kaggle = "*"
 
 [tool.black]
 line-length=79
