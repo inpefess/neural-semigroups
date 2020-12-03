@@ -72,7 +72,7 @@ class TestTrainingHelpers(TestCase):
             test_labels,
         )
         train_loader, validation_loader, test_loader = get_loaders(
-            "filename", 1, 1, 1, 0.0
+            1, 1, 1, 1, 0.0
         )
         batch = [i for i in train_loader][0]
         self.assertIsInstance(batch, list)
@@ -143,7 +143,7 @@ class TestTrainingHelpers(TestCase):
         self.assertIsInstance(completed_handlers[1][0], ModelCheckpoint)
 
     def test_get_trainer(self):
-        trainer = get_trainer(Sequential(Linear(1, 1)), 1.0, Loss(lambda x: x))
+        trainer = get_trainer(Sequential(Linear(1, 1)), 1.0, lambda x: x)
         print(trainer._event_handlers[Events.ITERATION_COMPLETED])
         self.assertIsInstance(
             trainer._event_handlers[Events.ITERATION_COMPLETED][1][0].__self__,

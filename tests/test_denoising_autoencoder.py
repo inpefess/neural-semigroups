@@ -17,6 +17,7 @@
 from unittest import TestCase
 
 import torch
+
 from neural_semigroups.constants import CURRENT_DEVICE
 from neural_semigroups.denoising_autoencoder import MagmaDAE
 from neural_semigroups.magma import Magma
@@ -30,6 +31,12 @@ class TestMagmaDAE(TestCase):
         self.magma_dae = MagmaDAE(
             cardinality=self.cardinality, hidden_dims=[4], dropout_rate=0.6
         ).to(CURRENT_DEVICE)
+        self.magma_vae = MagmaDAE(
+            cardinality=self.cardinality,
+            hidden_dims=[4],
+            dropout_rate=0.6,
+            do_reparametrization=True,
+        )
 
     def test_forward(self):
         cayley_cube = (
@@ -44,4 +51,7 @@ class TestMagmaDAE(TestCase):
         )
         self.assertEqual(
             self.magma_dae(cayley_cube).detach().sum().item(), 32.0,
+        )
+        self.assertEqual(
+            self.magma_vae(cayley_cube).detach().sum().item(), 32.0,
         )

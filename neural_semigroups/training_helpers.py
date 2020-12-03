@@ -337,13 +337,13 @@ def learning_pipeline(
 
     @trainer.on(Events.EPOCH_COMPLETED)
     # pylint: disable=unused-argument,unused-variable
-    def validate(trainer):
+    def validate(a_trainer):
         evaluators.train.run(data_loaders[0])
         evaluators.validation.run(data_loaders[1])
 
     @trainer.on(Events.COMPLETED)
     # pylint: disable=unused-argument,unused-variable
-    def test(trainer):
+    def test(a_trainer):
         model.load_state_dict(torch.load(get_newest_file("checkpoints")))
         evaluators.test.run(data_loaders[2])
 

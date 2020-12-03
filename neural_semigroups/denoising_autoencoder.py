@@ -163,9 +163,11 @@ class MagmaDAE(Module):
         reparametrized_input = self.reparametrize(encoded_input)
         decoded_input = self.decode(reparametrized_input)
         return torch.where(
-            corrupted_input == 1.0,
+            torch.eq(corrupted_input, 1.0),
             self._nearly_one,
             torch.where(
-                corrupted_input == 0.0, self._nearly_zero, decoded_input
+                torch.eq(corrupted_input, 0.0),
+                self._nearly_zero,
+                decoded_input,
             ),
         )
