@@ -1,0 +1,13 @@
+{
+  "id": "inpefess/neural-semigroups-denoising-autoencoder",
+  "title": "Neural Semigroups: Denoising Autoencoder",
+  "code_file": "train-dae-on-kaggle.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_internet": "true",
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": []
+}
