@@ -120,7 +120,9 @@ class TestUtils(TestCase):
             )
 
     def test_get_equivalent_magmas(self):
-        equivalent_groups = get_equivalent_magmas(FOUR_GROUP.view(1, 4, 4))
+        equivalent_groups = get_equivalent_magmas(
+            FOUR_GROUP.view(1, 4, 4).to(CURRENT_DEVICE)
+        )
         self.assertIsInstance(equivalent_groups, torch.Tensor)
         n = equivalent_groups.shape[0]
         self.assertEqual(n, 4)
@@ -132,9 +134,11 @@ class TestUtils(TestCase):
                 )
             )
         equivalent_magmas = get_equivalent_magmas(
-            torch.tensor([[[1, 1], [0, 0]]])
+            torch.tensor([[[1, 1], [0, 0]]], device=CURRENT_DEVICE)
         )
-        true_equivalent_magmas = [[[1, 0], [1, 0]], [[1, 1], [0, 0]]]
+        true_equivalent_magmas = torch.tensor(
+            [[[1, 0], [1, 0]], [[1, 1], [0, 0]]], device=CURRENT_DEVICE
+        )
         self.assertIsInstance(equivalent_magmas, torch.Tensor)
         n = equivalent_magmas.shape[0]
         self.assertEqual(n, 2)
@@ -142,8 +146,7 @@ class TestUtils(TestCase):
             self.assertIsInstance(equivalent_magmas[i], torch.Tensor)
             self.assertTrue(
                 torch.allclose(
-                    equivalent_magmas[i],
-                    torch.tensor(true_equivalent_magmas[i]).to(CURRENT_DEVICE),
+                    equivalent_magmas[i], true_equivalent_magmas[i],
                 )
             )
 
