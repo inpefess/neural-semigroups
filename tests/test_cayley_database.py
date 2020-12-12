@@ -112,7 +112,7 @@ class TestCayleyDatabase(TestCase):
     def test_augment_by_equivalent_tables(self):
         database = torch.tensor(
             [[[0, 1], [1, 0]], [[1, 0], [0, 1]], [[1, 0], [1, 1]]]
-        )
+        ).to(CURRENT_DEVICE)
         true_database = torch.tensor(
             [
                 [[0, 0], [1, 0]],

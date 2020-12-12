@@ -180,19 +180,21 @@ def get_equivalent_magmas(cayley_tables: torch.Tensor) -> torch.Tensor:
     """
     equivalent_cayley_tables = list()
     for permutation in permutations(range(cayley_tables.shape[1])):
-        permutation_tensor = torch.tensor(permutation, device=CURRENT_DEVICE)
+        permutation_tensor = torch.tensor(
+            permutation, device=cayley_tables.device
+        )
         sample_index, one, two = get_two_indices_per_sample(
             cayley_tables.shape[0], cayley_tables.shape[1]
         )
         isomorphic_cayley_tables = torch.zeros(
-            cayley_tables.shape, dtype=torch.long, device=CURRENT_DEVICE
+            cayley_tables.shape, dtype=torch.long, device=cayley_tables.device
         )
         isomorphic_cayley_tables[
             sample_index, permutation_tensor[one], permutation_tensor[two]
         ] = permutation_tensor[cayley_tables[sample_index, one, two]]
         equivalent_cayley_tables.append(isomorphic_cayley_tables)
         anti_isomorphic_cayley_tables = torch.zeros(
-            cayley_tables.shape, dtype=torch.long, device=CURRENT_DEVICE
+            cayley_tables.shape, dtype=torch.long, device=cayley_tables.device
         )
         anti_isomorphic_cayley_tables[
             sample_index, permutation_tensor[one], permutation_tensor[two]
