@@ -410,10 +410,8 @@ def load_data_and_labels_from_smallsemi(
     if not path.exists(filename):
         download_smallsemi_data(data_path)
     with gzip.open(filename, "rb") as file:
-        database = import_smallsemi_format(file.readlines()).to(CURRENT_DEVICE)
-    labels = torch.ones(
-        len(database), dtype=torch.int64, device=CURRENT_DEVICE
-    )
+        database = import_smallsemi_format(file.readlines())
+    labels = torch.ones(len(database), dtype=torch.int64)
     return database, labels
 
 
