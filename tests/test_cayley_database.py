@@ -109,24 +109,6 @@ class TestCayleyDatabase(TestCase):
         self.assertFalse(self.cayley_db._check_input([[-2, 0], [0, 0]]))
         self.assertFalse(self.cayley_db._check_input([[2, 0], [0, 0]]))
 
-    def test_augment_by_equivalent_tables(self):
-        database = torch.tensor(
-            [[[0, 1], [1, 0]], [[1, 0], [0, 1]], [[1, 0], [1, 1]]]
-        ).to(CURRENT_DEVICE)
-        true_database = torch.tensor(
-            [
-                [[0, 0], [1, 0]],
-                [[0, 1], [0, 0]],
-                [[0, 1], [1, 0]],
-                [[1, 0], [0, 1]],
-                [[1, 0], [1, 1]],
-                [[1, 1], [0, 1]],
-            ]
-        ).to(CURRENT_DEVICE)
-        self.cayley_db.database = database
-        self.cayley_db.augment_by_equivalent_tables()
-        self.assertTrue(torch.allclose(true_database, self.cayley_db.database))
-
     def test_train_test_split(self):
         train, validation, test = self.cayley_db.train_test_split(2, 1)
         self.assertTrue(

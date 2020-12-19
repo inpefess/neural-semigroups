@@ -25,7 +25,6 @@ from tqdm import tqdm
 from neural_semigroups.constants import CAYLEY_DATABASE_PATH
 from neural_semigroups.magma import Magma
 from neural_semigroups.utils import (
-    get_equivalent_magmas,
     load_data_and_labels_from_file,
     load_data_and_labels_from_smallsemi,
     partial_table_to_cube,
@@ -58,13 +57,6 @@ class CayleyDatabase:
             if database_filename is None
             else load_data_and_labels_from_file(database_filename)
         )
-
-    def augment_by_equivalent_tables(self) -> None:
-        """
-        for every Cayley table in a previously loaded database adds all of its
-        equivalent tables to the database
-        """
-        self.database = get_equivalent_magmas(self.database)
 
     def _check_input(self, cayley_table: List[List[int]]) -> bool:
         """
