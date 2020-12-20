@@ -14,7 +14,6 @@
    limitations under the License.
 """
 from neural_semigroups.associator_loss import AssociatorLoss
-from neural_semigroups.cayley_database import CayleyDatabase
 from neural_semigroups.cyclic_group import CyclicGroup
 from neural_semigroups.denoising_autoencoder import MagmaDAE
 from neural_semigroups.magma import Magma
