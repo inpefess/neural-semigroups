@@ -25,7 +25,7 @@ from torch.nn.functional import dropout2d
 from tqdm import tqdm
 
 from neural_semigroups.constants import CURRENT_DEVICE
-from neural_semigroups.magma import Magma
+from neural_semigroups.magma import Magma, get_two_indices_per_sample
 
 # the Cayley table of Klein Vierergruppe
 # pylint: disable=not-callable
@@ -233,28 +233,6 @@ def get_newest_file(dir_path: str) -> str:
     return max(
         [join(dir_path, filename) for filename in listdir(dir_path)],
         key=getmtime,
-    )
-
-
-def get_two_indices_per_sample(
-    batch_size: int, cardinality: int
-) -> Tuple[Tensor, Tensor, Tensor]:
-    """
-    generates all possible combination of two indices
-    for each sample in a batch
-
-    >>> get_two_indices_per_sample(1, 2)
-    (tensor([0, 0, 0, 0]), tensor([0, 0, 1, 1]), tensor([0, 1, 0, 1]))
-
-    :param batch_size: number of samples in a batch
-    :param cardinality: number of possible values of an index
-    :returns: triples (index, index, index)
-    """
-    a_range = torch.arange(cardinality)
-    return (
-        torch.arange(batch_size).repeat_interleave(cardinality * cardinality),
-        a_range.repeat_interleave(cardinality).repeat(batch_size),
-        a_range.repeat(cardinality).repeat(batch_size),
     )
 
 

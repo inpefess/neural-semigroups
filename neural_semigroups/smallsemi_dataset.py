@@ -95,3 +95,9 @@ class Smallsemi(TensorDataset):
             )
         with gzip.open(filenames[0], "rb") as file:
             self.tensors = (import_smallsemi_format(file.readlines()),)
+
+    def __getitem__(self, index):
+        tensors = super().__getitem__(index)
+        if self.transform is not None:
+            tensors = tuple(self.transform(tensor) for tensor in tensors)
+        return tensors
