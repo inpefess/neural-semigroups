@@ -194,7 +194,7 @@ def add_early_stopping_and_checkpoint(
     def score(engine):
         return -engine.state.metrics["loss"]
 
-    early_stopping = EarlyStopping(10, score, trainer)
+    early_stopping = EarlyStopping(100, score, trainer)
     evaluator.add_event_handler(Events.COMPLETED, early_stopping)
     checkpoint = ModelCheckpoint(
         "checkpoints", "", score_function=score, require_empty=False
