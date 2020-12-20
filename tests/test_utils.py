@@ -21,8 +21,6 @@ import torch
 from neural_semigroups.constants import CURRENT_DEVICE
 from neural_semigroups.utils import (
     FOUR_GROUP,
-    check_filename,
-    check_smallsemi_filename,
     corrupt_input,
     get_equivalent_magmas,
     get_magma_by_index,
@@ -47,36 +45,6 @@ class TestUtils(TestCase):
         success, cayley_table = random_semigroup(2, 1)
         self.assertTrue(success)
         self.assertEqual(cayley_table.shape, torch.Size([2, 2]))
-
-    def test_check_filename(self):
-        with self.assertRaises(ValueError):
-            check_filename(123)
-        with self.assertRaises(ValueError):
-            check_filename("strange.name")
-        with self.assertRaises(ValueError):
-            check_filename("very.strange.name")
-        with self.assertRaises(ValueError):
-            check_filename("semigroup.strange.name")
-        with self.assertRaises(ValueError):
-            check_filename("semigroup.name.zip")
-        self.assertEqual(check_filename("monoid.1.zip"), 1)
-
-    def test_check_smallsemi_filename(self):
-        with self.assertRaises(ValueError):
-            check_smallsemi_filename(123)
-        with self.assertRaises(ValueError):
-            check_smallsemi_filename("very.very.strange.name")
-        with self.assertRaises(ValueError):
-            check_smallsemi_filename("very.strange.name")
-        with self.assertRaises(ValueError):
-            check_smallsemi_filename("strange.name.gz")
-        with self.assertRaises(ValueError):
-            check_smallsemi_filename("name.gl.gz")
-        with self.assertRaises(ValueError):
-            check_smallsemi_filename("datan.gl.gz")
-        with self.assertRaises(ValueError):
-            check_smallsemi_filename("data1.gl.gz")
-        self.assertEqual(check_smallsemi_filename("data2.gl.gz"), 2)
 
     def test_get_magma_by_index(self):
         self.assertTrue(

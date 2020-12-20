@@ -34,12 +34,10 @@ from ignite.handlers import EarlyStopping, ModelCheckpoint
 from ignite.metrics import Metric, RunningAverage
 from torch.nn import Module
 from torch.optim import Adam
-from torch.utils.data import TensorDataset
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 
 from neural_semigroups.associator_loss import AssociatorLoss
-from neural_semigroups.cayley_database import CayleyDatabase
 from neural_semigroups.constants import CURRENT_DEVICE
 from neural_semigroups.magma import Magma
 from neural_semigroups.precise_guess_loss import PreciseGuessLoss
@@ -62,52 +60,6 @@ def generate_features_and_labels(
         features_list.append(cube)
     features = torch.stack(features_list)
     return corrupt_input(features, dropout_rate), features
-
-
-def load_database_as_cubes(
-    cardinality: int,
-    train_size: int,
-    validation_size: int,
-    dropout_rate: float,
-) -> Tuple[
-    torch.Tensor,
-    torch.Tensor,
-    torch.Tensor,
-    torch.Tensor,
-    torch.Tensor,
-    torch.Tensor,
-]:
-    """
-    load a database file to probability cubes representation
-
-    :param cardinality: cardinality of Cayley database (from ``smallsemi``)
-    :param train_size: number of tables for training
-    :param validation_size: number of tables for validation
-    :param dropout_rate: dropout is applied only to validation and test sets
-    :returns: three arrays of probability Cayley cubes (train, validation, test
-    ) and three arrays of labels for them
-    """
-    train, validation, test = CayleyDatabase(cardinality).train_test_split(
-        train_size, validation_size
-    )
-    train_cubes = list()
-    for cayley_table in tqdm(train.database, desc="generating train cubes"):
-        train_cubes.append(Magma(cayley_table).probabilistic_cube)
-    validation_cubes, validation_labels = generate_features_and_labels(
-        validation.database, dropout_rate
-    )
-    test_cubes, test_labels = generate_features_and_labels(
-        test.database, dropout_rate
-    )
-    train_labels = torch.stack(train_cubes)
-    return (
-        train_labels,
-        validation_cubes,
-        test_cubes,
-        train_labels,
-        validation_labels,
-        test_labels,
-    )
 
 
 def get_arguments() -> Namespace:
@@ -349,40 +301,3 @@ def learning_pipeline(
     )
     with get_tensorboard_logger(trainer, evaluators, list(metrics.keys())):
         trainer.run(data_loaders[0], max_epochs=params["epochs"])
-
-
-def get_loaders(
-    cardinality: int,
-    batch_size: int,
-    train_size: int,
-    validation_size: int,
-    dropout_rate: float,
-) -> Tuple[DataLoader, DataLoader, DataLoader]:
-    """
-    get train and validation data loaders
-
-    :param cardinality: the cardinality of a ``smallsemi`` database
-    :param batch_size: batch size (common for train and validation)
-    :param train_size: number of tables for training
-    :param validation_size: number of tables for validation
-    :param dropout_rate: a dropout rate for validation and test set 'labels'
-    :returns: a triple of train, validation, and test data loaders
-    """
-    (
-        train_tensor,
-        val_tensor,
-        test_tensor,
-        train_labels,
-        validation_labels,
-        test_labels,
-    ) = load_database_as_cubes(
-        cardinality, train_size, validation_size, dropout_rate
-    )
-    train_data = TensorDataset(train_tensor, train_labels)
-    val_data = TensorDataset(val_tensor, validation_labels)
-    test_data = TensorDataset(test_tensor, test_labels)
-    return (
-        DataLoader(train_data, batch_size=batch_size, shuffle=True),
-        DataLoader(val_data, batch_size=batch_size, shuffle=True),
-        DataLoader(test_data, batch_size=batch_size, shuffle=True),
-    )
