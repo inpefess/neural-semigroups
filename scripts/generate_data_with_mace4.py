@@ -18,9 +18,8 @@ import sqlite3
 from argparse import ArgumentParser, Namespace
 from functools import partial
 from multiprocessing.pool import Pool
-from typing import Tuple
+from typing import List, Tuple
 
-import numpy as np
 import torch
 from torch import Tensor
 from tqdm import tqdm
@@ -67,23 +66,26 @@ def write_mace_input(partial_table: Tensor, dim: int, filename: str) -> None:
 
 
 def table_completion(
-    dim: int, mace_timeout: int, task_id: int
+    dims: List[int], mace_timeout: int, mace_memory_mb: int, task_id: int
 ) -> Tuple[str, str]:
     """
     generate a random incomplete Cayley table and complete it
 
-    :param dim: total number of items in a magma
+    :param dims: cardinalities of magmas to be generated in each task
     :param mace_timeout: number of seconds for ``mace4`` to search for a model or :math:``-1`` if it can search forever
+    :param mace_memory_mb: number of memory used by a single ``mace4`` process in megabytes
     :param task_id: needed for using with multiprocessing
     :returns:
     """
-    np.random.seed(task_id)
+    dim = dims[task_id]
     partial_table = generate_partial_table(
         dim, int(torch.randint(1, dim * dim, (1,)).item())
     )
     write_mace_input(partial_table, dim, f"{task_id}.in")
     io_redirections = f"< {task_id}.in > {task_id}.out 2> {task_id}.err"
-    os.system(f"mace4 -n {dim} -t {mace_timeout} {io_redirections}")
+    os.system(
+        f"mace4 -n {dim} -t {mace_timeout} -b {mace_memory_mb} {io_redirections}"
+    )
     output = read_whole_file(f"{task_id}.out")
     errors = read_whole_file(f"{task_id}.err")
     os.system(f"rm {task_id}.in {task_id}.out {task_id}.err")
@@ -95,13 +97,17 @@ def parse_args() -> Namespace:
     :returns: arguments namespace for the script
     """
     argument_parser = ArgumentParser()
-    argument_parser.add_argument("--dim", type=int, required=True)
+    argument_parser.add_argument("--max_dim", type=int, required=True)
+    argument_parser.add_argument("--min_dim", type=int, required=True)
     argument_parser.add_argument("--number_of_tasks", type=int, required=True)
     argument_parser.add_argument(
         "--number_of_processes", type=int, required=True
     )
     argument_parser.add_argument(
         "--mace_timeout", type=int, required=False, default=-1
+    )
+    argument_parser.add_argument(
+        "--mace_memory_mb", type=int, required=False, default=500
     )
     argument_parser.add_argument("--database_name", type=str, required=True)
     args = argument_parser.parse_args()
@@ -146,11 +152,21 @@ def write_mace_output(database_name: str, values: Tuple[str, str]) -> None:
 def main():
     """ do all """
     args = parse_args()
+    dims = (
+        torch.randint(args.min_dim, args.max_dim, (args.number_of_tasks,))
+        .numpy()
+        .tolist()
+    )
     with Pool(processes=args.number_of_processes) as pool:
         create_if_not_exist(args.database_name)
         with tqdm(total=args.number_of_tasks) as progress_bar:
             for output, errors in pool.imap_unordered(
-                partial(table_completion, args.dim, args.mace_timeout),
+                partial(
+                    table_completion,
+                    dims,
+                    args.mace_timeout,
+                    args.mace_memory_mb,
+                ),
                 range(args.number_of_tasks),
             ):
                 write_mace_output(args.database_name, (output, errors))
