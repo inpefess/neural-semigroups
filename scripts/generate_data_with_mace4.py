@@ -166,7 +166,7 @@ def main():
     """ do all """
     args = parse_args()
     dims = (
-        torch.randint(args.min_dim, args.max_dim, (args.number_of_tasks,))
+        torch.randint(args.min_dim, args.max_dim + 1, (args.number_of_tasks,))
         .numpy()
         .tolist()
     )
