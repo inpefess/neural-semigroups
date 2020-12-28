@@ -15,6 +15,7 @@
 """
 import os
 import sqlite3
+import subprocess
 from argparse import ArgumentParser, Namespace
 from functools import partial
 from multiprocessing.pool import Pool
@@ -82,13 +83,25 @@ def table_completion(
         dim, int(torch.randint(1, dim * dim, (1,)).item())
     )
     write_mace_input(partial_table, dim, f"{task_id}.in")
-    io_redirections = f"< {task_id}.in > {task_id}.out 2> {task_id}.err"
-    os.system(
-        f"mace4 -n {dim} -t {mace_timeout} -b {mace_memory_mb} {io_redirections}"
-    )
+    with open(f"{task_id}.in", "r") as task_in, open(
+        f"{task_id}.out", "w"
+    ) as task_out, open(f"{task_id}.err", "w") as task_err:
+        subprocess.run(
+            [
+                "mace4",
+                f"-n {dim}",
+                f"-t {mace_timeout}",
+                f"-b {mace_memory_mb}",
+            ],
+            stdin=task_in,
+            stdout=task_out,
+            stderr=task_err,
+            check=False,
+        )
     output = read_whole_file(f"{task_id}.out")
     errors = read_whole_file(f"{task_id}.err")
-    os.system(f"rm {task_id}.in {task_id}.out {task_id}.err")
+    for extension in ["in", "out", "err"]:
+        os.remove(f"{task_id}.{extension}")
     return output, errors
 
 
