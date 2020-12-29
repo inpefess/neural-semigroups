@@ -46,6 +46,7 @@ black = "^19.10b0"
 data-science-types = "*"
 vulture = "*"
 kaggle = "*"
+matplotlib = "*"
 
 [tool.black]
 line-length=79
