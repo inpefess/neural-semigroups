@@ -13,11 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from os import environ, path
-
 import torch
 
-CAYLEY_DATABASE_PATH = path.join(environ["HOME"], "neural-semigroups-data")
 CURRENT_DEVICE = (
     f"cuda:{torch.cuda.current_device()}"
     if torch.cuda.is_available()
