@@ -33,6 +33,25 @@ class Smallsemi(TensorDataset):
     """
     a ``torch.util.data.Dataset`` wrapper for the data
     from https://www.gap-system.org/Packages/smallsemi.html
+
+    >>> import shutil
+    >>> import os
+    >>> test_temp_data = "test_temp_data"
+    >>> shutil.rmtree(test_temp_data, ignore_errors=True)
+    >>> os.mkdir(test_temp_data)
+    >>> smallsemi = Smallsemi(root=test_temp_data, cardinality=2)
+    Traceback (most recent call last):
+       ...
+    ValueError: test_temp_data must have exactly one version of smallsemi
+    >>> smallsemi = Smallsemi(
+    ...     root=test_temp_data,
+    ...     cardinality=2,
+    ...     download=True,
+    ...     transform=lambda x: x
+    ... )
+    >>> smallsemi[0][0]
+    tensor([[0, 0],
+            [0, 0]])
     """
 
     gap_packages_url = (
@@ -91,7 +110,7 @@ class Smallsemi(TensorDataset):
         )
         if len(filenames) != 1:
             raise ValueError(
-                f"{self.root} must have only one version of smallsemi package"
+                f"{self.root} must have exactly one version of smallsemi"
             )
         with gzip.open(filenames[0], "rb") as file:
             database = import_smallsemi_format(file.readlines())
