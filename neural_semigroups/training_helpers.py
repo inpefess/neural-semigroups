@@ -35,31 +35,11 @@ from ignite.metrics import Metric, RunningAverage
 from torch.nn import Module
 from torch.optim import Adam
 from torch.utils.data.dataloader import DataLoader
-from tqdm import tqdm
 
 from neural_semigroups.associator_loss import AssociatorLoss
 from neural_semigroups.constants import CURRENT_DEVICE
-from neural_semigroups.magma import Magma
 from neural_semigroups.precise_guess_loss import PreciseGuessLoss
-from neural_semigroups.utils import corrupt_input, get_newest_file
-
-
-def generate_features_and_labels(
-    cayley_cubes: torch.Tensor, dropout_rate: float
-) -> Tuple[torch.Tensor, torch.Tensor]:
-    """
-    a function-helper to generate labels as features to which we apply dropout
-
-    :param cayley_cubes: tensors to create features and labels for training
-    :param dropout_rate: dropout rate to apply for generating labels
-    :returns: a pair of (features, labels) for training
-    """
-    features_list = list()
-    for cayley_table in tqdm(cayley_cubes):
-        cube = Magma(cayley_table).probabilistic_cube
-        features_list.append(cube)
-    features = torch.stack(features_list)
-    return corrupt_input(features, dropout_rate), features
+from neural_semigroups.utils import get_newest_file
 
 
 def get_arguments() -> Namespace:

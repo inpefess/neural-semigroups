@@ -159,18 +159,18 @@ def download_file_from_url(
     """
     downloads some file from the Web to a specified destination
 
-    >>> download_file_from_url("https://python.org/", "/tmp/test.html")
-    >>> import subprocess
-    >>> subprocess.run("ls /tmp/test.html", shell=True).returncode
-    0
+    >>> import os
+    >>> temp_file = "/tmp/test.html"
+    >>> os.remove(temp_file)
+    >>> download_file_from_url("https://python.org/", temp_file)
+    >>> os.path.exists(temp_file)
+    True
 
     :param url: a valid HTTP URL
     :param filename: a valid filename
     :param buffer_size: a number of bytes to read from URL at once
     """
     response = requests.get(url, stream=True)
-    if not response.ok:
-        raise ValueError(f"Wrong response from URL: {response.status_code}")
     file_size = int(response.headers.get("Content-Length", 0))
     progress = tqdm(
         response.iter_content(chunk_size=buffer_size),
@@ -322,7 +322,10 @@ def corrupt_input(cayley_cubes: Tensor, dropout_rate: float) -> Tensor:
 
 def read_whole_file(filename: str) -> str:
     """
-    reads the whole file into a string
+    reads the whole file into a string,  for example
+
+    >>> read_whole_file("README.md").split("\\n")[2]
+    '# Neural Semigroups'
 
     :param filename: a name of the file to read
     :returns: whole contents of the file
@@ -335,7 +338,15 @@ def read_whole_file(filename: str) -> str:
 def partial_table_to_cube(table: Tensor) -> Tensor:
     """
     create a probabilistic cube from a partially filled Cayley table
-    ``-1`` is translated to :math:`\frac1n` where :math:`n` is table's cardinality
+    ``-1`` is translated to :math:`\\frac1n` where :math:`n` is table's
+    cardinality, for example
+
+    >>> partial_table_to_cube(torch.tensor([[0, -1], [0, 0]]))
+    tensor([[[[1.0000, 0.0000],
+              [0.5000, 0.5000]],
+    <BLANKLINE>
+             [[1.0000, 0.0000],
+              [1.0000, 0.0000]]]])
 
     :param table: a Cayley table, partially filled by ``-1``'s
     :returns: a probabilistic cube

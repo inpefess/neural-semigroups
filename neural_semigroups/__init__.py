@@ -14,6 +14,9 @@
    limitations under the License.
 """
 from neural_semigroups.associator_loss import AssociatorLoss
+from neural_semigroups.constant_baseline import ConstantBaseline
 from neural_semigroups.cyclic_group import CyclicGroup
 from neural_semigroups.denoising_autoencoder import MagmaDAE
 from neural_semigroups.magma import Magma
+from neural_semigroups.precise_guess_loss import PreciseGuessLoss
+from neural_semigroups.smallsemi_dataset import Smallsemi
