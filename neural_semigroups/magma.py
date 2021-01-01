@@ -13,9 +13,31 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from typing import Optional
+from typing import Optional, Tuple
 
 import torch
+
+
+def get_two_indices_per_sample(
+    batch_size: int, cardinality: int
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """
+    generates all possible combination of two indices
+    for each sample in a batch
+
+    >>> get_two_indices_per_sample(1, 2)
+    (tensor([0, 0, 0, 0]), tensor([0, 0, 1, 1]), tensor([0, 1, 0, 1]))
+
+    :param batch_size: number of samples in a batch
+    :param cardinality: number of possible values of an index
+    :returns: triples (index, index, index)
+    """
+    a_range = torch.arange(cardinality)
+    return (
+        torch.arange(batch_size).repeat_interleave(cardinality * cardinality),
+        a_range.repeat_interleave(cardinality).repeat(batch_size),
+        a_range.repeat(cardinality).repeat(batch_size),
+    )
 
 
 class Magma:
@@ -200,3 +222,27 @@ class Magma:
                 raise ValueError("there is no next magma!")
         next_table[row, column] += 1
         return Magma(next_table)
+
+    def random_isomorphism(self) -> torch.Tensor:
+        """
+        get some Cayley table isomorphic to ``self.cayley_table`` form example
+
+        >>> Magma(torch.tensor([[0, 0], [0, 0]])).random_isomorphism()
+        tensor([[1, 1],
+            [1, 1]])
+
+        :returns:
+        """
+        permutation_tensor = torch.randperm(self.cayley_table.shape[0]).to(
+            self.cayley_table.device
+        )
+        _, one, two = get_two_indices_per_sample(1, self.cayley_table.shape[0])
+        isomorphic_cayley_table = torch.zeros(
+            self.cayley_table.shape,
+            dtype=torch.long,
+            device=self.cayley_table.device,
+        )
+        isomorphic_cayley_table[
+            permutation_tensor[one], permutation_tensor[two]
+        ] = permutation_tensor[self.cayley_table[one, two]]
+        return isomorphic_cayley_table

@@ -13,12 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-import gzip
-import tarfile
 from itertools import permutations
-from os import listdir, makedirs, path, rename
-from os.path import basename, getmtime, join
-from shutil import rmtree
+from os import listdir
+from os.path import getmtime, join
 from typing import List, Tuple
 
 import requests
@@ -27,8 +24,8 @@ from torch import Tensor
 from torch.nn.functional import dropout2d
 from tqdm import tqdm
 
-from neural_semigroups.constants import CURRENT_DEVICE, GAP_PACKAGES_URL
-from neural_semigroups.magma import Magma
+from neural_semigroups.constants import CURRENT_DEVICE
+from neural_semigroups.magma import Magma, get_two_indices_per_sample
 
 # the Cayley table of Klein Vierergruppe
 # pylint: disable=not-callable
@@ -63,53 +60,6 @@ def random_semigroup(
         associative = magma.is_associative
         try_count += 1
     return associative, magma.cayley_table
-
-
-def check_filename(filename: str) -> int:
-    """
-    checks filename, raises if it's incorrect
-
-    :param filename: filename to check
-    :returns: magma cardinality extracted from the filename
-    """
-    if isinstance(filename, str):
-        base_filename = basename(filename)
-        filename_parts = base_filename.split(".")
-        if len(filename_parts) == 3:
-            if (
-                filename_parts[0] in ("semigroup", "monoid", "group")
-                and filename_parts[2] == "zip"
-                and filename_parts[1].isdigit()
-            ):
-                return int(filename_parts[1])
-    raise ValueError(
-        "filename should be of format"
-        f"[semigroup|monoid|group].[int].zip, not {filename}"
-    )
-
-
-def check_smallsemi_filename(filename: str) -> int:
-    """
-    checks a filename from a `smallsemi` package, raises if it's incorrect
-
-    :param filename: filename from a `smallsemi` package to check
-    :returns: magma cardinality extracted from the filename
-    """
-    if isinstance(filename, str):
-        filename_parts = basename(filename).split(".")
-        if len(filename_parts) == 3:
-            if (
-                filename_parts[2] == "gz"
-                and filename_parts[1] == "gl"
-                and filename_parts[0][:-1] == "data"
-                and filename_parts[0][-1].isdigit()
-            ):
-                cardinality = int(filename_parts[0][-1])
-                if 2 <= cardinality <= 7:
-                    return cardinality
-    raise ValueError(
-        "filename should be of format data[2-7].gl.gz" f" not {filename}"
-    )
 
 
 def get_magma_by_index(cardinality: int, index: int) -> Magma:
@@ -209,18 +159,19 @@ def download_file_from_url(
     """
     downloads some file from the Web to a specified destination
 
-    >>> download_file_from_url("https://python.org/", "/tmp/test.html")
-    >>> import subprocess
-    >>> subprocess.run("ls /tmp/test.html", shell=True).returncode
-    0
+    >>> import os
+    >>> temp_file = "./test_temp_data/test.html"
+    >>> if os.path.exists(temp_file):
+    ...     os.remove(temp_file)
+    >>> download_file_from_url("https://python.org/", temp_file)
+    >>> os.path.exists(temp_file)
+    True
 
     :param url: a valid HTTP URL
     :param filename: a valid filename
     :param buffer_size: a number of bytes to read from URL at once
     """
     response = requests.get(url, stream=True)
-    if not response.ok:
-        raise ValueError(f"Wrong response from URL: {response.status_code}")
     file_size = int(response.headers.get("Content-Length", 0))
     progress = tqdm(
         response.iter_content(chunk_size=buffer_size),
@@ -261,47 +212,21 @@ def find_substring_by_pattern(
     raise ValueError(f"pattern {starts_with}.*{ends_before} not found")
 
 
-def download_smallsemi_data(data_path: str) -> None:
-    """
-    downloads, unzips and moves ``smallsemi`` data
-
-    :param data_path: data storage path
-    :returns:
-    """
-    full_name_with_version = find_substring_by_pattern(
-        strings=requests.get(GAP_PACKAGES_URL).text.split("\n"),
-        starts_with="smallsemi",
-        ends_before=".tar.bz2",
-    )
-    temp_path = path.join(data_path, "tmp")
-    rmtree(temp_path, ignore_errors=True)
-    makedirs(temp_path, exist_ok=True)
-    archive_path = path.join(temp_path, f"{full_name_with_version}.tar.bz2")
-    download_file_from_url(
-        url=f"{GAP_PACKAGES_URL}{full_name_with_version}.tar.bz2",
-        filename=archive_path,
-    )
-    with tarfile.open(archive_path) as archive:
-        archive.extractall(temp_path)
-    rename(
-        path.join(temp_path, full_name_with_version, "data", "data2to7"),
-        path.join(data_path, "smallsemi_data"),
-    )
-
-
 def get_newest_file(dir_path: str) -> str:
     """
     get the last modified file from a diretory
 
     >>> from pathlib import Path
-    >>> rmtree("/tmp/tmp/", ignore_errors=True)
-    >>> makedirs("/tmp/tmp/")
-    >>> Path("/tmp/tmp/one").touch()
+    >>> from shutil import rmtree
+    >>> from os import makedirs
+    >>> rmtree("./test_temp_data/tmp/", ignore_errors=True)
+    >>> makedirs("./test_temp_data/tmp/")
+    >>> Path("./test_temp_data/tmp/one").touch()
     >>> from time import sleep
     >>> sleep(0.01)
-    >>> Path("/tmp/tmp/two").touch()
-    >>> get_newest_file("/tmp/tmp/")
-    '/tmp/tmp/two'
+    >>> Path("./test_temp_data/tmp/two").touch()
+    >>> get_newest_file("./test_temp_data/tmp/")
+    './test_temp_data/tmp/two'
 
     :param dir_path: a directory path
     :returns: the last modified file's name
@@ -309,28 +234,6 @@ def get_newest_file(dir_path: str) -> str:
     return max(
         [join(dir_path, filename) for filename in listdir(dir_path)],
         key=getmtime,
-    )
-
-
-def get_two_indices_per_sample(
-    batch_size: int, cardinality: int
-) -> Tuple[Tensor, Tensor, Tensor]:
-    """
-    generates all possible combination of two indices
-    for each sample in a batch
-
-    >>> get_two_indices_per_sample(1, 2)
-    (tensor([0, 0, 0, 0]), tensor([0, 0, 1, 1]), tensor([0, 1, 0, 1]))
-
-    :param batch_size: number of samples in a batch
-    :param cardinality: number of possible values of an index
-    :returns: triples (index, index, index)
-    """
-    a_range = torch.arange(cardinality)
-    return (
-        torch.arange(batch_size).repeat_interleave(cardinality * cardinality),
-        a_range.repeat_interleave(cardinality).repeat(batch_size),
-        a_range.repeat(cardinality).repeat(batch_size),
     )
 
 
@@ -373,48 +276,6 @@ def make_discrete(cayley_cubes: torch.Tensor) -> torch.Tensor:
     )
     cube[sample_index, one, two, cayley_table[sample_index, one, two]] = 1.0
     return cube
-
-
-def load_data_and_labels_from_file(
-    database_filename: str,
-) -> Tuple[Tensor, Tensor]:
-    """
-    reads data from a special file format
-
-    :param database_filename: a special file to read data from
-    :returns: (a tensor with Cayley tables, a tensor of their labels)
-    """
-    check_filename(path.basename(database_filename))
-    torch_zip_file = torch.load(database_filename)
-    database = torch_zip_file["database"]
-    labels = torch_zip_file.get(
-        "labels", torch.zeros(len(database), dtype=torch.int64)
-    )
-    return database, labels
-
-
-def load_data_and_labels_from_smallsemi(
-    cardinality: int, data_path: str
-) -> Tuple[Tensor, Tensor]:
-    """
-    Loads data from ``smallsemi`` package
-
-    :param cardinality: which ``smallsemi`` file to use
-    :param data_path: where to search for ``smallsemi`` data
-    :returns: (a tensor with Cayley tables, a tensor of their labels)
-    """
-    filename = path.join(
-        data_path, "smallsemi_data", f"data{cardinality}.gl.gz"
-    )
-    check_smallsemi_filename(filename)
-    if not path.exists(filename):
-        download_smallsemi_data(data_path)
-    with gzip.open(filename, "rb") as file:
-        database = import_smallsemi_format(file.readlines()).to(CURRENT_DEVICE)
-    labels = torch.ones(
-        len(database), dtype=torch.int64, device=CURRENT_DEVICE
-    )
-    return database, labels
 
 
 def count_different(one: Tensor, two: Tensor) -> Tensor:
@@ -462,7 +323,10 @@ def corrupt_input(cayley_cubes: Tensor, dropout_rate: float) -> Tensor:
 
 def read_whole_file(filename: str) -> str:
     """
-    reads the whole file into a string
+    reads the whole file into a string,  for example
+
+    >>> read_whole_file("README.md").split("\\n")[2]
+    '# Neural Semigroups'
 
     :param filename: a name of the file to read
     :returns: whole contents of the file
@@ -475,7 +339,15 @@ def read_whole_file(filename: str) -> str:
 def partial_table_to_cube(table: Tensor) -> Tensor:
     """
     create a probabilistic cube from a partially filled Cayley table
-    ``-1`` is translated to :math:`\frac1n` where :math:`n` is table's cardinality
+    ``-1`` is translated to :math:`\\frac1n` where :math:`n` is table's
+    cardinality, for example
+
+    >>> partial_table_to_cube(torch.tensor([[0, -1], [0, 0]]))
+    tensor([[[[1.0000, 0.0000],
+              [0.5000, 0.5000]],
+    <BLANKLINE>
+             [[1.0000, 0.0000],
+              [1.0000, 0.0000]]]])
 
     :param table: a Cayley table, partially filled by ``-1``'s
     :returns: a probabilistic cube
