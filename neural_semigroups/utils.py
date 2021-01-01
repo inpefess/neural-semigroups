@@ -160,8 +160,9 @@ def download_file_from_url(
     downloads some file from the Web to a specified destination
 
     >>> import os
-    >>> temp_file = "/tmp/test.html"
-    >>> os.remove(temp_file)
+    >>> temp_file = "./test_temp_data/test.html"
+    >>> if os.path.exists(temp_file):
+    ...     os.remove(temp_file)
     >>> download_file_from_url("https://python.org/", temp_file)
     >>> os.path.exists(temp_file)
     True
@@ -218,14 +219,14 @@ def get_newest_file(dir_path: str) -> str:
     >>> from pathlib import Path
     >>> from shutil import rmtree
     >>> from os import makedirs
-    >>> rmtree("/tmp/tmp/", ignore_errors=True)
-    >>> makedirs("/tmp/tmp/")
-    >>> Path("/tmp/tmp/one").touch()
+    >>> rmtree("./test_temp_data/tmp/", ignore_errors=True)
+    >>> makedirs("./test_temp_data/tmp/")
+    >>> Path("./test_temp_data/tmp/one").touch()
     >>> from time import sleep
     >>> sleep(0.01)
-    >>> Path("/tmp/tmp/two").touch()
-    >>> get_newest_file("/tmp/tmp/")
-    '/tmp/tmp/two'
+    >>> Path("./test_temp_data/tmp/two").touch()
+    >>> get_newest_file("./test_temp_data/tmp/")
+    './test_temp_data/tmp/two'
 
     :param dir_path: a directory path
     :returns: the last modified file's name
