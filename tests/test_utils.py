@@ -123,38 +123,8 @@ class TestUtils(TestCase):
         # for all x and y: x * y = 0
         cayley_cube = torch.zeros([1, 4, 4, 4])
         cayley_cube[:, :, :, 0] = 1.0
-        true_value = torch.tensor(
-            [
-                [
-                    [
-                        [1.0, 0.0, 0.0, 0.0],
-                        [0.25, 0.25, 0.25, 0.25],
-                        [0.25, 0.25, 0.25, 0.25],
-                        [1.0, 0.0, 0.0, 0.0],
-                    ],
-                    [
-                        [1.0, 0.0, 0.0, 0.0],
-                        [0.25, 0.25, 0.25, 0.25],
-                        [0.25, 0.25, 0.25, 0.25],
-                        [1.0, 0.0, 0.0, 0.0],
-                    ],
-                    [
-                        [1.0, 0.0, 0.0, 0.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                        [0.25, 0.25, 0.25, 0.25],
-                    ],
-                    [
-                        [0.25, 0.25, 0.25, 0.25],
-                        [1.0, 0.0, 0.0, 0.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                    ],
-                ]
-            ]
-        )
-        self.assertTrue(
-            torch.allclose(corrupt_input(cayley_cube, 0.5), true_value)
+        self.assertEqual(
+            (corrupt_input(cayley_cube, 0.5) == cayley_cube).sum(), 36
         )
         self.assertTrue(
             torch.allclose(corrupt_input(cayley_cube, 0.0), cayley_cube,)

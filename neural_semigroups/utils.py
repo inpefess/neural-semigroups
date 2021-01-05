@@ -342,7 +342,7 @@ def partial_table_to_cube(table: Tensor) -> Tensor:
     ``-1`` is translated to :math:`\\frac1n` where :math:`n` is table's
     cardinality, for example
 
-    >>> partial_table_to_cube(torch.tensor([[0, -1], [0, 0]]))
+    >>> partial_table_to_cube(torch.tensor([[0, -1], [0, 0]])).cpu()
     tensor([[[[1.0000, 0.0000],
               [0.5000, 0.5000]],
     <BLANKLINE>
