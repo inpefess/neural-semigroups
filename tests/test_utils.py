@@ -13,15 +13,18 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+import os
+
 # pylint: disable-all
 from unittest import TestCase
 
 import torch
 
-from neural_semigroups.constants import CURRENT_DEVICE
+from neural_semigroups.constants import CURRENT_DEVICE, TEST_TEMP_DATA
 from neural_semigroups.utils import (
     FOUR_GROUP,
     corrupt_input,
+    create_table_if_not_exists,
     get_equivalent_magmas,
     get_magma_by_index,
     import_smallsemi_format,
@@ -128,4 +131,11 @@ class TestUtils(TestCase):
         )
         self.assertTrue(
             torch.allclose(corrupt_input(cayley_cube, 0.0), cayley_cube,)
+        )
+
+    def test_create_table_if_not_exists(self):
+        create_table_if_not_exists(
+            os.path.join(TEST_TEMP_DATA, "test.db"),
+            "test_table",
+            ["test_column INT"],
         )

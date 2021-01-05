@@ -20,3 +20,5 @@ CURRENT_DEVICE = (
     if torch.cuda.is_available()
     else "cpu"
 )
+
+TEST_TEMP_DATA = "test_temp_data"

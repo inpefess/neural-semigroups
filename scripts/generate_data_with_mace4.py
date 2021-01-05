@@ -25,7 +25,7 @@ import torch
 from torch import Tensor
 from tqdm import tqdm
 
-from neural_semigroups.utils import read_whole_file
+from neural_semigroups.utils import create_table_if_not_exists, read_whole_file
 
 
 def generate_partial_table(cardinality: int, known_cells_num: int) -> Tensor:
@@ -127,26 +127,6 @@ def parse_args() -> Namespace:
     return args
 
 
-def create_if_not_exist(database_name: str) -> None:
-    """
-    create a table ``mace_output`` if it does not exist
-
-    :param database_name: where to create a table
-    :returns:
-    """
-    with sqlite3.connect(database_name, isolation_level=None) as connection:
-        connection.execute("PRAGMA journal_mode=WAL;")
-        cursor = connection.cursor()
-        cursor.execute(
-            "SELECT COUNT(*) FROM sqlite_master WHERE name = 'mace_output'"
-        )
-        if cursor.fetchone()[0] == 0:
-            connection.execute(
-                "CREATE TABLE mace_output(output STRING, errors STRING)"
-            )
-        cursor.close()
-
-
 def write_mace_output(database_name: str, values: Tuple[str, str]) -> None:
     """
     inserts values into a table ``mace_output``
@@ -171,7 +151,11 @@ def main():
         .tolist()
     )
     with Pool(processes=args.number_of_processes) as pool:
-        create_if_not_exist(args.database_name)
+        create_table_if_not_exists(
+            args.database_name,
+            "mace_output",
+            ["output STRING", "errors STRING"],
+        )
         with tqdm(total=args.number_of_tasks) as progress_bar:
             for output, errors in pool.imap_unordered(
                 partial(
