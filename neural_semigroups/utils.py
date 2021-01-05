@@ -390,3 +390,24 @@ def create_table_if_not_exists(
                 f"CREATE TABLE {table_name}({', '.join(columns)})"
             )
         cursor.close()
+
+
+def insert_values_into_table(
+    database_name: str, table_name: str, values: Tuple[str]
+) -> None:
+    """
+    inserts values into a table
+
+    :param database_name:
+    :param table_name:
+    :param values:
+    :returns:
+    """
+    with sqlite3.connect(database_name, isolation_level=None) as connection:
+        connection.execute("PRAGMA journal_mode=WAL;")
+        cursor = connection.cursor()
+        placeholders = ", ".join(len(values) * ["?"])
+        cursor.execute(
+            f"INSERT INTO {table_name} VALUES({placeholders})", values
+        )
+        cursor.close()
