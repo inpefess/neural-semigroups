@@ -13,18 +13,23 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+import os
+import sqlite3
+
 # pylint: disable-all
 from unittest import TestCase
 
 import torch
 
-from neural_semigroups.constants import CURRENT_DEVICE
+from neural_semigroups.constants import CURRENT_DEVICE, TEST_TEMP_DATA
 from neural_semigroups.utils import (
     FOUR_GROUP,
     corrupt_input,
+    create_table_if_not_exists,
     get_equivalent_magmas,
     get_magma_by_index,
     import_smallsemi_format,
+    insert_values_into_table,
     random_semigroup,
 )
 
@@ -123,39 +128,31 @@ class TestUtils(TestCase):
         # for all x and y: x * y = 0
         cayley_cube = torch.zeros([1, 4, 4, 4])
         cayley_cube[:, :, :, 0] = 1.0
-        true_value = torch.tensor(
-            [
-                [
-                    [
-                        [1.0, 0.0, 0.0, 0.0],
-                        [0.25, 0.25, 0.25, 0.25],
-                        [0.25, 0.25, 0.25, 0.25],
-                        [1.0, 0.0, 0.0, 0.0],
-                    ],
-                    [
-                        [1.0, 0.0, 0.0, 0.0],
-                        [0.25, 0.25, 0.25, 0.25],
-                        [0.25, 0.25, 0.25, 0.25],
-                        [1.0, 0.0, 0.0, 0.0],
-                    ],
-                    [
-                        [1.0, 0.0, 0.0, 0.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                        [0.25, 0.25, 0.25, 0.25],
-                    ],
-                    [
-                        [0.25, 0.25, 0.25, 0.25],
-                        [1.0, 0.0, 0.0, 0.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                        [1.0, 0.0, 0.0, 0.0],
-                    ],
-                ]
-            ]
-        )
-        self.assertTrue(
-            torch.allclose(corrupt_input(cayley_cube, 0.5), true_value)
+        self.assertEqual(
+            (corrupt_input(cayley_cube, 0.5) == cayley_cube).sum(), 40
         )
         self.assertTrue(
             torch.allclose(corrupt_input(cayley_cube, 0.0), cayley_cube,)
         )
+
+    def test_create_table_if_not_exists(self):
+        db_name = os.path.join(TEST_TEMP_DATA, "test.db")
+        if os.path.exists(db_name):
+            os.remove(db_name)
+        create_table_if_not_exists(
+            db_name, "test_table", ["test1 INT, test2 INT, test3 STRING"],
+        )
+        insert_values_into_table(db_name, "test_table", (1, 2, "three"))
+        with sqlite3.connect(db_name, isolation_level=None) as connection:
+            connection.execute("PRAGMA journal_mode=WAL;")
+            cursor = connection.cursor()
+            cursor.execute(
+                "SELECT sql FROM sqlite_master WHERE name = 'test_table'"
+            )
+            self.assertEqual(
+                cursor.fetchone()[0],
+                "CREATE TABLE test_table(test1 INT, test2 INT, test3 STRING)",
+            )
+            cursor.execute("SELECT test1, test2, test3 FROM test_table")
+            self.assertEqual(cursor.fetchone(), (1, 2, "three"))
+            cursor.close()

@@ -36,15 +36,15 @@ class Smallsemi(TensorDataset):
 
     >>> import shutil
     >>> import os
-    >>> test_temp_data = "test_temp_data"
-    >>> shutil.rmtree(test_temp_data, ignore_errors=True)
-    >>> os.mkdir(test_temp_data)
-    >>> smallsemi = Smallsemi(root=test_temp_data, cardinality=2)
+    >>> from neural_semigroups.constants import TEST_TEMP_DATA
+    >>> shutil.rmtree(TEST_TEMP_DATA, ignore_errors=True)
+    >>> os.mkdir(TEST_TEMP_DATA)
+    >>> smallsemi = Smallsemi(root=TEST_TEMP_DATA, cardinality=2)
     Traceback (most recent call last):
        ...
     ValueError: test_temp_data must have exactly one version of smallsemi
     >>> smallsemi = Smallsemi(
-    ...     root=test_temp_data,
+    ...     root=TEST_TEMP_DATA,
     ...     cardinality=2,
     ...     download=True,
     ...     transform=lambda x: x

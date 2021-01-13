@@ -13,6 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+import sqlite3
 from itertools import permutations
 from os import listdir
 from os.path import getmtime, join
@@ -160,7 +161,8 @@ def download_file_from_url(
     downloads some file from the Web to a specified destination
 
     >>> import os
-    >>> temp_file = "./test_temp_data/test.html"
+    >>> from neural_semigroups.constants import TEST_TEMP_DATA
+    >>> temp_file = os.path.join(TEST_TEMP_DATA, "test.html")
     >>> if os.path.exists(temp_file):
     ...     os.remove(temp_file)
     >>> download_file_from_url("https://python.org/", temp_file)
@@ -218,15 +220,16 @@ def get_newest_file(dir_path: str) -> str:
 
     >>> from pathlib import Path
     >>> from shutil import rmtree
-    >>> from os import makedirs
-    >>> rmtree("./test_temp_data/tmp/", ignore_errors=True)
-    >>> makedirs("./test_temp_data/tmp/")
-    >>> Path("./test_temp_data/tmp/one").touch()
+    >>> from os import makedirs, path
+    >>> from neural_semigroups.constants import TEST_TEMP_DATA
+    >>> rmtree(path.join(TEST_TEMP_DATA, "tmp"), ignore_errors=True)
+    >>> makedirs(path.join(TEST_TEMP_DATA, "tmp"))
+    >>> Path(path.join(TEST_TEMP_DATA, "tmp", "one")).touch()
     >>> from time import sleep
     >>> sleep(0.01)
-    >>> Path("./test_temp_data/tmp/two").touch()
-    >>> get_newest_file("./test_temp_data/tmp/")
-    './test_temp_data/tmp/two'
+    >>> Path(path.join(TEST_TEMP_DATA, "tmp", "two")).touch()
+    >>> get_newest_file(path.join(TEST_TEMP_DATA, "tmp"))
+    'test_temp_data/tmp/two'
 
     :param dir_path: a directory path
     :returns: the last modified file's name
@@ -342,7 +345,7 @@ def partial_table_to_cube(table: Tensor) -> Tensor:
     ``-1`` is translated to :math:`\\frac1n` where :math:`n` is table's
     cardinality, for example
 
-    >>> partial_table_to_cube(torch.tensor([[0, -1], [0, 0]]))
+    >>> partial_table_to_cube(torch.tensor([[0, -1], [0, 0]])).cpu()
     tensor([[[[1.0000, 0.0000],
               [0.5000, 0.5000]],
     <BLANKLINE>
@@ -363,3 +366,48 @@ def partial_table_to_cube(table: Tensor) -> Tensor:
     rows, cols = torch.where(torch.eq(table, -1))
     cube[rows, cols, :] = 1 / cardinality
     return cube.reshape([-1, cardinality, cardinality, cardinality])
+
+
+def create_table_if_not_exists(
+    database_name: str, table_name, columns: List[str]
+) -> None:
+    """
+    create a table if it does not exist
+
+    :param database_name: where to create a table
+    :param table_name: what table to create
+    :param columns: a list of strings of format "COLUMN_NAME COLUMN_TYPE"
+    :returns:
+    """
+    with sqlite3.connect(database_name, isolation_level=None) as connection:
+        connection.execute("PRAGMA journal_mode=WAL;")
+        cursor = connection.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) FROM sqlite_master WHERE name = ?", [table_name]
+        )
+        if cursor.fetchone()[0] == 0:
+            connection.execute(
+                f"CREATE TABLE {table_name}({', '.join(columns)})"
+            )
+        cursor.close()
+
+
+def insert_values_into_table(
+    database_name: str, table_name: str, values: Tuple[str]
+) -> None:
+    """
+    inserts values into a table
+
+    :param database_name:
+    :param table_name:
+    :param values:
+    :returns:
+    """
+    with sqlite3.connect(database_name, isolation_level=None) as connection:
+        connection.execute("PRAGMA journal_mode=WAL;")
+        cursor = connection.cursor()
+        placeholders = ", ".join(len(values) * ["?"])
+        cursor.execute(
+            f"INSERT INTO {table_name} VALUES({placeholders})", values
+        )
+        cursor.close()

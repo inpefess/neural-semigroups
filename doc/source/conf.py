@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 # -- Project information -----------------------------------------------------
 
 project = "neural-semigroups"
-copyright = "2019-2020, Boris Shminke"
+copyright = "2019-2021, Boris Shminke"
 author = "Boris Shminke"
 
 

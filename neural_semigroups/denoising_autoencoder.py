@@ -21,7 +21,6 @@ from torch import Tensor
 from torch.nn import BatchNorm1d, Linear, Module, ReLU, Sequential, Softmax2d
 
 from neural_semigroups.constants import CURRENT_DEVICE
-from neural_semigroups.utils import corrupt_input
 
 
 def get_linear_bn_relu_sequence(
@@ -156,18 +155,13 @@ class MagmaDAE(Module):
         :param cayley_cubes: a batch of probabilistic representations of magmas
         :returns: auto-encoded probabilistic representations of magmas
         """
-        corrupted_input = corrupt_input(
-            cayley_cubes, self.dropout_rate if self.training else 0.0
-        )
-        encoded_input = self.encode(corrupted_input)
+        encoded_input = self.encode(cayley_cubes)
         reparametrized_input = self.reparametrize(encoded_input)
         decoded_input = self.decode(reparametrized_input)
         return torch.where(
-            torch.eq(corrupted_input, 1.0),
+            torch.eq(cayley_cubes, 1.0),
             self._nearly_one,
             torch.where(
-                torch.eq(corrupted_input, 0.0),
-                self._nearly_zero,
-                decoded_input,
+                torch.eq(cayley_cubes, 0.0), self._nearly_zero, decoded_input,
             ),
         )
