@@ -76,7 +76,7 @@ class TestUtils(TestCase):
             get_magma_by_index(3, 20000)
 
     def test_import_smallsemi_format(self):
-        lines = [b"# header", b"0100\r", b"0101\r", b"0011\r"]
+        lines = ["# header", "0100\n", "0101\n", "0011\n"]
         semigroups = import_smallsemi_format(lines)
         self.assertIsInstance(semigroups, torch.Tensor)
         self.assertEqual(semigroups.shape[0], 4)

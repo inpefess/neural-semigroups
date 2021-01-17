@@ -13,10 +13,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+import gzip
+import shutil
 import sqlite3
 from itertools import permutations
 from os import listdir
-from os.path import getmtime, join
+from os.path import getmtime, join, splitext
 from typing import List, Tuple
 
 import requests
@@ -89,12 +91,12 @@ def get_magma_by_index(cardinality: int, index: int) -> Magma:
     )
 
 
-def import_smallsemi_format(lines: List[bytes]) -> torch.Tensor:
+def import_smallsemi_format(lines: List[str]) -> torch.Tensor:
     """
     imports lines in a format used by ``smallsemi`` `GAP package`.
     Format description:
 
-    * filename is of a form ``data[n].gl.gz``, :math:`1<=n<=7`
+    * filename is of a form ``data[n].gl``, :math:`1<=n<=7`
     * lines are separated by a pair of symbols ``\\r\\n``
     * there are exactly :math:`n^2` lines in a file
     * the first line is a header starting with '#' symbol
@@ -111,7 +113,7 @@ def import_smallsemi_format(lines: List[bytes]) -> torch.Tensor:
 
     """
     raw_tables = torch.tensor(
-        [list(map(int, list(line.decode("utf-8")[:-1]))) for line in lines[1:]]
+        [list(map(int, list(line[:-1]))) for line in lines[1:]]
     ).transpose(0, 1)
     tables = torch.cat(
         [torch.zeros([raw_tables.shape[0], 1], dtype=torch.long), raw_tables],
@@ -219,10 +221,9 @@ def get_newest_file(dir_path: str) -> str:
     get the last modified file from a diretory
 
     >>> from pathlib import Path
-    >>> from shutil import rmtree
     >>> from os import makedirs, path
     >>> from neural_semigroups.constants import TEST_TEMP_DATA
-    >>> rmtree(path.join(TEST_TEMP_DATA, "tmp"), ignore_errors=True)
+    >>> shutil.rmtree(path.join(TEST_TEMP_DATA, "tmp"), ignore_errors=True)
     >>> makedirs(path.join(TEST_TEMP_DATA, "tmp"))
     >>> Path(path.join(TEST_TEMP_DATA, "tmp", "one")).touch()
     >>> from time import sleep
@@ -411,3 +412,15 @@ def insert_values_into_table(
             f"INSERT INTO {table_name} VALUES({placeholders})", values
         )
         cursor.close()
+
+
+def gunzip(archive_path: str) -> None:
+    """
+    extracts a GZIP file in the same folder
+
+    :param archive_path: a path ending with ``.gz``
+    :returns:
+    """
+    with gzip.open(archive_path, "rb") as f_in:
+        with open(splitext(archive_path)[0], "wb",) as f_out:
+            shutil.copyfileobj(f_in, f_out)
