@@ -1,10 +1,10 @@
 {
-    "id": "inpefess/neural-semigroups-dae",
-    "title": "Neural Semigroups DAE",
+    "id": "inpefess/neural-semigroups-dae-dim-4",
+    "title": "Neural Semigroups DAE (dim 4)",
     "code_file": "dae-4.ipynb",
     "language": "python",
     "kernel_type": "notebook",
-    "is_private": "true",
+    "is_private": "false",
     "enable_gpu": "true",
     "enable_internet": "true",
     "dataset_sources": ["inpefess/smallsemi"],

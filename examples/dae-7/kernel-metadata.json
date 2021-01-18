@@ -1,0 +1,13 @@
+{
+    "id": "inpefess/neural-semigroups-dae-dim-7",
+    "title": "Neural Semigroups DAE (dim 7)",
+    "code_file": "dae-7.ipynb",
+    "language": "python",
+    "kernel_type": "notebook",
+    "is_private": "false",
+    "enable_gpu": "true",
+    "enable_internet": "true",
+    "dataset_sources": ["inpefess/smallsemi"],
+    "competition_sources": [],
+    "kernel_sources": []
+}
