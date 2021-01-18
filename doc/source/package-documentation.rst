@@ -64,3 +64,5 @@ A collection of different functions used by other modules.
 .. autofunction:: partial_table_to_cube
 .. autofunction:: create_table_if_not_exists
 .. autofunction:: insert_values_into_table
+.. autofunction:: gunzip
+		  
