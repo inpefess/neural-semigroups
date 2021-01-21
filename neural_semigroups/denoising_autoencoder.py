@@ -77,18 +77,15 @@ class MagmaDAE(Module):
         self,
         cardinality: int,
         hidden_dims: List[int],
-        dropout_rate: float,
         do_reparametrization: bool = False,
     ):
         """
         :param cardinality: the number of elements in a magma
         :param hidden_dims: a list of sizes of hidden layers of the encoder and the decoder
-        :param dropout_rate: what percentage of cells from the Cayley table to substitute with uniform random variables
         :param do_reparametrization: if ``True``, adds a reparametrization trick
         """
         super().__init__()
         self.cardinality = cardinality
-        self.dropout_rate = dropout_rate
         self.do_reparametrization = do_reparametrization
         (
             self.encoder_layers,

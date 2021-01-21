@@ -16,7 +16,6 @@
 import gzip
 import shutil
 import sqlite3
-from itertools import permutations
 from os import listdir
 from os.path import getmtime, join, splitext
 from typing import List, Tuple
@@ -24,7 +23,6 @@ from typing import List, Tuple
 import requests
 import torch
 from torch import Tensor
-from torch.nn.functional import dropout2d
 from tqdm import tqdm
 
 from neural_semigroups.constants import CURRENT_DEVICE
@@ -121,39 +119,6 @@ def import_smallsemi_format(lines: List[str]) -> torch.Tensor:
     )
     cardinality = int(tables.max()) + 1
     return tables.reshape(tables.shape[0], cardinality, cardinality)
-
-
-def get_equivalent_magmas(cayley_tables: torch.Tensor) -> torch.Tensor:
-    """
-    given a Cayley tables batch generate Cayley tables of isomorphic and
-    anti-isomorphic magmas
-
-    :param cayley_tables: a batch of Cayley tables
-    :returns: a batch of Cayley tables of isomorphic and anti-isomorphic magmas
-    """
-    equivalent_cayley_tables = list()
-    for permutation in permutations(range(cayley_tables.shape[1])):
-        permutation_tensor = torch.tensor(
-            permutation, device=cayley_tables.device
-        )
-        sample_index, one, two = get_two_indices_per_sample(
-            cayley_tables.shape[0], cayley_tables.shape[1]
-        )
-        isomorphic_cayley_tables = torch.zeros(
-            cayley_tables.shape, dtype=torch.long, device=cayley_tables.device
-        )
-        isomorphic_cayley_tables[
-            sample_index, permutation_tensor[one], permutation_tensor[two]
-        ] = permutation_tensor[cayley_tables[sample_index, one, two]]
-        equivalent_cayley_tables.append(isomorphic_cayley_tables)
-        anti_isomorphic_cayley_tables = torch.zeros(
-            cayley_tables.shape, dtype=torch.long, device=cayley_tables.device
-        )
-        anti_isomorphic_cayley_tables[
-            sample_index, permutation_tensor[one], permutation_tensor[two]
-        ] = permutation_tensor[cayley_tables[sample_index, two, one]]
-        equivalent_cayley_tables.append(anti_isomorphic_cayley_tables)
-    return torch.unique(torch.cat(equivalent_cayley_tables, dim=0), dim=0)
 
 
 def download_file_from_url(
@@ -265,7 +230,7 @@ def make_discrete(cayley_cubes: torch.Tensor) -> torch.Tensor:
              [[1., 0.],
               [0., 1.]]]])
 
-    :param cayley_cubes: a batch of probabilistic cubes representing Cayley tables
+    :param cayley_cube: a batch of probabilistic cubes representing Cayley tables
     :returns: a batch of probabilistic cubes filled in with ``0`` or ``1``
     """
     cardinality = cayley_cubes.shape[1]
@@ -302,27 +267,25 @@ def count_different(one: Tensor, two: Tensor) -> Tensor:
     )
 
 
-def corrupt_input(cayley_cubes: Tensor, dropout_rate: float) -> Tensor:
+def hide_cells(cayley_table: Tensor, number_of_cells: int) -> Tensor:
     """
-    changes several cells in a Cayley table with uniformly distributed
-    random variables
+    set several cells in a Cayley table to math:`-1`
 
-    :param cayley_cubes: a batch of representations of Cayley tables
-                         as probability distributions
-    :param dropout_rate: a percentage of cells to distort
-    :returns: a batch of distorted Cayley cubes
+    >>> torch.manual_seed(42) # doctest: +ELLIPSIS
+    <torch...
+    >>> hide_cells(torch.tensor([[0, 1], [2, 3]]), 2).cpu()
+    tensor([[ 0,  1],
+            [-1, -1]])
+
+    :param cayley_table: a Cayley table
+    :param number_of_cells: a number of cells to hide
+    :returns: a Cayley table with hidden cells
     """
-    cardinality = cayley_cubes.shape[1]
-    return (
-        (1 - dropout_rate)
-        * dropout2d(
-            cayley_cubes.view(-1, cardinality * cardinality, cardinality, 1,)
-            - 1 / cardinality,
-            dropout_rate,
-            dropout_rate > 0,
-        )
-        + 1 / cardinality
-    ).view(-1, cardinality, cardinality, cardinality)
+    partial_table = cayley_table.clone()
+    cardinality = cayley_table.shape[0]
+    pairs = torch.randperm(cardinality * cardinality)[:number_of_cells]
+    partial_table[pairs // cardinality, pairs % cardinality] = -1
+    return partial_table
 
 
 def read_whole_file(filename: str) -> str:
@@ -347,11 +310,11 @@ def partial_table_to_cube(table: Tensor) -> Tensor:
     cardinality, for example
 
     >>> partial_table_to_cube(torch.tensor([[0, -1], [0, 0]])).cpu()
-    tensor([[[[1.0000, 0.0000],
+    tensor([[[1.0000, 0.0000],
               [0.5000, 0.5000]],
     <BLANKLINE>
              [[1.0000, 0.0000],
-              [1.0000, 0.0000]]]])
+              [1.0000, 0.0000]]])
 
     :param table: a Cayley table, partially filled by ``-1``'s
     :returns: a probabilistic cube
@@ -366,7 +329,7 @@ def partial_table_to_cube(table: Tensor) -> Tensor:
     cube[rows, cols, table[rows, cols]] = 1.0
     rows, cols = torch.where(torch.eq(table, -1))
     cube[rows, cols, :] = 1 / cardinality
-    return cube.reshape([-1, cardinality, cardinality, cardinality])
+    return cube.reshape([cardinality, cardinality, cardinality])
 
 
 def create_table_if_not_exists(

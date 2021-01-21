@@ -53,13 +53,12 @@ A collection of different functions used by other modules.
 .. autofunction:: random_semigroup
 .. autofunction:: get_magma_by_index
 .. autofunction:: import_smallsemi_format
-.. autofunction:: get_equivalent_magmas
 .. autofunction:: download_file_from_url
 .. autofunction:: find_substring_by_pattern
 .. autofunction:: get_newest_file
 .. autofunction:: make_discrete
 .. autofunction:: count_different
-.. autofunction:: corrupt_input
+.. autofunction:: hide_cells
 .. autofunction:: read_whole_file
 .. autofunction:: partial_table_to_cube
 .. autofunction:: create_table_if_not_exists

@@ -24,29 +24,13 @@ import torch
 from torch import Tensor
 from tqdm import tqdm
 
+from neural_semigroups import Magma
 from neural_semigroups.utils import (
     create_table_if_not_exists,
+    hide_cells,
     insert_values_into_table,
     read_whole_file,
 )
-
-
-def generate_partial_table(cardinality: int, known_cells_num: int) -> Tensor:
-    """
-    generate a Cayley table in which some cells are set to :math:`-1` (unknown)
-
-    >>> torch.eq(generate_partial_table(2, 3), -1).sum().item()
-    1
-
-    :param cardinality: magma cardinality
-    :param known_cells_num: the number of cells to fill with numbers from :math:`0` to :math:`n-1`
-    :returns: a square table with numbers from :math:`-1` to :math:`n-1`
-    """
-    table = -torch.ones((cardinality, cardinality))
-    for pair in torch.randperm(cardinality * cardinality)[:known_cells_num]:
-        row, col = divmod(pair.item(), cardinality)
-        table[row, col] = torch.randint(cardinality, (1,)).item()
-    return table
 
 
 def write_mace_input(partial_table: Tensor, dim: int, filename: str) -> None:
@@ -82,8 +66,9 @@ def table_completion(
     :returns:
     """
     dim = dims[task_id]
-    partial_table = generate_partial_table(
-        dim, int(torch.randint(1, dim * dim, (1,)).item())
+    partial_table = hide_cells(
+        Magma(cardinality=dim).cayley_table,
+        int(torch.randint(1, dim * dim, (1,)).item()),
     )
     write_mace_input(partial_table, dim, f"{task_id}.in")
     with open(f"{task_id}.in", "r") as task_in, open(
