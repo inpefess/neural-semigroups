@@ -53,7 +53,6 @@ A collection of different functions used by other modules.
 .. autofunction:: random_semigroup
 .. autofunction:: get_magma_by_index
 .. autofunction:: import_smallsemi_format
-.. autofunction:: get_equivalent_magmas
 .. autofunction:: download_file_from_url
 .. autofunction:: find_substring_by_pattern
 .. autofunction:: get_newest_file

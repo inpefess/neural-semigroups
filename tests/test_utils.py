@@ -23,9 +23,7 @@ import torch
 
 from neural_semigroups.constants import CURRENT_DEVICE, TEST_TEMP_DATA
 from neural_semigroups.utils import (
-    FOUR_GROUP,
     create_table_if_not_exists,
-    get_equivalent_magmas,
     get_magma_by_index,
     import_smallsemi_format,
     insert_values_into_table,
@@ -89,37 +87,6 @@ class TestUtils(TestCase):
             self.assertIsInstance(semigroups[i], torch.Tensor)
             self.assertTrue(
                 torch.allclose(semigroups[i], torch.tensor(true_semigroups[i]))
-            )
-
-    def test_get_equivalent_magmas(self):
-        equivalent_groups = get_equivalent_magmas(
-            FOUR_GROUP.view(1, 4, 4).to(CURRENT_DEVICE)
-        )
-        self.assertIsInstance(equivalent_groups, torch.Tensor)
-        n = equivalent_groups.shape[0]
-        self.assertEqual(n, 4)
-        for i in range(n):
-            self.assertIsInstance(equivalent_groups[i], torch.Tensor)
-            self.assertTrue(
-                torch.allclose(
-                    equivalent_groups[i], self.true_isomorphic_groups[i],
-                )
-            )
-        equivalent_magmas = get_equivalent_magmas(
-            torch.tensor([[[1, 1], [0, 0]]], device=CURRENT_DEVICE)
-        )
-        true_equivalent_magmas = torch.tensor(
-            [[[1, 0], [1, 0]], [[1, 1], [0, 0]]], device=CURRENT_DEVICE
-        )
-        self.assertIsInstance(equivalent_magmas, torch.Tensor)
-        n = equivalent_magmas.shape[0]
-        self.assertEqual(n, 2)
-        for i in range(n):
-            self.assertIsInstance(equivalent_magmas[i], torch.Tensor)
-            self.assertTrue(
-                torch.allclose(
-                    equivalent_magmas[i], true_equivalent_magmas[i],
-                )
             )
 
     def test_create_table_if_not_exists(self):
