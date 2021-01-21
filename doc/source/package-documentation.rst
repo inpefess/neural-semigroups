@@ -59,7 +59,7 @@ A collection of different functions used by other modules.
 .. autofunction:: get_newest_file
 .. autofunction:: make_discrete
 .. autofunction:: count_different
-.. autofunction:: corrupt_input
+.. autofunction:: hide_cells
 .. autofunction:: read_whole_file
 .. autofunction:: partial_table_to_cube
 .. autofunction:: create_table_if_not_exists

@@ -29,12 +29,11 @@ class TestMagmaDAE(TestCase):
         torch.manual_seed(0)
         self.cardinality = 4
         self.magma_dae = MagmaDAE(
-            cardinality=self.cardinality, hidden_dims=[4], dropout_rate=0.6
+            cardinality=self.cardinality, hidden_dims=[4]
         ).to(CURRENT_DEVICE)
         self.magma_vae = MagmaDAE(
             cardinality=self.cardinality,
             hidden_dims=[4],
-            dropout_rate=0.6,
             do_reparametrization=True,
         )
 

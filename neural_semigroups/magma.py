@@ -226,12 +226,9 @@ class Magma:
     def random_isomorphism(self) -> torch.Tensor:
         """
         get some Cayley table isomorphic to ``self.cayley_table`` form example
-
         >>> Magma(torch.tensor([[0, 0], [0, 0]])).random_isomorphism()
         tensor([[1, 1],
-            [1, 1]])
-
-        :returns:
+                        [1, 1]])
         """
         permutation_tensor = torch.randperm(self.cayley_table.shape[0]).to(
             self.cayley_table.device

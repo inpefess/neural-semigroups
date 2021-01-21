@@ -24,7 +24,6 @@ import torch
 from neural_semigroups.constants import CURRENT_DEVICE, TEST_TEMP_DATA
 from neural_semigroups.utils import (
     FOUR_GROUP,
-    corrupt_input,
     create_table_if_not_exists,
     get_equivalent_magmas,
     get_magma_by_index,
@@ -122,18 +121,6 @@ class TestUtils(TestCase):
                     equivalent_magmas[i], true_equivalent_magmas[i],
                 )
             )
-
-    def test_dropout(self):
-        # first dimension is a batch size
-        # for all x and y: x * y = 0
-        cayley_cube = torch.zeros([1, 4, 4, 4])
-        cayley_cube[:, :, :, 0] = 1.0
-        self.assertEqual(
-            (corrupt_input(cayley_cube, 0.5) == cayley_cube).sum(), 40
-        )
-        self.assertTrue(
-            torch.allclose(corrupt_input(cayley_cube, 0.0), cayley_cube,)
-        )
 
     def test_create_table_if_not_exists(self):
         db_name = os.path.join(TEST_TEMP_DATA, "test.db")
