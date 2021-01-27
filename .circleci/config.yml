@@ -17,6 +17,13 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
       - run:
+          name: install mace4
+          command: |
+            mkdir mace4_bin
+            cd mace4_bin
+            wget https://github.com/inpefess/Prover9/releases/download/LADR-2017-11A/mace4
+            chmod u+x mace4
+      - run:
           name: install dependencies
           command: |
             python3 -m venv venv
@@ -31,6 +38,7 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
+            export PATH=$(pwd)/mace4_bin:$PATH
             pytest --cov neural_semigroups --cov-report xml --cov-fail-under=99\
                    --junit-xml test-results/neural-semigroups.xml\
                    --doctest-modules neural_semigroups tests
@@ -45,7 +53,7 @@ jobs:
           name: run type checks
           command: |
             . venv/bin/activate
-            mypy --config-file mypy.ini neural_semigroups scripts tests
+            mypy --config-file mypy.ini neural_semigroups tests
       - run:
           name: upload data to codecov
           command: |
