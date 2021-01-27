@@ -353,7 +353,7 @@ def create_table_if_not_exists(
 
 
 def insert_values_into_table(
-    cursor: sqlite3.Cursor, table_name: str, values: Tuple[str]
+    cursor: sqlite3.Cursor, table_name: str, values: Tuple[str, ...]
 ) -> None:
     """
     inserts values into a table
