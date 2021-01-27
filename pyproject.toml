@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "neural-semigroups"
-version = "0.5.4"
+version = "0.5.5"
 description = "Neural networks powered research of semigroups"
 authors = ["Boris Shminke <boris@shminke.ml>"]
 license = "Apache-2.0"

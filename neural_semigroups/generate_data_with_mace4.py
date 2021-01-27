@@ -14,11 +14,12 @@
    limitations under the License.
 """
 import os
+import sqlite3
 import subprocess
 from argparse import ArgumentParser, Namespace
 from functools import partial
 from multiprocessing.pool import Pool
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import torch
 from torch import Tensor
@@ -26,11 +27,14 @@ from tqdm import tqdm
 
 from neural_semigroups import Magma
 from neural_semigroups.utils import (
+    connect_to_db,
     create_table_if_not_exists,
     hide_cells,
     insert_values_into_table,
     read_whole_file,
 )
+
+TABLE_NAME = "mace_output"
 
 
 def write_mace_input(partial_table: Tensor, dim: int, filename: str) -> None:
@@ -93,8 +97,11 @@ def table_completion(
     return output, errors
 
 
-def parse_args() -> Namespace:
+def parse_args(args: Optional[List[str]]) -> Namespace:
     """
+
+    :param args: a list of string arguments
+        (for testing and use in a non script scenario)
     :returns: arguments namespace for the script
     """
     argument_parser = ArgumentParser()
@@ -102,7 +109,7 @@ def parse_args() -> Namespace:
     argument_parser.add_argument("--min_dim", type=int, required=True)
     argument_parser.add_argument("--number_of_tasks", type=int, required=True)
     argument_parser.add_argument(
-        "--number_of_processes", type=int, required=True
+        "--number_of_processes", type=int, required=False, default=1
     )
     argument_parser.add_argument(
         "--mace_timeout", type=int, required=False, default=-1
@@ -111,22 +118,25 @@ def parse_args() -> Namespace:
         "--mace_memory_mb", type=int, required=False, default=500
     )
     argument_parser.add_argument("--database_name", type=str, required=True)
-    args = argument_parser.parse_args()
-    return args
+    parsed_args = argument_parser.parse_args(args)
+    return parsed_args
 
 
-def main():
-    """ do all """
-    args = parse_args()
-    dims = (
-        torch.randint(args.min_dim, args.max_dim + 1, (args.number_of_tasks,))
-        .numpy()
-        .tolist()
-    )
-    table_name = "mace_output"
-    with Pool(processes=args.number_of_processes) as pool:
+def work_with_database(
+    cursor: sqlite3.Cursor, args: Namespace, pool: Pool, dims: int
+) -> None:
+    """
+    a function-helper
+
+    :param cursor: a cursor for a database to work with
+    :param args: additional arguments
+    :param pool: a multiprocessing pool
+    :param dims: semigroups cardinality
+    :returns:
+    """
+    try:
         create_table_if_not_exists(
-            args.database_name, table_name, ["output STRING", "errors STRING"],
+            cursor, TABLE_NAME, ["output STRING", "errors STRING"],
         )
         with tqdm(total=args.number_of_tasks) as progress_bar:
             for output, errors in pool.imap_unordered(
@@ -138,11 +148,30 @@ def main():
                 ),
                 range(args.number_of_tasks),
             ):
-                insert_values_into_table(
-                    args.database_name, table_name, (output, errors)
-                )
+                insert_values_into_table(cursor, TABLE_NAME, (output, errors))
                 progress_bar.update()
+    finally:
+        pool.close()
+        pool.join()
+
+
+def generate_data_with_mace4(input_args: Optional[List[str]] = None) -> None:
+    """
+    :param input_args: a list of arguments
+        (if ``None`` then ones from the command line are used)
+    :returns:
+    """
+    args = parse_args(input_args)
+    dims = (
+        torch.randint(args.min_dim, args.max_dim + 1, (args.number_of_tasks,))
+        .numpy()
+        .tolist()
+    )
+    cursor = connect_to_db(args.database_name)
+    pool = Pool(processes=args.number_of_processes)
+    work_with_database(cursor, args, pool, dims)
+    cursor.connection.close()
 
 
 if __name__ == "__main__":
-    main()
+    generate_data_with_mace4()

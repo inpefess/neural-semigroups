@@ -36,11 +36,23 @@ Precise Guess Loss
    :special-members: __init__
    :members:
 
+Semigroups Dataset
+-------------------
+.. autoclass:: neural_semigroups.SemigroupsDataset
+   :special-members: __init__
+   :members:
+      
 .. _smallsemi-dataset:
 
 Smallsemi Dataset
 -----------------
 .. autoclass:: neural_semigroups.Smallsemi
+   :special-members: __init__
+   :members:
+
+Mace4 Semigroups Dataset
+-------------------------
+.. autoclass:: neural_semigroups.Mace4Semigroups
    :special-members: __init__
    :members:
 
@@ -61,7 +73,15 @@ A collection of different functions used by other modules.
 .. autofunction:: hide_cells
 .. autofunction:: read_whole_file
 .. autofunction:: partial_table_to_cube
+.. autofunction:: connect_to_db
 .. autofunction:: create_table_if_not_exists
 .. autofunction:: insert_values_into_table
 .. autofunction:: gunzip
 		  
+generate_data_with_mace4
+-------------------------
+.. currentmodule:: neural_semigroups.generate_data_with_mace4
+
+A script which generates semigroups with ``mace4`` and saves them in an ``sqlite`` database.
+
+.. autofunction:: generate_data_with_mace4

@@ -19,8 +19,8 @@ from glob import glob
 from typing import Callable, Optional
 
 import requests
-from torch.utils.data import TensorDataset
 
+from neural_semigroups.semigroups_dataset import SemigroupsDataset
 from neural_semigroups.utils import (
     download_file_from_url,
     find_substring_by_pattern,
@@ -29,7 +29,7 @@ from neural_semigroups.utils import (
 )
 
 
-class Smallsemi(TensorDataset):
+class Smallsemi(SemigroupsDataset):
     """
     a ``torch.util.data.Dataset`` wrapper for the data
     from https://www.gap-system.org/Packages/smallsemi.html
@@ -72,13 +72,10 @@ class Smallsemi(TensorDataset):
         :param download: if true, downloads the dataset from the internet
             and puts it in root directory. If dataset is already downloaded,
             it is not downloaded again.
-        :param transform: a function/transform that takes in an PIL image
+        :param transform: a function/transform that takes in a Cayley table
             and returns a transformed version.
         """
-        super().__init__()
-        self.root = root
-        self.cardinality = cardinality
-        self.transform = transform
+        super().__init__(root, cardinality, transform)
         if download:
             self.download()
         self.load_data_and_labels_from_smallsemi()
@@ -117,9 +114,3 @@ class Smallsemi(TensorDataset):
         with open(filenames[0], "r") as file:
             database = import_smallsemi_format(file.readlines())
             self.tensors = (database, database)
-
-    def __getitem__(self, index):
-        tensors = super().__getitem__(index)
-        if self.transform is not None:
-            tensors = self.transform(tensors)
-        return tensors
