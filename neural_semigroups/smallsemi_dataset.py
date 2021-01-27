@@ -72,7 +72,7 @@ class Smallsemi(TensorDataset):
         :param download: if true, downloads the dataset from the internet
             and puts it in root directory. If dataset is already downloaded,
             it is not downloaded again.
-        :param transform: a function/transform that takes in an PIL image
+        :param transform: a function/transform that takes in a Cayley table
             and returns a transformed version.
         """
         super().__init__()
