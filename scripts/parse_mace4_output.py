@@ -21,6 +21,8 @@ from typing import List, Tuple
 import torch
 from tqdm import tqdm
 
+from neural_semigroups.utils import connect_to_db
+
 
 def parse_args() -> Namespace:
     """
@@ -51,17 +53,6 @@ def get_cube_from_output(output: str, dim: int) -> torch.Tensor:
         cube[i, j, :] = 0
         cube[i, j, k] = 1
     return cube
-
-
-def connect_to_db(database_name: str) -> sqlite3.Cursor:
-    """ open a connection to an SQLite database
-
-    :param database_name: filename of a database
-    :returns: a cursor to the database
-    """
-    connection = sqlite3.connect(database_name, isolation_level=None)
-    connection.execute("PRAGMA journal_mode=WAL;")
-    return connection.cursor()
 
 
 def get_additional_info(cursor: sqlite3.Cursor) -> Tuple[int, int]:

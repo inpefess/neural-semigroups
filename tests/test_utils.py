@@ -14,7 +14,6 @@
    limitations under the License.
 """
 import os
-import sqlite3
 
 # pylint: disable-all
 from unittest import TestCase
@@ -23,6 +22,7 @@ import torch
 
 from neural_semigroups.constants import CURRENT_DEVICE, TEST_TEMP_DATA
 from neural_semigroups.utils import (
+    connect_to_db,
     create_table_if_not_exists,
     get_magma_by_index,
     import_smallsemi_format,
@@ -93,20 +93,18 @@ class TestUtils(TestCase):
         db_name = os.path.join(TEST_TEMP_DATA, "test.db")
         if os.path.exists(db_name):
             os.remove(db_name)
+        cursor = connect_to_db(db_name)
         create_table_if_not_exists(
-            db_name, "test_table", ["test1 INT, test2 INT, test3 STRING"],
+            cursor, "test_table", ["test1 INT, test2 INT, test3 STRING"],
         )
-        insert_values_into_table(db_name, "test_table", (1, 2, "three"))
-        with sqlite3.connect(db_name, isolation_level=None) as connection:
-            connection.execute("PRAGMA journal_mode=WAL;")
-            cursor = connection.cursor()
-            cursor.execute(
-                "SELECT sql FROM sqlite_master WHERE name = 'test_table'"
-            )
-            self.assertEqual(
-                cursor.fetchone()[0],
-                "CREATE TABLE test_table(test1 INT, test2 INT, test3 STRING)",
-            )
-            cursor.execute("SELECT test1, test2, test3 FROM test_table")
-            self.assertEqual(cursor.fetchone(), (1, 2, "three"))
-            cursor.close()
+        insert_values_into_table(cursor, "test_table", (1, 2, "three"))
+        cursor.execute(
+            "SELECT sql FROM sqlite_master WHERE name = 'test_table'"
+        )
+        self.assertEqual(
+            cursor.fetchone()[0],
+            "CREATE TABLE test_table(test1 INT, test2 INT, test3 STRING)",
+        )
+        cursor.execute("SELECT test1, test2, test3 FROM test_table")
+        self.assertEqual(cursor.fetchone(), (1, 2, "three"))
+        cursor.connection.close()

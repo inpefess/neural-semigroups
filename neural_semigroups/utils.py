@@ -333,48 +333,38 @@ def partial_table_to_cube(table: Tensor) -> Tensor:
 
 
 def create_table_if_not_exists(
-    database_name: str, table_name, columns: List[str]
+    cursor: sqlite3.Cursor, table_name: str, columns: List[str]
 ) -> None:
     """
     create a table if it does not exist
 
-    :param database_name: where to create a table
+    :param cursor: a cursor to the database where to create a table
     :param table_name: what table to create
     :param columns: a list of strings of format "COLUMN_NAME COLUMN_TYPE"
     :returns:
     """
-    with sqlite3.connect(database_name, isolation_level=None) as connection:
-        connection.execute("PRAGMA journal_mode=WAL;")
-        cursor = connection.cursor()
-        cursor.execute(
-            "SELECT COUNT(*) FROM sqlite_master WHERE name = ?", [table_name]
+    cursor.execute(
+        "SELECT COUNT(*) FROM sqlite_master WHERE name = ?", [table_name]
+    )
+    if cursor.fetchone()[0] == 0:
+        cursor.connection.execute(
+            f"CREATE TABLE {table_name}({', '.join(columns)})"
         )
-        if cursor.fetchone()[0] == 0:
-            connection.execute(
-                f"CREATE TABLE {table_name}({', '.join(columns)})"
-            )
-        cursor.close()
 
 
 def insert_values_into_table(
-    database_name: str, table_name: str, values: Tuple[str]
+    cursor: sqlite3.Cursor, table_name: str, values: Tuple[str]
 ) -> None:
     """
     inserts values into a table
 
-    :param database_name:
-    :param table_name:
-    :param values:
+    :param cursor: a cursor to database where the target table is located
+    :param table_name: the target table
+    :param values: values to insert into the target table
     :returns:
     """
-    with sqlite3.connect(database_name, isolation_level=None) as connection:
-        connection.execute("PRAGMA journal_mode=WAL;")
-        cursor = connection.cursor()
-        placeholders = ", ".join(len(values) * ["?"])
-        cursor.execute(
-            f"INSERT INTO {table_name} VALUES({placeholders})", values
-        )
-        cursor.close()
+    placeholders = ", ".join(len(values) * ["?"])
+    cursor.execute(f"INSERT INTO {table_name} VALUES({placeholders})", values)
 
 
 def gunzip(archive_path: str) -> None:
@@ -387,3 +377,14 @@ def gunzip(archive_path: str) -> None:
     with gzip.open(archive_path, "rb") as f_in:
         with open(splitext(archive_path)[0], "wb",) as f_out:
             shutil.copyfileobj(f_in, f_out)
+
+
+def connect_to_db(database_name: str) -> sqlite3.Cursor:
+    """ open a connection to an SQLite database
+
+    :param database_name: filename of a database
+    :returns: a cursor to the database
+    """
+    connection = sqlite3.connect(database_name, isolation_level=None)
+    connection.execute("PRAGMA journal_mode=WAL;")
+    return connection.cursor()

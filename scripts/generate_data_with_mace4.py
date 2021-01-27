@@ -26,11 +26,14 @@ from tqdm import tqdm
 
 from neural_semigroups import Magma
 from neural_semigroups.utils import (
+    connect_to_db,
     create_table_if_not_exists,
     hide_cells,
     insert_values_into_table,
     read_whole_file,
 )
+
+TABLE_NAME = "mace_output"
 
 
 def write_mace_input(partial_table: Tensor, dim: int, filename: str) -> None:
@@ -123,10 +126,10 @@ def main():
         .numpy()
         .tolist()
     )
-    table_name = "mace_output"
+    cursor = connect_to_db(args.database_name)
     with Pool(processes=args.number_of_processes) as pool:
         create_table_if_not_exists(
-            args.database_name, table_name, ["output STRING", "errors STRING"],
+            cursor, TABLE_NAME, ["output STRING", "errors STRING"],
         )
         with tqdm(total=args.number_of_tasks) as progress_bar:
             for output, errors in pool.imap_unordered(
@@ -138,10 +141,9 @@ def main():
                 ),
                 range(args.number_of_tasks),
             ):
-                insert_values_into_table(
-                    args.database_name, table_name, (output, errors)
-                )
+                insert_values_into_table(cursor, TABLE_NAME, (output, errors))
                 progress_bar.update()
+    cursor.connection.close()
 
 
 if __name__ == "__main__":
