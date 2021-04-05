@@ -230,7 +230,7 @@ def make_discrete(cayley_cubes: torch.Tensor) -> torch.Tensor:
              [[1., 0.],
               [0., 1.]]]])
 
-    :param cayley_cube: a batch of probabilistic cubes representing Cayley tables
+    :param cayley_cubes: a batch of probabilistic cubes representing Cayley tables
     :returns: a batch of probabilistic cubes filled in with ``0`` or ``1``
     """
     cardinality = cayley_cubes.shape[1]

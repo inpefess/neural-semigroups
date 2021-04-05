@@ -55,7 +55,8 @@ def get_encoder_and_decoder_layers(
     construct symmetrical encoder and decoder modules
 
     :param dims: the dimensions of layers in an encoder part (the same dimensions are used for a decoder)
-    :param split_last: if ``True``, makes their last encoder dimensions twice larger than the first decoder dimension (for a reparametrization trick)
+    :param split_last: if ``True``, makes their last encoder dimensions twice larger than the first decoder dimension
+        (for a reparametrization trick)
     :returns: a pair of two sequential models, representing encoder and decoder layers
     """
     encoder_dims = dims.copy()
