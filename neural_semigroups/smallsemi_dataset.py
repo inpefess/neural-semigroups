@@ -83,7 +83,7 @@ class Smallsemi(SemigroupsDataset):
     def download(self) -> None:
         """ downloads, unzips and moves ``smallsemi`` data """
         data_paths = f"{self.root}/smallsemi-*/data/data2to7/data*.gl.gz"
-        if glob(data_paths) == []:
+        if not glob(data_paths):
             full_name_with_version = find_substring_by_pattern(
                 strings=requests.get(self.gap_packages_url).text.split("\n"),
                 starts_with="smallsemi",

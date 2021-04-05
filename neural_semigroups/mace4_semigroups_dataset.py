@@ -80,7 +80,7 @@ class Mace4Semigroups(SemigroupsDataset):
         :returns: a Cayley table
         """
         search_result = re.search(
-            r".*function\(\*\(\_,\_\),\ \[(.*)\]\)\..*", output, re.DOTALL
+            r".*function\(\*\(_,_\), \[(.*)]\)\..*", output, re.DOTALL
         )
         if search_result is None:
             raise ValueError("wrong mace4 output file format!")
