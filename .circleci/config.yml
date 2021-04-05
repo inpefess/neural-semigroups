@@ -28,7 +28,9 @@ jobs:
           command: |
             python3 -m venv venv
             . venv/bin/activate
-            pip install -U pip poetry
+            pip install -U pip
+            pip install -U wheel setuptools
+            pip install -U poetry
             poetry install
       - save_cache:
           paths:
