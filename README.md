@@ -9,6 +9,19 @@ The simplest way to get started is to [use Google Colaboratory](https://colab.re
 More documentation can be found 
 [here](https://neural-semigroups.readthedocs.io).
 
+There is also a [paper](https://arxiv.org/abs/2103.07388) with more maths inside. It can be used to cite the package:
+
+<pre>
+@misc{balzin2021neural,
+      title={A Neural Network for Semigroups}, 
+      author={Edouard Balzin and Boris Shminke},
+      year={2021},
+      eprint={2103.07388},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+</pre>
+
 ## Motivation
 
 This work was inspired by [a sudoku
