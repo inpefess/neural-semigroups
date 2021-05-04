@@ -3,7 +3,7 @@
 Installing Neural Semigroups for Development
 ============================================
 
-First, get Python 3.6
+First, get Python 3.6 or later (for now, it doesn't support Python 3.9 because of ``torch`` dependency).
 
 Then run several commands in a terminal: ::
 
@@ -11,7 +11,7 @@ Then run several commands in a terminal: ::
   cd neural-semigroups
   python -m venv venv
   source ./venv/bin/activate
-  pip install -U pip poetry
+  pip install -U pip poetry wheel setuptools
   poetry install
 
 This could take some time (mostly downloading ``torch``).
