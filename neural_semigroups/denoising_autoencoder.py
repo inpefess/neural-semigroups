@@ -146,7 +146,7 @@ class MagmaDAE(Module):
         return sample
 
     # pylint: disable=arguments-differ
-    def forward(self, cayley_cubes: Tensor) -> Tensor:
+    def forward(self, cayley_cubes: Tensor) -> Tensor:  # type: ignore
         """
         forward pass inherited from Module
 
@@ -160,6 +160,8 @@ class MagmaDAE(Module):
             torch.eq(cayley_cubes, 1.0),
             self._nearly_one,
             torch.where(
-                torch.eq(cayley_cubes, 0.0), self._nearly_zero, decoded_input,
+                torch.eq(cayley_cubes, 0.0),
+                self._nearly_zero,
+                decoded_input,
             ),
         )

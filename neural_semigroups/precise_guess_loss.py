@@ -26,7 +26,9 @@ class PreciseGuessLoss(Module):
     """
 
     # pylint: disable=arguments-differ, no-self-use
-    def forward(self, predicted_cubes: Tensor, target_cubes: Tensor) -> Tensor:
+    def forward(  # type: ignore
+        self, predicted_cubes: Tensor, target_cubes: Tensor
+    ) -> Tensor:
         """
         finds a percentage of predicted Cayley tables,
         identical to the target ones

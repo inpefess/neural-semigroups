@@ -37,7 +37,7 @@ class AssociatorLoss(Module):
         self.discrete = discrete
 
     # pylint: disable=arguments-differ
-    def forward(self, cayley_cubes: Tensor) -> Tensor:
+    def forward(self, cayley_cubes: Tensor) -> Tensor:  # type: ignore
         """
         finds a probabilistic associator of a given probabilistic Cayley cube
 
