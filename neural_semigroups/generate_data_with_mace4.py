@@ -171,7 +171,3 @@ def generate_data_with_mace4(input_args: Optional[List[str]] = None) -> None:
     pool = Pool(processes=args.number_of_processes)
     work_with_database(cursor, args, pool, dims)
     cursor.connection.close()
-
-
-if __name__ == "__main__":
-    generate_data_with_mace4()

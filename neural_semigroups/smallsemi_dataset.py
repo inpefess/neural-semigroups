@@ -81,7 +81,7 @@ class Smallsemi(SemigroupsDataset):
         self.load_data_and_labels_from_smallsemi()
 
     def download(self) -> None:
-        """ downloads, unzips and moves ``smallsemi`` data """
+        """downloads, unzips and moves ``smallsemi`` data"""
         data_paths = f"{self.root}/smallsemi-*/data/data2to7/data*.gl.gz"
         if not glob(data_paths):
             full_name_with_version = find_substring_by_pattern(
@@ -102,7 +102,7 @@ class Smallsemi(SemigroupsDataset):
                 gunzip(archive_path)
 
     def load_data_and_labels_from_smallsemi(self) -> None:
-        """ loads data from ``smallsemi`` package """
+        """loads data from ``smallsemi`` package"""
         filenames = glob(
             f"{self.root}/smallsemi-*/"
             + f"data/data2to7/data{self.cardinality}.gl"
@@ -113,4 +113,4 @@ class Smallsemi(SemigroupsDataset):
             )
         with open(filenames[0], "r") as file:
             database = import_smallsemi_format(file.readlines())
-            self.tensors = (database, database)
+            self.tensors = [database, database]

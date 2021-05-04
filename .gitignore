@@ -8,7 +8,7 @@ __pycache__
 *.npz
 *.joblib
 *.model
-venv
+venv*/
 pyvenv.cfg
 #*.*#
 runs

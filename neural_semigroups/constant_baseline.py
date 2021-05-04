@@ -54,7 +54,7 @@ class ConstantBaseline(Module):
         self.constant_distribution[fill_in_with] = 1.0
 
     # pylint: disable=arguments-differ,unused-argument
-    def forward(self, cayley_cube: Tensor) -> Tensor:
+    def forward(self, cayley_cube: Tensor) -> Tensor:  # type: ignore
         """
         forward pass inhereted from Module
 
@@ -79,5 +79,5 @@ class ConstantBaseline(Module):
         :returns: a batch of constant values (set in the constructor)
         """
         result = cayley_cube.clone().detach()
-        result[cayley_cube.max(3).values != 1.0] = self.constant_distribution
+        result[cayley_cube.max(3)[0] != 1.0] = self.constant_distribution
         return result
