@@ -52,6 +52,10 @@ class Mace4Semigroups(SemigroupsDataset):
     >>> mace4_semigroups[0][0]
     tensor([[0, 0],
             [0, 0]])
+    >>> mace4_semigroups.get_table_from_output("not a mace4 output file")
+    Traceback (most recent call last):
+        ...
+    ValueError: wrong mace4 output file format!
     """
 
     _where_clause = "WHERE output LIKE '%Process % exit (max_models)%'"
