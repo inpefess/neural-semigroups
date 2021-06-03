@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "neural-semigroups"
-version = "0.5.7"
+version = "0.5.8"
 description = "Neural networks powered research of semigroups"
 authors = ["Boris Shminke <boris@shminke.ml>"]
 license = "Apache-2.0"
@@ -48,6 +48,7 @@ data-science-types = "*"
 vulture = "*"
 kaggle = "*"
 matplotlib = "*"
+jedi = "0.17.2"
 
 [tool.black]
 line-length=79
