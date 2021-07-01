@@ -20,7 +20,6 @@ from torch.nn import Module
 from neural_semigroups.constants import CURRENT_DEVICE
 
 
-# pylint: disable=abstract-method
 class ConstantBaseline(Module):
     """
     A model that always fills in the same number
@@ -53,8 +52,7 @@ class ConstantBaseline(Module):
         ).to(CURRENT_DEVICE)
         self.constant_distribution[fill_in_with] = 1.0
 
-    # pylint: disable=arguments-differ,unused-argument
-    def forward(self, cayley_cube: Tensor) -> Tensor:  # type: ignore
+    def forward(self, cayley_cube: Tensor) -> Tensor:
         """
         forward pass inhereted from Module
 

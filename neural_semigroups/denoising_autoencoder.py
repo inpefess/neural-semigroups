@@ -68,7 +68,6 @@ def get_encoder_and_decoder_layers(
     return encoder_layers, decoder_layers
 
 
-# pylint: disable=abstract-method
 class MagmaDAE(Module):
     """
     Denoising Autoencoder for probability Cayley cubes of magmas
@@ -147,8 +146,7 @@ class MagmaDAE(Module):
             sample = mu_and_sigma
         return sample
 
-    # pylint: disable=arguments-differ
-    def forward(self, cayley_cubes: Tensor) -> Tensor:  # type: ignore
+    def forward(self, cayley_cubes: Tensor) -> Tensor:
         """
         forward pass inherited from Module
 

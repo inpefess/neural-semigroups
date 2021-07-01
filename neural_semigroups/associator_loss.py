@@ -22,7 +22,6 @@ from torch.nn.functional import kl_div
 from neural_semigroups.utils import count_different, make_discrete
 
 
-# pylint: disable=abstract-method
 class AssociatorLoss(Module):
     """
     probabilistic associator loss
@@ -36,8 +35,7 @@ class AssociatorLoss(Module):
         super().__init__()
         self.discrete = discrete
 
-    # pylint: disable=arguments-differ
-    def forward(self, cayley_cubes: Tensor) -> Tensor:  # type: ignore
+    def forward(self, cayley_cubes: Tensor) -> Tensor:
         """
         finds a probabilistic associator of a given probabilistic Cayley cube
 
