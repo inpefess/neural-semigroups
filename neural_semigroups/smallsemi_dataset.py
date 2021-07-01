@@ -113,4 +113,4 @@ class Smallsemi(SemigroupsDataset):
             )
         with open(filenames[0], "r") as file:
             database = import_smallsemi_format(file.readlines())
-            self.tensors = [database, database]
+            self.tensors = (database, database)
