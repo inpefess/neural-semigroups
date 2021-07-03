@@ -19,16 +19,13 @@ from torch.nn import Module
 from neural_semigroups.utils import count_different, make_discrete
 
 
-# pylint: disable=abstract-method
 class PreciseGuessLoss(Module):
     """
     loss for comparing probabilistic Cayley cubes precisely
     """
 
-    # pylint: disable=arguments-differ, no-self-use
-    def forward(  # type: ignore
-        self, predicted_cubes: Tensor, target_cubes: Tensor
-    ) -> Tensor:
+    # pylint: disable=no-self-use
+    def forward(self, predicted_cubes: Tensor, target_cubes: Tensor) -> Tensor:
         """
         finds a percentage of predicted Cayley tables,
         identical to the target ones

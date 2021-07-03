@@ -68,7 +68,6 @@ def get_encoder_and_decoder_layers(
     return encoder_layers, decoder_layers
 
 
-# pylint: disable=abstract-method
 class MagmaDAE(Module):
     """
     Denoising Autoencoder for probability Cayley cubes of magmas
@@ -108,6 +107,7 @@ class MagmaDAE(Module):
         :param corrupted_input: a tensor with two indices
         :returns: some tensor with two indices and non-negative values
         """
+        # pylint: disable=not-callable
         return self.encoder_layers(
             corrupted_input.view(corrupted_input.shape[0], -1)
         )
@@ -120,6 +120,7 @@ class MagmaDAE(Module):
         :param encoded_input: an embedding vector
         :returns: a vector of values from ``0`` to ``1`` (kind of probabilities)
         """
+        # pylint: disable=not-callable
         return (
             Softmax2d()(
                 self.decoder_layers(encoded_input)
@@ -145,8 +146,7 @@ class MagmaDAE(Module):
             sample = mu_and_sigma
         return sample
 
-    # pylint: disable=arguments-differ
-    def forward(self, cayley_cubes: Tensor) -> Tensor:  # type: ignore
+    def forward(self, cayley_cubes: Tensor) -> Tensor:
         """
         forward pass inherited from Module
 

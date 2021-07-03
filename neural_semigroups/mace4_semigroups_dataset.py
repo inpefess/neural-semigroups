@@ -124,4 +124,4 @@ class Mace4Semigroups(SemigroupsDataset):
         for _ in tqdm(range(row_count)):
             output = cursor.fetchone()[0]
             features.append(self.get_table_from_output(output))
-        self.tensors = [torch.stack(features)]
+        self.tensors = (torch.stack(features),)

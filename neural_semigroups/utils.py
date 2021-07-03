@@ -375,12 +375,15 @@ def gunzip(archive_path: str) -> None:
     :returns:
     """
     with gzip.open(archive_path, "rb") as f_in:
-        with open(splitext(archive_path)[0], "wb",) as f_out:
+        with open(
+            splitext(archive_path)[0],
+            "wb",
+        ) as f_out:
             shutil.copyfileobj(f_in, f_out)
 
 
 def connect_to_db(database_name: str) -> sqlite3.Cursor:
-    """ open a connection to an SQLite database
+    """open a connection to an SQLite database
 
     :param database_name: filename of a database
     :returns: a cursor to the database
