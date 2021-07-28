@@ -7,8 +7,6 @@ To look at more experimental results for different semigroups cardinalities, you
 
 * `cardinality 4`_
 * `cardinality 5`_
-* `cardinality 6`_
-* `cardinality 7`_
 
 .. toctree::
    :maxdepth: 2
@@ -26,9 +24,7 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. _Google Colaboratory: https://colab.research.google.com/github/inpefess/neural-semigroups/blob/master/examples/dae-4-colab.ipynb
+.. _Google Colaboratory: https://colab.research.google.com/github/inpefess/neural-semigroups/blob/master/examples/dae_4_colab.ipynb
 .. _Kaggle: https://kaggle.com
 .. _cardinality 4: https://www.kaggle.com/inpefess/neural-semigroups-dae-dim-4
 .. _cardinality 5: https://www.kaggle.com/inpefess/neural-semigroups-dae-dim-5
-.. _cardinality 6: https://www.kaggle.com/inpefess/neural-semigroups-dae-dim-6
-.. _cardinality 7: https://www.kaggle.com/inpefess/neural-semigroups-dae-dim-7
