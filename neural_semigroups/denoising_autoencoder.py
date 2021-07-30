@@ -132,7 +132,7 @@ class MagmaDAE(Module):
             .transpose(1, 3)
         )
 
-    def reparametrize(self, mu_and_sigma: Tensor) -> Tensor:
+    def reparametrize(self, mu_and_log_sigma: Tensor) -> Tensor:
         """
         do a reparametrization trick
 
@@ -140,10 +140,14 @@ class MagmaDAE(Module):
         :returns: sample from a distribution
         """
         if self.do_reparametrization:
-            dim = mu_and_sigma.shape[1] // 2
-            sample = torch.normal(mu_and_sigma[:, :dim], mu_and_sigma[:, dim:])
+            dim = mu_and_log_sigma.shape[1] // 2
+            sample = mu_and_log_sigma[:, :dim] + torch.exp(
+                mu_and_log_sigma[:, dim:]
+            ) * torch.randn(
+                (mu_and_log_sigma.shape[0], dim), device=CURRENT_DEVICE
+            )
         else:
-            sample = mu_and_sigma
+            sample = mu_and_log_sigma
         return sample
 
     def forward(self, cayley_cubes: Tensor) -> Tensor:

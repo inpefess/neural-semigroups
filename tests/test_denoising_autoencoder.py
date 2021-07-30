@@ -49,8 +49,10 @@ class TestMagmaDAE(TestCase):
             .to(CURRENT_DEVICE)
         )
         self.assertEqual(
-            self.magma_dae(cayley_cube).detach().sum().item(), 32.0,
+            self.magma_dae(cayley_cube).detach().sum().item(),
+            32.0,
         )
         self.assertEqual(
-            self.magma_vae(cayley_cube).detach().sum().item(), 32.0,
+            self.magma_vae(cayley_cube).detach().sum().item(),
+            32.0,
         )
