@@ -100,16 +100,16 @@ class MagmaDAE(Module):
             [1 - (self.cardinality - 1) * 1e-6], device=CURRENT_DEVICE
         )
 
-    def encode(self, corrupted_input: Tensor) -> Tensor:
+    def encode(self, input_with_noise: Tensor) -> Tensor:
         """
         represent input cube as an embedding vector
 
-        :param corrupted_input: a tensor with two indices
+        :param input_with_noise: a tensor with two indices
         :returns: some tensor with two indices and non-negative values
         """
         # pylint: disable=not-callable
         return self.encoder_layers(
-            corrupted_input.view(corrupted_input.shape[0], -1)
+            input_with_noise.view(input_with_noise.shape[0], -1)
         )
 
     def decode(self, encoded_input: Tensor) -> Tensor:
@@ -132,7 +132,7 @@ class MagmaDAE(Module):
             .transpose(1, 3)
         )
 
-    def reparametrize(self, mu_and_sigma: Tensor) -> Tensor:
+    def reparametrize(self, mu_and_log_sigma: Tensor) -> Tensor:
         """
         do a reparametrization trick
 
@@ -140,10 +140,14 @@ class MagmaDAE(Module):
         :returns: sample from a distribution
         """
         if self.do_reparametrization:
-            dim = mu_and_sigma.shape[1] // 2
-            sample = torch.normal(mu_and_sigma[:, :dim], mu_and_sigma[:, dim:])
+            dim = mu_and_log_sigma.shape[1] // 2
+            sample = mu_and_log_sigma[:, :dim] + torch.exp(
+                mu_and_log_sigma[:, dim:]
+            ) * torch.randn(
+                (mu_and_log_sigma.shape[0], dim), device=CURRENT_DEVICE
+            )
         else:
-            sample = mu_and_sigma
+            sample = mu_and_log_sigma
         return sample
 
     def forward(self, cayley_cubes: Tensor) -> Tensor:
