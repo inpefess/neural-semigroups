@@ -77,7 +77,7 @@ def get_magma_by_index(cardinality: int, index: int) -> Magma:
             """
         An index must be non negative and less than $n^(n^2)$"""
         )
-    cayley_table = list()
+    cayley_table = []
     residual = index
     for _ in range(square):
         cayley_table.append(residual % cardinality)
@@ -298,7 +298,7 @@ def read_whole_file(filename: str) -> str:
     :param filename: a name of the file to read
     :returns: whole contents of the file
     """
-    with open(filename, "r") as input_file:
+    with open(filename, "r", encoding="utf-8") as input_file:
         text = input_file.read()
     return text
 
@@ -375,10 +375,7 @@ def gunzip(archive_path: str) -> None:
     :returns:
     """
     with gzip.open(archive_path, "rb") as f_in:
-        with open(
-            splitext(archive_path)[0],
-            "wb",
-        ) as f_out:
+        with open(splitext(archive_path)[0], "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
 
 

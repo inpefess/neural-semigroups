@@ -120,7 +120,7 @@ class Mace4Semigroups(SemigroupsDataset):
         cursor = connect_to_db(self.root)
         row_count = self.get_additional_info(cursor)
         cursor.execute(f"SELECT output FROM mace_output {self._where_clause}")
-        features = list()
+        features = []
         for _ in tqdm(range(row_count)):
             output = cursor.fetchone()[0]
             features.append(self.get_table_from_output(output))

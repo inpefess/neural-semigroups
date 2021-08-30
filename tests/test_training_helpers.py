@@ -95,7 +95,7 @@ class TestTrainingHelpers(TestCase):
 
     def test_get_tensorboard_logger(self):
         trainer = Engine(lambda x, y: 0.0)
-        three_evaluators = ThreeEvaluators(Module(), dict())
+        three_evaluators = ThreeEvaluators(Module(), {})
         tensorboard_logger = get_tensorboard_logger(
             trainer, three_evaluators, []
         )

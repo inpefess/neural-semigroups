@@ -111,6 +111,6 @@ class Smallsemi(SemigroupsDataset):
             raise ValueError(
                 f"{self.root} must have exactly one version of smallsemi"
             )
-        with open(filenames[0], "r") as file:
+        with open(filenames[0], "r", encoding="utf-8") as file:
             database = import_smallsemi_format(file.readlines())
             self.tensors = (database, database)

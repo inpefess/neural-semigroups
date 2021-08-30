@@ -280,4 +280,4 @@ def learning_pipeline(
         evaluators.validation, trainer, "semigroup", model
     )
     with get_tensorboard_logger(trainer, evaluators, list(metrics.keys())):
-        trainer.run(data_loaders[0], max_epochs=params["epochs"])
+        trainer.run(data_loaders[0], max_epochs=int(params["epochs"]))
