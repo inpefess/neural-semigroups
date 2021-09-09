@@ -46,7 +46,7 @@ def write_mace_input(partial_table: Tensor, dim: int, filename: str) -> None:
     :param filename: where to save the file
     :returns:
     """
-    with open(filename, "w") as in_file:
+    with open(filename, "w", encoding="utf-8") as in_file:
         print("formulas(assumptions).", file=in_file)
         print("(x * y) * z = x * (y * z).", file=in_file)
         for i in range(dim):
@@ -75,9 +75,9 @@ def table_completion(
         int(torch.randint(1, dim * dim, (1,)).item()),
     )
     write_mace_input(partial_table, dim, f"{task_id}.in")
-    with open(f"{task_id}.in", "r") as task_in, open(
-        f"{task_id}.out", "w"
-    ) as task_out, open(f"{task_id}.err", "w") as task_err:
+    with open(f"{task_id}.in", "r", encoding="utf-8") as task_in, open(
+        f"{task_id}.out", "w", encoding="utf-8"
+    ) as task_out, open(f"{task_id}.err", "w", encoding="utf-8") as task_err:
         subprocess.run(
             [
                 "mace4",
@@ -136,7 +136,9 @@ def work_with_database(
     """
     try:
         create_table_if_not_exists(
-            cursor, TABLE_NAME, ["output STRING", "errors STRING"],
+            cursor,
+            TABLE_NAME,
+            ["output STRING", "errors STRING"],
         )
         with tqdm(total=args.number_of_tasks) as progress_bar:
             for output, errors in pool.imap_unordered(

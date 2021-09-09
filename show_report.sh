@@ -12,4 +12,4 @@ mypy --config-file mypy.ini ${PACKAGE_NAME} tests
 pytest --cov ${PACKAGE_NAME} --cov-report term-missing --cov-fail-under=99 \
        --junit-xml test-results/neural-semigroups.xml \
        --doctest-modules ${PACKAGE_NAME} tests/
-cloc --include-lang Python ${PACKAGE_NAME}
+scc -i py ${PACKAGE_NAME}
