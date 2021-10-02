@@ -1,43 +1,44 @@
+======================
 Package Documentation
-=====================
+======================
 
 Associator Loss
----------------
+===============
 .. autoclass:: neural_semigroups.AssociatorLoss
    :special-members: __init__
    :members:
 
 Constant Baseline
------------------
+=================
 .. autoclass:: neural_semigroups.ConstantBaseline
    :special-members: __init__
    :members:
 
 Cyclic Group
-------------
+============
 .. autoclass:: neural_semigroups.CyclicGroup
    :special-members: __init__      
 
 Denoising Autoencoder for Magmas
---------------------------------
+================================
 .. autoclass:: neural_semigroups.MagmaDAE
    :special-members: __init__
    :members:
 
 Magma
------
+======
 .. autoclass:: neural_semigroups.Magma
    :special-members: __init__
    :members:
 
 Precise Guess Loss
-------------------
+===================
 .. autoclass:: neural_semigroups.PreciseGuessLoss
    :special-members: __init__
    :members:
 
 Semigroups Dataset
--------------------
+===================
 .. autoclass:: neural_semigroups.SemigroupsDataset
    :special-members: __init__
    :members:
@@ -45,19 +46,19 @@ Semigroups Dataset
 .. _smallsemi-dataset:
 
 Smallsemi Dataset
------------------
+==================
 .. autoclass:: neural_semigroups.Smallsemi
    :special-members: __init__
    :members:
 
 Mace4 Semigroups Dataset
--------------------------
+=========================
 .. autoclass:: neural_semigroups.Mace4Semigroups
    :special-members: __init__
    :members:
 
 utils
------
+======
 .. currentmodule:: neural_semigroups.utils
 
 A collection of different functions used by other modules.
@@ -79,7 +80,7 @@ A collection of different functions used by other modules.
 .. autofunction:: gunzip
 		  
 generate_data_with_mace4
--------------------------
+=========================
 .. currentmodule:: neural_semigroups.generate_data_with_mace4
 
 A script which generates semigroups with ``mace4`` and saves them in an ``sqlite`` database.

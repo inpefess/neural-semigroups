@@ -103,7 +103,6 @@ notebook <https://colab.research.google.com/github/inpefess/neural-semigroups/bl
    :maxdepth: 2
    :caption: Contents:
 
-   for-developers
    about-data
    package-documentation
 
