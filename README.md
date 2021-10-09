@@ -4,28 +4,6 @@
 
 Here we try to model Cayley tables of semigroups using neural networks.
 
-The simplest way to get started is to [use Google Colaboratory](https://colab.research.google.com/github/inpefess/neural-semigroups/blob/master/examples/dae_4_colab.ipynb)
-
-More documentation can be found 
-[here](https://neural-semigroups.readthedocs.io).
-
-There is also a [paper](https://arxiv.org/abs/2103.07388) with more maths inside. It can be used to cite the package:
-
-<pre>
-@misc{balzin2021neural,
-      title={A Neural Network for Semigroups}, 
-      author={Edouard Balzin and Boris Shminke},
-      year={2021},
-      eprint={2103.07388},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
-}
-</pre>
-
-To reproduce results from the paper, use [this notebook](https://colab.research.google.com/github/inpefess/neural-semigroups/blob/master/examples/train_a_model.ipynb)
-
-## Motivation
-
 This work was inspired by [a sudoku
 solver](https://github.com/Kyubyong/sudoku). A solved Sudoku puzzle
 is nothing more than a Cayley table of a quasigroup from 9 items with
@@ -48,3 +26,51 @@ solution. On the contrary, nobody guesses values in a partially
 filled Cayley table of a semigroup as a form of amusement. As a
 result, one can create a puzzle from a full Cayley table of a
 semigroup but there may be many distinct solutions.
+
+# How to Install
+
+The best way to install this package is to use `pip`:
+
+```sh
+pip install neural-semigroups
+```
+
+# How to use
+
+The simplest way to get started is to [use Google Colaboratory](https://colab.research.google.com/github/inpefess/neural-semigroups/blob/master/examples/dae_4_colab.ipynb).
+
+To look at more experimental results for different semigroups cardinalities, you can use [Kaggle](https://kaggle.com):
+
+* [cardinality 4](https://www.kaggle.com/inpefess/neural-semigroups-dae-dim-4)
+* [cardinality 5](https://www.kaggle.com/inpefess/neural-semigroups-dae-dim-5)
+
+# How to Contribute
+
+[Pull requests](https://github.com/inpefess/neural-semigroups/pulls) are welcome. To start:
+
+```sh
+git clone https://github.com/inpefess/neural-semigroups
+cd neural-semigroups
+# activate python virtual environment with Python 3.6+
+pip install -U pip
+pip install -U setuptools wheel poetry
+poetry install
+# recommended but not necessary
+pre-commit install
+```
+
+To check the code quality before creating a pull request, one might run the script [show_report.sh](https://colab.research.google.com/github/inpefess/neural-semigroups/blob/master/show_report.sh). It locally does nearly the same as the CI pipeline after the PR is created.
+
+# Reporting issues or problems with the software
+
+Questions and bug reports are welcome on [the tracker](https://github.com/inpefess/neural-semigroups/issues). 
+
+# More documentation
+
+More documentation can be found [here](https://neural-semigroups.readthedocs.io/en/latest).
+
+# The paper
+
+There is also a [paper](https://arxiv.org/abs/2103.07388) with more maths inside. It can be used to [cite](https://dblp.org/rec/journals/corr/abs-2103-07388.html?view=bibtex) the package.
+
+To reproduce results from the paper, use [this notebook](https://colab.research.google.com/github/inpefess/neural-semigroups/blob/master/examples/train_a_model.ipynb)

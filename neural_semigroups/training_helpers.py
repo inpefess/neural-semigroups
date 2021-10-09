@@ -13,6 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+import os
 from argparse import ArgumentParser, Namespace
 from datetime import datetime
 from typing import Callable, Dict, List, Tuple, Union
@@ -195,7 +196,10 @@ def get_tensorboard_logger(
     :param metric_names: a list of metrics to log during validation and testing
     """
     tb_logger = TensorboardLogger(
-        log_dir=f"runs/{datetime.now()}", flush_secs=1
+        log_dir=os.path.join(
+            "runs", f"{datetime.now().strftime('%Y.%m.%d.%H.%M.%S')}"
+        ),
+        flush_secs=1,
     )
     training_loss = OutputHandler(
         "training",

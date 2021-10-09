@@ -1,5 +1,6 @@
+================
 More about data
----------------
+================
 
 This package uses data included into a ``smallsemi`` package for GAP system. One can download it from `the GAP page`_.
 

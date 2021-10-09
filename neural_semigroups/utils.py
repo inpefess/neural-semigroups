@@ -284,7 +284,10 @@ def hide_cells(cayley_table: Tensor, number_of_cells: int) -> Tensor:
     partial_table = cayley_table.clone()
     cardinality = cayley_table.shape[0]
     pairs = torch.randperm(cardinality * cardinality)[:number_of_cells]
-    partial_table[pairs // cardinality, pairs % cardinality] = -1
+    partial_table[
+        torch.div(pairs, cardinality, rounding_mode="floor"),
+        pairs % cardinality,
+    ] = -1
     return partial_table
 
 
