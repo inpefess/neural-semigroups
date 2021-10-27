@@ -44,6 +44,8 @@ To look at more experimental results for different semigroups cardinalities, you
 * [cardinality 4](https://www.kaggle.com/inpefess/neural-semigroups-dae-dim-4)
 * [cardinality 5](https://www.kaggle.com/inpefess/neural-semigroups-dae-dim-5)
 
+There is also an experimental [notebook](https://github.com/inpefess/neural-semigroups/blob/master/examples/ExperimentNotebook.ipynb) contributed by [Žarko Bulić](https://github.com/zarebulic).
+
 # How to Contribute
 
 [Pull requests](https://github.com/inpefess/neural-semigroups/pulls) are welcome. To start:

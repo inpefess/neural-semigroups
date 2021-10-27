@@ -53,6 +53,10 @@ cardinalities, you can use `Kaggle <https://kaggle.com>`__:
 -  `cardinality
    5 <https://www.kaggle.com/inpefess/neural-semigroups-dae-dim-5>`__
 
+There is also an experimental
+`notebook <https://github.com/inpefess/neural-semigroups/blob/master/examples/ExperimentNotebook.ipynb>`__
+contributed by `Žarko Bulić <https://github.com/zarebulic>`__.
+   
 How to Contribute
 =================
 
