@@ -1,0 +1,13 @@
+venv*/
+doc/build/
+.mypy_cache/
+dist/
+.idea/
+checkpoints/
+runs/
+Dockerfile
+.mypy_cache/
+test_temp_data/
+examples/checkpoints/
+examples/runs/
+*.onnx
