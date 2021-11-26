@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "neural-semigroups"
-version = "0.6.0"
+version = "0.6.1"
 description = "Neural networks powered research of semigroups"
 authors = ["Boris Shminke <boris@shminke.ml>", "Žarko Bulić"]
 license = "Apache-2.0"
@@ -23,7 +23,7 @@ classifiers=[
 ]
 
 [tool.poetry.dependencies]
-python = ">= 3.6.2, < 4.0"
+python = ">= 3.6.2, < 3.10"
 torch = "*"
 tqdm = "*"
 pytorch-ignite = "*"
