@@ -29,7 +29,6 @@ from neural_semigroups.constants import CURRENT_DEVICE
 from neural_semigroups.magma import Magma, get_two_indices_per_sample
 
 # the Cayley table of Klein Vierergruppe
-# pylint: disable=not-callable
 FOUR_GROUP = torch.tensor(
     [[0, 1, 2, 3], [1, 0, 3, 2], [2, 3, 0, 1], [3, 2, 1, 0]]
 )
@@ -37,7 +36,6 @@ FOUR_GROUP = torch.tensor(
 # some non associative magma
 # (0 * 1) * 2 = 0 * 2 = 0
 # 0 * (1 * 2) = 0 * 0 = 1
-# pylint: disable=not-callable
 NON_ASSOCIATIVE_MAGMA = torch.tensor([[1, 0, 0], [2, 2, 0], [2, 2, 2]])
 
 

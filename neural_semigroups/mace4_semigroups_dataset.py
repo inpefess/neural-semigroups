@@ -89,7 +89,6 @@ class Mace4Semigroups(SemigroupsDataset):
         if search_result is None:
             raise ValueError("wrong mace4 output file format!")
         input_lines = search_result.groups()[0]
-        # pylint: disable=not-callable
         cayley_table = torch.tensor(
             list(
                 map(

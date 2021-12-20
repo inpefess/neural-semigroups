@@ -93,9 +93,7 @@ class MagmaDAE(Module):
         ) = get_encoder_and_decoder_layers(
             [cardinality ** 3] + hidden_dims, do_reparametrization
         )
-        # pylint: disable=not-callable
         self._nearly_zero = torch.tensor([1e-6], device=CURRENT_DEVICE)
-        # pylint: disable=not-callable
         self._nearly_one = torch.tensor(
             [1 - (self.cardinality - 1) * 1e-6], device=CURRENT_DEVICE
         )
