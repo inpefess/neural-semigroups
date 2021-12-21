@@ -20,7 +20,7 @@ from typing import Callable, Optional
 
 import requests
 
-from neural_semigroups.semigroups_dataset import SemigroupsDataset
+from neural_semigroups.datasets.semigroups_dataset import SemigroupsDataset
 from neural_semigroups.utils import (
     download_file_from_url,
     find_substring_by_pattern,

@@ -20,7 +20,7 @@ from typing import Callable, Optional
 import torch
 from tqdm import tqdm
 
-from neural_semigroups.semigroups_dataset import SemigroupsDataset
+from neural_semigroups.datasets.semigroups_dataset import SemigroupsDataset
 from neural_semigroups.utils import connect_to_db
 
 
