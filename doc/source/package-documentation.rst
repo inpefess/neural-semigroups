@@ -36,24 +36,33 @@ Precise Guess Loss
 .. autoclass:: neural_semigroups.PreciseGuessLoss
    :special-members: __init__
    :members:
+      
+Datasets
+=========
+
+Random Dataset
+---------------
+.. autoclass:: neural_semigroups.datasets.RandomDataset
+   :special-members: __init__
+   :members:
 
 Semigroups Dataset
-===================
-.. autoclass:: neural_semigroups.SemigroupsDataset
+-------------------
+.. autoclass:: neural_semigroups.datasets.SemigroupsDataset
    :special-members: __init__
    :members:
       
 .. _smallsemi-dataset:
 
 Smallsemi Dataset
-==================
-.. autoclass:: neural_semigroups.Smallsemi
+------------------
+.. autoclass:: neural_semigroups.datasets.Smallsemi
    :special-members: __init__
    :members:
 
 Mace4 Semigroups Dataset
-=========================
-.. autoclass:: neural_semigroups.Mace4Semigroups
+-------------------------
+.. autoclass:: neural_semigroups.datasets.Mace4Semigroups
    :special-members: __init__
    :members:
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "neural-semigroups"
-version = "0.6.1"
+version = "0.6.2"
 description = "Neural networks powered research of semigroups"
 authors = ["Boris Shminke <boris@shminke.ml>", "Žarko Bulić"]
 license = "Apache-2.0"
@@ -57,8 +57,9 @@ tomlkit = "*"
 line-length=79
 
 [build-system]
-requires = ["poetry>=1.1.11"]
+requires = ["poetry>=1.0.0"]
 build-backend = "poetry.masonry.api"
 
 [tool.isort]
+profile = "black"
 src_paths = ["neural_semigroups"]

@@ -29,7 +29,6 @@ from neural_semigroups.constants import CURRENT_DEVICE
 from neural_semigroups.magma import Magma, get_two_indices_per_sample
 
 # the Cayley table of Klein Vierergruppe
-# pylint: disable=not-callable
 FOUR_GROUP = torch.tensor(
     [[0, 1, 2, 3], [1, 0, 3, 2], [2, 3, 0, 1], [3, 2, 1, 0]]
 )
@@ -37,7 +36,6 @@ FOUR_GROUP = torch.tensor(
 # some non associative magma
 # (0 * 1) * 2 = 0 * 2 = 0
 # 0 * (1 * 2) = 0 * 0 = 1
-# pylint: disable=not-callable
 NON_ASSOCIATIVE_MAGMA = torch.tensor([[1, 0, 0], [2, 2, 0], [2, 2, 2]])
 
 
@@ -128,12 +126,11 @@ def download_file_from_url(
     downloads some file from the Web to a specified destination
 
     >>> import os
-    >>> from neural_semigroups.constants import TEST_TEMP_DATA
-    >>> temp_file = os.path.join(TEST_TEMP_DATA, "test.html")
-    >>> if os.path.exists(temp_file):
-    ...     os.remove(temp_file)
-    >>> download_file_from_url("https://python.org/", temp_file)
-    >>> os.path.exists(temp_file)
+    >>> TEMP_FILE = "test.html"
+    >>> if os.path.exists(TEMP_FILE):
+    ...     os.remove(TEMP_FILE)
+    >>> download_file_from_url("https://python.org/", TEMP_FILE)
+    >>> os.path.exists(TEMP_FILE)
     True
 
     :param url: a valid HTTP URL
