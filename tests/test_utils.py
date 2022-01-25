@@ -1,5 +1,5 @@
 """
-   Copyright 2019-2021 Boris Shminke
+   Copyright 2019-2022 Boris Shminke
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -95,7 +95,9 @@ class TestUtils(TestCase):
             os.remove(db_name)
         cursor = connect_to_db(db_name)
         create_table_if_not_exists(
-            cursor, "test_table", ["test1 INT, test2 INT, test3 STRING"],
+            cursor,
+            "test_table",
+            ["test1 INT, test2 INT, test3 STRING"],
         )
         insert_values_into_table(cursor, "test_table", (1, 2, "three"))
         cursor.execute(

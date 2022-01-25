@@ -1,5 +1,5 @@
 """
-   Copyright 2019-2021 Boris Shminke
+   Copyright 2019-2022 Boris Shminke
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -122,7 +122,7 @@ def guessed_ratio(
 
 
 class ThreeEvaluators:
-    """ a triple of three ``ignite`` evaluators: train, validation, test"""
+    """a triple of three ``ignite`` evaluators: train, validation, test"""
 
     def __init__(self, model: Module, metrics: Dict[str, Metric]):
         """
@@ -143,17 +143,17 @@ class ThreeEvaluators:
 
     @property
     def train(self):
-        """ train evaluator """
+        """train evaluator"""
         return self._train
 
     @property
     def validation(self):
-        """ validation evaluator """
+        """validation evaluator"""
         return self._validation
 
     @property
     def test(self):
-        """ test evaluator """
+        """test evaluator"""
         return self._test
 
 
