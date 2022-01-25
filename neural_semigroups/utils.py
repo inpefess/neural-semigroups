@@ -292,8 +292,8 @@ def read_whole_file(filename: str) -> str:
     """
     reads the whole file into a string,  for example
 
-    >>> read_whole_file("README.md").split("\\n")[2]
-    '# Neural Semigroups'
+    >>> read_whole_file("README.rst").split("\\n")[3]
+    'Neural Semigroups'
 
     :param filename: a name of the file to read
     :returns: whole contents of the file

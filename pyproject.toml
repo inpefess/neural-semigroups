@@ -6,7 +6,7 @@ authors = ["Boris Shminke <boris@shminke.ml>", "Žarko Bulić"]
 license = "Apache-2.0"
 repository = "https://github.com/inpefess/neural-semigroups"
 documentation = "https://neural-semigroups.readthedocs.io"
-readme = "README.md"
+readme = "README.rst"
 classifiers=[
 	"Programming Language :: Python :: 3.7",
 	"Programming Language :: Python :: 3.8",
